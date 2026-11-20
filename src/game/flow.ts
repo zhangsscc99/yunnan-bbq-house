@@ -49,7 +49,7 @@ export class Flow {
 
   readonly player = new Player();
   readonly customers: Customer[] = [];
-  private grill: Grill;
+  readonly grill: Grill;
   private stations: StationRuntime[];
   private tables: TableRuntime[];
   private doorPos: THREE.Vector3;

@@ -3,7 +3,9 @@
 
 import * as THREE from 'three';
 import { DISHES, LEVEL } from '../config.ts';
+import { COOK } from '../config.ts';
 import type { Customer } from '../game/types.ts';
+import type { GrillSlot } from '../game/grill.ts';
 
 const CSS = `
 #bbq-hud { position: absolute; inset: 0; pointer-events: none; font-family: inherit; }
@@ -50,6 +52,25 @@ const CSS = `
 }
 .bubble svg { flex: none; }
 .bubble.angry { border-color: #e05a3a; color: #ff9a80; }
+
+#bbq-grillbars { position: absolute; inset: 0; overflow: hidden; }
+.gb {
+  position: absolute; left: 0; top: 0; display: none; flex-direction: column; align-items: center; gap: 3px;
+  background: rgba(24,16,12,.82); border: 1.5px solid rgba(232,180,90,.55);
+  border-radius: 9px; padding: 3px 5px 4px; white-space: nowrap; will-change: transform;
+}
+.gb .gb-bar {
+  position: relative; width: 64px; height: 8px; flex: none; border-radius: 4px;
+  background: rgba(245,232,216,.18); overflow: hidden;
+}
+.gb .gb-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #f0c060; border-radius: 4px; }
+.gb .gb-mark { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: rgba(24,16,12,.85); }
+.gb .gb-txt { font-size: 12px; line-height: 14px; font-weight: 700; color: #f5e8d8; }
+.gb.done { border-color: #f0c060; }
+.gb.done .gb-txt { color: #f0c060; }
+.gb.burnt { border-color: #e05a3a; }
+.gb.burnt .gb-fill { background: #e05a3a; }
+.gb.burnt .gb-txt { color: #ff6a4a; }
 
 #bbq-guide {
   position: absolute; left: 50%; bottom: calc(150px + env(safe-area-inset-bottom));
@@ -109,6 +130,8 @@ export class Hud {
   private bubblesEl: HTMLElement;
   private popupsEl: HTMLElement;
   private guideEl: HTMLElement;
+  private grillEl: HTMLElement;
+  private gbs: { root: HTMLElement; fill: HTMLElement; txt: HTMLElement; state: string; label: string }[] = [];
   private guideTimer = 0;
   private bubbleMap = new Map<number, Bubble>();
   private lastMoney = -1;
@@ -145,6 +168,8 @@ export class Hud {
     this.bubblesEl.id = 'bbq-bubbles';
     this.popupsEl = el('div', '', this.root);
     this.popupsEl.id = 'bbq-popups';
+    this.grillEl = el('div', '', this.root);
+    this.grillEl.id = 'bbq-grillbars';
     this.guideEl = el('div', '', this.root);
     this.guideEl.id = 'bbq-guide';
   }
@@ -214,6 +239,46 @@ export class Hud {
       x: (this.tmp.x * 0.5 + 0.5) * window.innerWidth,
       y: (-this.tmp.y * 0.5 + 0.5) * window.innerHeight,
     };
+  }
+
+  /** screen-space grill badges: one per occupied slot, constant pixel size (64×8 bar + status line) */
+  updateGrill(slots: GrillSlot[]): void {
+    this.cam.updateMatrixWorld();
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    slots.forEach((slot, i) => {
+      let b = this.gbs[i];
+      if (!b) {
+        const root = el('div', 'gb', this.grillEl);
+        root.dataset.slot = String(i);
+        const bar = el('div', 'gb-bar', root);
+        const fill = el('div', 'gb-fill', bar);
+        el('div', 'gb-mark', bar);
+        b = this.gbs[i] = { root, fill, txt: el('div', 'gb-txt', root), state: '', label: '' };
+      }
+      const item = slot.item;
+      this.tmp.copy(slot.pos);
+      this.tmp.y += 0.5;
+      this.tmp.project(this.cam);
+      const x = (this.tmp.x * 0.5 + 0.5) * w;
+      const y = (-this.tmp.y * 0.5 + 0.5) * h;
+      if (!item || this.tmp.z > 1 || x < 0 || x > w || y < 0 || y > h) {
+        b.root.style.display = 'none';
+        return;
+      }
+      const t = item.grillT;
+      const state = t >= COOK.burnTime ? 'burnt' : t >= COOK.grillTime ? 'done' : 'cooking';
+      const label = state === 'burnt' ? '焦了 ✗' : state === 'done' ? '已熟 ✓' : `烤制中 ${Math.ceil(COOK.grillTime - t)}s`;
+      if (label !== b.label) { b.label = label; b.txt.textContent = label; }
+      if (state !== b.state) {
+        b.state = state;
+        b.root.classList.toggle('done', state === 'done');
+        b.root.classList.toggle('burnt', state === 'burnt');
+      }
+      b.fill.style.width = `${Math.min(1, t / COOK.burnTime) * 100}%`;
+      b.root.style.display = 'flex';
+      b.root.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px) translate(-50%, -100%)`;
+    });
   }
 
   /** refresh world-anchored bubbles above customers: dish name + patience ring */

@@ -26,7 +26,8 @@ for (const r of [stickGeo, cubeGeo, cylGeo, noodleGeo, plateGeo, plateRimGeo, bo
   r.userData.shared = true;
 }
 
-const GOLDEN = new THREE.Color(0xcf7d2a);
+const GOLDEN = new THREE.Color(0xdc9a2e);
+const GLOW = new THREE.Color(0xc27a14);
 const CHAR = new THREE.Color(0x241d18);
 const RAW_TINT = new THREE.Color(0xffe8e0);
 
@@ -36,9 +37,10 @@ export function meatColor(dish: DishId, stage: ItemStage, grillT = 0, out = new 
   if (stage === 'raw') return out.lerp(RAW_TINT, 0.28);
   if (stage === 'waste') return out.copy(CHAR);
   if (stage === 'cooked' || stage === 'plated') {
-    out.lerp(GOLDEN, 0.7);
+    out.lerp(GOLDEN, 0.88);
     if (stage === 'cooked' && grillT > COOK.grillTime) {
-      out.lerp(CHAR, Math.min(1, (grillT - COOK.grillTime) / (COOK.burnTime - COOK.grillTime)) * 0.6);
+      const k = Math.min(1, (grillT - COOK.grillTime) / (COOK.burnTime - COOK.grillTime));
+      out.lerp(CHAR, k * k * 0.5);
     }
     return out;
   }
@@ -48,7 +50,10 @@ export function meatColor(dish: DishId, stage: ItemStage, grillT = 0, out = new 
 /** live-tint a skewer while it sits on the grill */
 export function tintItem(item: Item): void {
   const m = item.obj.userData.meat as THREE.MeshStandardMaterial | undefined;
-  if (m) meatColor(item.dish, item.stage, item.grillT, m.color);
+  if (!m) return;
+  meatColor(item.dish, item.stage, item.grillT, m.color);
+  m.emissive.copy(GLOW);
+  m.emissiveIntensity = item.stage === 'cooked' && item.grillT < COOK.burnTime ? 0.4 : 0;
 }
 
 function dishMat(dish: DishId, stage: ItemStage, grillT = 0): THREE.MeshStandardMaterial {

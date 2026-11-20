@@ -14,6 +14,8 @@ export interface GrillSlot {
   barFill: THREE.Sprite;
   smokeT: number;
   done: boolean;
+  /** read-only: current skewer meat colour as '#rrggbb' ('' when empty) */
+  readonly hex: string;
 }
 
 function makeBar(): [THREE.Sprite, THREE.Sprite] {
@@ -50,6 +52,7 @@ interface Puff {
   sprite: THREE.Sprite;
   t: number;
   life: number;
+  base: number;
 }
 
 export class Grill {
@@ -65,7 +68,13 @@ export class Grill {
       fill.position.copy(bg.position);
       bg.visible = fill.visible = false;
       this.group.add(bg, fill);
-      this.slots.push({ item: null, pos, barBg: bg, barFill: fill, smokeT: 0, done: false });
+      this.slots.push({
+        item: null, pos, barBg: bg, barFill: fill, smokeT: 0, done: false,
+        get hex(): string {
+          const m = this.item?.obj.userData.meat as THREE.MeshStandardMaterial | undefined;
+          return m ? `#${m.color.getHexString()}` : '';
+        },
+      });
     }
   }
 
@@ -126,21 +135,23 @@ export class Grill {
       s.smokeT -= dt;
       if (s.smokeT <= 0) {
         s.smokeT = t >= COOK.grillTime ? 0.55 : 0.9;
-        const burning = t >= COOK.grillTime * 0.8;
+        const burnt = t >= COOK.burnTime;
+        const done = t >= COOK.grillTime;
+        const base = done ? 0.24 : 0.14;
         const mat = new THREE.SpriteMaterial({
           map: this.smokeTex,
-          color: s.item.stage === 'waste' ? 0x3a3632 : burning ? 0x8a8078 : 0xcfc8c0,
+          color: burnt ? 0x4a4540 : done ? 0xd9a743 : t >= COOK.grillTime * 0.8 ? 0x8a8078 : 0xcfc8c0,
           transparent: true,
-          opacity: 0.5,
+          opacity: done ? 0.7 : 0.5,
           depthWrite: false,
         });
         const sp = new THREE.Sprite(mat);
         sp.position.copy(s.pos).add(new THREE.Vector3(
           (Math.random() - 0.5) * 0.12, 0.12, (Math.random() - 0.5) * 0.1,
         ));
-        sp.scale.setScalar(0.14);
+        sp.scale.setScalar(base);
         this.group.add(sp);
-        this.puffs.push({ sprite: sp, t: 0, life: 1.4 });
+        this.puffs.push({ sprite: sp, t: 0, life: 1.4, base });
       }
     }
     // animate puffs
@@ -149,8 +160,9 @@ export class Grill {
       p.t += dt;
       const k = p.t / p.life;
       p.sprite.position.y += dt * 0.35;
-      p.sprite.scale.setScalar(0.14 + k * 0.3);
-      (p.sprite.material as THREE.SpriteMaterial).opacity = 0.5 * (1 - k);
+      p.sprite.scale.setScalar(p.base + k * 0.3);
+      const mat = p.sprite.material as THREE.SpriteMaterial;
+      mat.opacity = (p.base > 0.14 ? 0.7 : 0.5) * (1 - k);
       if (k >= 1) {
         this.group.remove(p.sprite);
         (p.sprite.material as THREE.Material).dispose();

@@ -111,6 +111,7 @@ renderer.setAnimationLoop(() => {
 
   // world-anchored bubbles
   if (flow.phase === 'playing') hud.updateBubbles(flow.customers);
+  hud.updateGrill(flow.grill.slots);
 
   renderer.render(scene, rig.cam);
 });
@@ -167,6 +168,7 @@ const hooks: TestHooks = {
     for (let i = 0; i < n; i++) {
       flow.update(dt, mv, i === 0 && pressed);
     }
+    hud.updateGrill(flow.grill.slots);
   },
   state() {
     const g = (s: string): unknown => {

@@ -36,6 +36,10 @@
 
 - [ ] **切配连点丢输入**：走查日志 `chop` 步骤连点 3 次后进度仍为「切配 1/3」（`cap3="切配 1/3"`）。`flow.act('chop')` 每次减 1 且无节流，怀疑是 E2E 点击过快/未命中按钮热区。需要一次真机 Playwright 慢速连点复现，确认是验收脚本问题还是输入丢失。
   - **复核（第 1 轮走查，14:37Z）：非产品缺陷，撤单（别派工）。** 连续点 5 次并**每次等两帧 rAF 后读数**，`chopLeft` 3→2→1→0→chopped 完整推进、第 5 次成功拿起熟串；症状来自“低帧率下按钮文案落后一帧”，在软件渲染（≈2–5fps）时读数过早。验收脚本一律用 `await rAF×2` 再断言 HUD 文案，数值断言直接读 `__game`。
+- [done 838bc9e + 016fae3 + 1b7899f] **切配阶段零可见反馈**（走查第 6 轮 P1-1，2026-11-20 22:40Z 部署）→ **B-030**
+  - 修：新增屏幕空间 HUD 层 `#bbq-chop`（照 `#bbq-grillbars` 的投影做法）：砧板上方 64×8 进度条 + 13px 状态字 `切配 0/3 → 1/3 → 2/3 → 已切好 ✓`，`pointer-events:none`、出屏/空板隐藏；砧板表面新增 3 道刀痕（`__game.cuts[i].visible` 随刀数出现，取走后清零）；删除旧 world-space `src/game/progressBar.ts`。
+  - 验收 `e2e/chop.mjs`（竖屏 390×844 + 横屏 844×390，`E2E_RUNS=3` 连跑三次）：fill 33.3/66.7/100%、文案、刀痕 1/2/3、条 64×8、字 13px、框全在视口内且不与 `#bbq-act`/`#bbq-stick` 重叠、取走后 `display:none`、0 JS error，末行 `CHOP OK`；draw calls 81（改前 78，+3 ≤ 预算 4）。
+  - 脚本坑：`locator.click('#bbq-act')` 在 swiftshader（≈1–5fps）下永远等不到"stable"→ 改 `page.touchscreen.tap(中心点)`；同 browser 开第 2/3 个 page 会崩（`SharedImageManager… non-existent mailbox`）→ 每页独立 browser + 仅对 `has been closed` 类环境崩溃重试 2 次（断言失败不重试）。
 - [ ] **顾客耐心归零离店**的反馈只有 0.6s 红怒符号，缺少「-1 满意度」的 HUD 飘字，玩家不会意识到扣分。
 - [done 2026-11-20 14:37Z 走查轮] **缺 docs/PRODUCT-REVIEW.md**：已建立，格式=每轮「四问打分 + 三体验维度 + P0/P1/P2（带验收标准）+ 与 SPEC 条款差距」，历史保留最近 5 轮。
 

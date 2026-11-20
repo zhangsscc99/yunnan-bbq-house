@@ -43,6 +43,18 @@ function distToStation(p: THREE.Vector3, s: StationRuntime): number {
   return Math.hypot(dx, dz);
 }
 
+/** where to go next, from what the player is holding (shown when nothing is in reach) */
+export function nextHint(carrying: Item | null, grill: Grill): string {
+  switch (carrying?.stage) {
+    case 'raw': return '去切配台';
+    case 'chopped': return '去烤炉';
+    case 'cooked': return '去装盘台';
+    case 'plated': return '送去客桌';
+    case 'waste': return '去垃圾桶';
+    default: return grill.readySlot() ? '去烤炉取串' : '去料箱取料';
+  }
+}
+
 export function resolveInteraction(
   p: THREE.Vector3,
   carrying: Item | null,
@@ -83,7 +95,7 @@ export function resolveInteraction(
     }
   }
 
-  if (!nearStation) return mk('none', '');
+  if (!nearStation) return mk('none', nextHint(carrying, grill));
 
   switch (nearStation.kind) {
     case 'crate':
@@ -96,25 +108,23 @@ export function resolveInteraction(
           : mk('chop', '取回切好的串', nearStation);
       }
       if (carrying?.stage === 'raw') return mk('chop', '放上砧板', nearStation);
-      if (carrying) return mk('none', '需要生串', nearStation);
-      return mk('none', '', nearStation);
+      return mk('none', nextHint(carrying, grill), nearStation);
     case 'grill': {
       if (carrying?.stage === 'chopped' && grill.freeSlot())
         return mk('put-grill', '上烤炉', nearStation);
       if (!carrying && grill.readySlot())
         return mk('take-grill', '取烤串', nearStation);
-      if (!carrying)
-        return mk('none', grill.slots.some((s) => s.item) ? '烤制中…' : '需要切好的串', nearStation);
-      return mk('none', '需要切好的串', nearStation);
+      if (!carrying && grill.slots.some((s) => s.item)) return mk('none', '烤制中…', nearStation);
+      return mk('none', nextHint(carrying, grill), nearStation);
     }
     case 'plate':
       if (carrying?.stage === 'cooked') return mk('plate', '装盘', nearStation);
-      return mk('none', '需要烤熟的串', nearStation);
+      return mk('none', nextHint(carrying, grill), nearStation);
     case 'bin':
       if (carrying) return mk('discard', '丢弃', nearStation);
-      return mk('none', '', nearStation);
+      return mk('none', nextHint(carrying, grill), nearStation);
     default:
-      return mk('none', '', nearStation);
+      return mk('none', nextHint(carrying, grill), nearStation);
   }
 }
 

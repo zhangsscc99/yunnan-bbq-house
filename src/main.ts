@@ -124,7 +124,7 @@ interface TestHooks {
   setPatience(sec: number): void;
   press(): void;
   start(): void;
-  tick(dt?: number, n?: number): void;
+  tick(dt?: number, n?: number, mx?: number, mz?: number): void;
   state(): Record<string, unknown>;
 }
 const ZERO_MOVE = new THREE.Vector2(0, 0);
@@ -160,10 +160,11 @@ const hooks: TestHooks = {
   start() { restart(); },
   // step the simulation synchronously (e2e: render rate doesn't matter).
   // A queued action press fires on the first tick.
-  tick(dt = 0.05, n = 1) {
+  tick(dt = 0.05, n = 1, mx = 0, mz = 0) {
     const pressed = input.consumeAction();
+    const mv = mx || mz ? new THREE.Vector2(mx, mz) : ZERO_MOVE;
     for (let i = 0; i < n; i++) {
-      flow.update(dt, ZERO_MOVE, i === 0 && pressed);
+      flow.update(dt, mv, i === 0 && pressed);
     }
   },
   state() {
@@ -184,6 +185,8 @@ const hooks: TestHooks = {
       action: currentAction.action,
       actionLabel: currentAction.label,
       player: { x: flow.player.obj.position.x, z: flow.player.obj.position.z },
+      stations: Object.fromEntries(kitchen.stations.map((st) => [st.id, { x: st.usePos.x, z: st.usePos.z }])),
+      tables: Object.fromEntries(dining.tables.map((tb) => [tb.id, { x: tb.usePos.x, z: tb.usePos.z }])),
       customers: flow.customers.map((c) => ({
         id: c.id, dish: c.dish, phase: c.phase,
         patience: c.patience, table: c.table,

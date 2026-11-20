@@ -12,8 +12,9 @@
   - 3031 已被 Saltline（pm2 saltline-ref）占用，yunnan-bbq 从未成功起进程，`https://openfolio.uk/bbq/` 返回 502。
   - 修法：全部改 3035，`pm2 start ecosystem.config.cjs` + `pm2 save`，双次 curl 200。
 
-- [ ] **出生点与设计不符**：`flow.ts startLevel()` 里 `spawn = {x:0.5, z:1.2}`（贴餐区左上死角），`docs/GAME-DESIGN.md §5` 写的是 (6,5.5)。要么改代码回 (6,5.5)，要么改文档；当前开局要横穿全店才能到料箱，新手第一秒不知道干什么。
-  - **复核（第 1 轮走查，14:37Z）**：回到 (6,5.5) **不能解决问题**——烤炉 `usePos`=(7,6)，与 (6,5.5) 距离 1.12m < 判定 1.15m，按文档实现照样开局命中烤炉。正解见 B-003：出生点与所有 `usePos` 保持 >1.15m（建议 (6, 5.0) 或把判定收到 1.0m），改完用 `__game.current.action==='none'` + 按钮标题为引导语验收。
+- [done 7908be2] **出生点与设计不符**（2026-11-20 15:19Z 部署，第 2 轮走查实测验证）
+  - `PLAYER_SPAWN` → cell (3,4) 世界 (-2.5,0)，距最近 usePos 1.44m；闲置按钮常亮 + 按下弹 2s `#bbq-guide` toast（不消耗输入）。`git show 7908be2` 含 e2e/spawn.mjs 断言，旧 spawn 上验证过会挂。
+  - 第 2 轮走查（15:49Z）在公网 `index-DqBNZH4C` 复测：spawn (-2.5,0)、min dist 1.442、开局按钮 opacity 1、guide toast 文本写入 ✓。**撤销第 1 轮的「单个大按钮语义不可见」P0 记录**——闲置语义现在是可点引导。
 
 - [done 2401f14] **世界内「下一步去哪」指引标记**（2026-11-20 14:41 本轮）
   - `nextTarget()`（stations.ts）返回目标 `{kind,id,pos}`；`state().hint` 可断言；金色脉冲环 +1 draw call。
@@ -52,7 +53,7 @@
 
 ### B-002 顾客气泡屏幕边界钳制
 优先级：P1
-来源：第 1 轮走查（竖屏 3 位顾客时左缘气泡 `x=-63, w=84`，只露出 21px「菌子」残字，像渲染错误）
+来源：第 1 轮走查（竖屏 3 位顾客时左缘气泡 `x=-63, w=84`，只露出 21px「菌子」残字，像渲染错误）；**第 2 轮复现并加重**：t3 客气泡整块出画（x=425 > 视口 390），vision 只数出 2 个气泡（port-22），见 B-013
 需求：`hud.updateBubbles` 里对投影点做钳制 `x∈[8, W-8]`（气泡按自身宽度再收一次边），或顾客不在视野内时整块隐藏；「正在进店」的顾客不要显示完整订单气泡，只显示一个“→”指示。
 验收：断言所有 `.bubble` 的 `rect.left ≥ 0 && rect.right ≤ innerWidth`，竖屏/横屏各 3 单同屏跑一遍；E2E 连跑 3 次无 flake。
 参考：Overcooked 的离屏指示箭头。
@@ -110,3 +111,40 @@
 需求：黑板字提亮到 ≥4.5:1 对比；扎染/篷布边缘加 1px 描边或改用整块几何，去掉破碎锯齿。
 验收：截图取色对比度 ≥4.5:1；`vision` 判定“看得到三行菜名”；边缘无破洞。
 参考：ART-DIRECTION §2 云南元素清单。
+
+---
+
+## 走查追加需求（B 编号，第 2 轮 2026-11-20 15:49Z）
+
+### B-011 订单卡就座触发 + 耐心环持续刷新
+优先级：P1
+来源：第 2 轮走查（顾客就座等待 5s 内连续 5 次同步读 `#bbq-orders .card` 全为空；卡片只在上菜/愤怒事件后才出现——`setOrders` 仅在 spawn/serve/angry 时被调，`walking-in→seated` 迁移不发 `onOrders`，等待期也无周期刷新；port-25-natural-orders.png 有客就座右上无卡，port-23 上菜后才出现）
+需求：顾客进入 `seated` 时触发 `ev.onOrders`；等待期耐心环按帧（或 ≥1s 一次）刷新 dashoffset；`patience<25%` 时卡变红。
+验收：e2e 断言——顾客就座 0.5s 内 `#bbq-orders .card` 数量 === 就座人数；同一张卡 2s 内 dashoffset 至少变化一次；`setPatience(10)` 后卡带 `.angry`；连跑 3 次无 flake。
+参考：GAME-DESIGN §1「订单(1 道菜 + 耐心条)」、§5 ART 订单卡规格。
+
+### B-012 「下一关」假解锁：出真 Lv.2 或改文案
+优先级：P1
+来源：第 2 轮走查（¥183 通关 → “目标达成，解锁下一关！”+「下一关」可点 → 点击后 timeLeft=180/目标 ¥180 与第 1 关完全相同；`localStorage.bbq.level` 被写为 2 但全仓无读取方——承诺不存在的内容，port-27/28 截图）
+需求：二选一——①真出 Lv.2（读取 `bbq.level`，目标/客流/耐心中的一项提升，config 里加 LEVELS 表）；②M1 保持单关，则结算文案改「目标达成，再来一局挑战高分！」，「下一关」按钮删除，且不写 `bbq.level=2`。
+验收：e2e 断言——pass 后点主按钮进入的关卡参数与上一关不同（①），或 pass 文案不再含“解锁下一关”且 `localStorage.getItem('bbq.level')` 为 null（②）；不得出现“文案承诺 X、行为是 Y”的组合。
+参考：GAME-DESIGN §3（M1 仅 1 关、面板预留按钮）。
+
+### B-013 离屏顾客/订单指示箭头
+优先级：P1
+来源：第 2 轮走查（竖屏 3 客同时：t3 客气泡 rect x=425 > 390 视口，整块不可见，vision 只数出 2 个气泡；顾客本体 x=9.4 也在视锥外——玩家完全感知不到第 3 单）
+需求：顾客（或其气泡）投影出画时，在 HUD 层沿屏幕边缘画一个方向箭头 + 菜名缩写；箭头随相机角度旋转。与 B-002（气泡钳制）配套：气泡钳到屏内仍看不见时用箭头。
+验收：竖屏 3 客场景截图，`vision` 判定能看到 3 个“单据指示”（气泡或箭头）；e2e 断言每个 `seated/walking-in` 顾客要么气泡 rect 在视口内、要么存在对应边缘箭头元素。
+参考：Overcooked 移动版离屏指示；B-002、B-004。
+
+### B-014 HUD 计时改 flow 驱动（去 setTimeout）
+优先级：P2
+来源：第 2 轮走查（hud.ts popup 900ms、guide 2000ms 用 `setTimeout`，违反 TECH-STACK §4「一切走 flow.update(dt)，setTimeout 禁止」；e2e 同步 tick 断言时 window 未走帧，时序不可控）
+需求：`Hud` 增加由 main 循环调用的 `update(dt)`，内部计时器数组管理 popup 生命与 guide 显隐。
+验收：`grep -n "setTimeout" src/ui/*.ts` 为 0；popup 0.9s 消失、guide 2s 消失行为不变（用 `__test.tick` 同步断言可见性，不再依赖真实时间）。
+
+### B-015 动作键 caption 完整显示菜名
+优先级：P2
+来源：第 2 轮走查（`#bbq-act .cap` font-size 10px + max-width 66px，“上菜 烤五花肉拼盘” scrollWidth 83 > clientWidth 66 → 省略号“上菜 烤五花肉…”，玩家看不全端的是哪道菜）
+需求：caption 允许两行（或按文本加宽至 ≤120px），字号 12px 起（与 B-008 合并做）；上菜语义下优先显示菜名，“上菜”二字可省略（图标已表达）。
+验收：390×844 下 `cap.scrollWidth ≤ cap.clientWidth` 对全部 6 种动作文案成立；`getComputedStyle.fontSize ≥ 12px`；按钮不遮挡场景主体（rect 高度 ≤ 88px）。

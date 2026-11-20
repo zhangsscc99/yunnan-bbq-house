@@ -17,7 +17,7 @@ import type { Results } from './game/flow.ts';
 import { Hud } from './ui/hud.ts';
 import { Controls } from './ui/controls.ts';
 import { Panels } from './ui/panels.ts';
-import { COOK, LEVEL } from './config.ts';
+import { COOK } from './config.ts';
 import { spawnCustomer } from './game/customers.ts';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
@@ -66,17 +66,26 @@ const flow = new Flow(scene, kitchen.stations, dining.tables, kitchen.grillSlots
   onPopup(pos, text, kind) { hud.popup(pos, text, kind); },
   onAction(a: Interaction) { currentAction = a; },
   onGuide(text: string) { hud.showGuide(text); },
-  onResults(r: Results) { panels.showResults(r, restart); },
+  onResults(r: Results) { panels.showResults(r, restart, nextLevel); },
 });
 flow.placePlayer();
 const chopBoard = kitchen.stations.find((st) => st.id === 'chop')!;
 
 function restart(): void {
+  hud.setLevel(flow.level, flow.cfg.target);
   flow.startLevel();
   rig.snapTo(flow.player.obj.position);
 }
 
-panels.showStart(LEVEL.target, LEVEL.duration, restart);
+function nextLevel(): void {
+  flow.nextLevel();
+  if (flow.phase !== 'playing') return;
+  hud.setLevel(flow.level, flow.cfg.target);
+  rig.snapTo(flow.player.obj.position);
+}
+
+hud.setLevel(flow.level, flow.cfg.target);
+panels.showStart(flow.cfg.target, flow.cfg.duration, restart, flow.level);
 
 // ---- resize ----
 window.addEventListener('resize', () => {
@@ -180,6 +189,8 @@ const hooks: TestHooks = {
     };
     return {
       phase: flow.phase,
+      level: flow.level,
+      levelTarget: flow.cfg.target,
       money: flow.money,
       timeLeft: flow.timeLeft,
       served: flow.served,

@@ -3,8 +3,8 @@
 // no setTimeout anywhere (see TECH-STACK boundaries).
 
 import * as THREE from 'three';
-import { COOK, DISHES, LEVEL, PLAYER, SAVE_KEYS } from '../config.ts';
-import type { DishId } from '../config.ts';
+import { COOK, DISHES, LEVELS, PLAYER, SAVE_KEYS } from '../config.ts';
+import type { DishId, Level } from '../config.ts';
 import type { StationRuntime, Customer, Item, GamePhase } from './types.ts';
 import { createItem, setItemStage } from './items.ts';
 import { resolveInteraction, Highlighter, setFootprint, nextTarget, registerNavPoints } from './stations.ts';
@@ -36,12 +36,21 @@ export interface Results {
   angry: number;
   waste: number;
   pass: boolean;
+  level: number;
+  hasNext: boolean;
+}
+
+function savedLevel(): number {
+  const n = Math.floor(Number(localStorage.getItem(SAVE_KEYS.level) || 1));
+  return Number.isFinite(n) && n >= 1 ? Math.min(n, LEVELS.length) : 1;
 }
 
 export class Flow {
   phase: GamePhase = 'menu';
   money = 0;
-  timeLeft = LEVEL.duration;
+  level = savedLevel();
+  cfg: Level = LEVELS[this.level - 1];
+  timeLeft = this.cfg.duration;
   served = 0;
   angry = 0;
   waste = 0;
@@ -133,7 +142,7 @@ export class Flow {
   startLevel(): void {
     this.phase = 'playing';
     this.money = 0;
-    this.timeLeft = LEVEL.duration;
+    this.timeLeft = this.cfg.duration;
     this.served = 0;
     this.angry = 0;
     this.waste = 0;
@@ -156,21 +165,28 @@ export class Flow {
     this.ev.onOrders(this.customers);
   }
 
+  /** advance only after a passed level that has a successor; otherwise no-op */
+  nextLevel(): void {
+    if (this.phase !== 'results' || this.money < this.cfg.target || this.level >= LEVELS.length) return;
+    this.level += 1;
+    this.cfg = LEVELS[this.level - 1];
+    localStorage.setItem(SAVE_KEYS.level, String(this.level));
+    this.startLevel();
+  }
+
   endLevel(): void {
-    const r = this.money / LEVEL.target;
+    const r = this.money / this.cfg.target;
     let stars = 1;
     if (r >= 1 && this.angry === 0 && this.waste <= 1) stars = 3;
     else if (r >= 1 || (r >= 0.7 && this.angry <= 1)) stars = 2;
     const res: Results = {
-      stars, money: this.money, target: LEVEL.target,
+      stars, money: this.money, target: this.cfg.target,
       served: this.served, angry: this.angry, waste: this.waste,
-      pass: this.money >= LEVEL.target,
+      pass: this.money >= this.cfg.target,
+      level: this.level,
+      hasNext: this.level < LEVELS.length,
     };
     this.phase = 'results';
-    if (res.pass) {
-      const cur = Number(localStorage.getItem(SAVE_KEYS.level) ?? '1');
-      if (cur < 2) localStorage.setItem(SAVE_KEYS.level, '2');
-    }
     const best = Number(localStorage.getItem(SAVE_KEYS.best) ?? '0');
     if (this.money > best) localStorage.setItem(SAVE_KEYS.best, String(this.money));
     this.ev.onPhase('results');
@@ -196,10 +212,10 @@ export class Flow {
     this.spawnT -= dt;
     if (this.spawnT > 0) return;
     const free = this.freeTables();
-    if (free.length && this.seatedCount() < LEVEL.maxDiners) {
+    if (free.length && this.seatedCount() < this.cfg.maxDiners) {
       const t = free[Math.floor(Math.random() * free.length)];
       this.customers.push(spawnCustomer(this.scene, t, this.doorPos));
-      const [a, b] = LEVEL.spawnEvery;
+      const [a, b] = this.cfg.spawnEvery;
       this.spawnT = a + Math.random() * (b - a);
       this.ev.onOrders(this.customers);
     } else {
@@ -393,7 +409,7 @@ export class Flow {
         },
         onGone: (cc) => {
           table.guest = null;
-          table.cooldown = LEVEL.tableCooldown;
+          table.cooldown = this.cfg.tableCooldown;
           const plate = (cc as unknown as { _plate?: THREE.Object3D })._plate;
           if (plate) { this.scene.remove(plate); disposeTree(plate); }
           const i = this.customers.indexOf(cc);

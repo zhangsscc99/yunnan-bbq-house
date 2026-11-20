@@ -64,13 +64,20 @@ export const COOK = {
   tipRate: 0.3,         // tip = price * tipRate * patienceFrac
 };
 
-export const LEVEL = {
-  duration: 180,        // seconds
-  target: 180,          // ¥
-  maxDiners: 3,         // simultaneous seated customers
-  spawnEvery: [12, 20] as const, // seconds between arrivals (min,max) while free table
-  tableCooldown: 4,     // seconds before a freed table can re-seat
-};
+export interface Level {
+  duration: number;     // seconds
+  target: number;       // ¥
+  maxDiners: number;    // simultaneous seated customers
+  spawnEvery: readonly [number, number]; // seconds between arrivals (min,max) while free table
+  tableCooldown: number; // seconds before a freed table can re-seat
+}
+
+export const LEVELS: Level[] = [
+  { duration: 180, target: 180, maxDiners: 3, spawnEvery: [12, 20], tableCooldown: 4 },
+  { duration: 180, target: 260, maxDiners: 3, spawnEvery: [9, 15],  tableCooldown: 4 },
+];
+
+export const LEVEL = LEVELS[0];
 
 export const PLAYER = {
   speed: 3.2,           // m/s

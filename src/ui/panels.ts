@@ -69,7 +69,7 @@ export class Panels {
     this.root.innerHTML = '';
   }
 
-  showStart(target: number, duration: number, onStart: () => void): void {
+  showStart(target: number, duration: number, onStart: () => void, level = 1): void {
     this.clear();
     const p = document.createElement('div');
     p.className = 'bbq-panel';
@@ -77,37 +77,37 @@ export class Panels {
       <div class="card">
         <h1>柳真真云南烤肉</h1>
         <div class="sub">炭火生香，小店开张。<br/>取料 → 切配 → 炭烤 → 装盘 → 上菜</div>
-        <div class="target">目标：${Math.floor(duration / 60)} 分钟营业额 ¥${target}</div>
+        <div class="target">第 ${level} 关 · 目标：${Math.floor(duration / 60)} 分钟营业额 ¥${target}</div>
         <button data-btn="start">开 店</button>
       </div>`;
     this.root.appendChild(p);
     p.querySelector('button')!.addEventListener('click', onStart);
   }
 
-  showResults(r: Results, onReplay: () => void): void {
+  showResults(r: Results, onReplay: () => void, onNext: () => void): void {
     this.clear();
     const p = document.createElement('div');
     p.className = 'bbq-panel';
     const stars = STAR(r.stars >= 1) + STAR(r.stars >= 2) + STAR(r.stars >= 3);
+    const nextN = r.level + 1;
+    const verdict = !r.pass ? `离目标还差 ¥${r.target - r.money}`
+      : r.hasNext ? `目标达成，进入第 ${nextN} 关` : '全部关卡通关！';
+    const nextBtn = r.pass && r.hasNext ? `<button data-btn="next">进入第 ${nextN} 关</button><br/>` : '';
     p.innerHTML = `
       <div class="card">
         <h1>打烊结算</h1>
         <div class="stars-big">${stars}</div>
-        <div class="verdict ${r.pass ? 'pass' : 'fail'}">
-          ${r.pass ? '目标达成，解锁下一关！' : `离目标还差 ¥${r.target - r.money}`}
-        </div>
+        <div class="verdict ${r.pass ? 'pass' : 'fail'}">${verdict}</div>
         <div class="row"><span>营业额</span><b>¥${r.money} / ¥${r.target}</b></div>
         <div class="row"><span>服务顾客</span><b>${r.served} 位</b></div>
         <div class="row ${r.angry ? 'neg' : ''}"><span>愤怒离店</span><b>${r.angry} 位</b></div>
         <div class="row ${r.waste ? 'neg' : ''}"><span>废料</span><b>${r.waste} 份</b></div>
-        <button data-btn="next" ${r.pass ? '' : 'disabled'}>下 一 关</button>
-        <br/>
+        ${nextBtn}
         <button class="ghost" data-btn="replay">再 开 一 局</button>
       </div>`;
     this.root.appendChild(p);
     p.querySelector('[data-btn="replay"]')!.addEventListener('click', onReplay);
-    const next = p.querySelector('[data-btn="next"]') as HTMLButtonElement | null;
-    if (next && r.pass) next.addEventListener('click', onReplay);
+    p.querySelector('[data-btn="next"]')?.addEventListener('click', onNext);
   }
 
   hide(): void {

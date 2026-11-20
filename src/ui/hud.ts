@@ -2,7 +2,7 @@
 // world-anchored customer bubbles + floating popups. No emoji, inline SVG.
 
 import * as THREE from 'three';
-import { DISHES, LEVEL } from '../config.ts';
+import { DISHES } from '../config.ts';
 import { COOK } from '../config.ts';
 import type { Customer } from '../game/types.ts';
 import type { GrillSlot } from '../game/grill.ts';
@@ -144,6 +144,8 @@ function el(tag: string, cls: string, parent: HTMLElement): HTMLElement {
 
 export class Hud {
   private root: HTMLElement;
+  private levelV: HTMLElement;
+  private target = 0;
   private moneyV: HTMLElement;
   private timeV: HTMLElement;
   private starsEl: HTMLElement;
@@ -172,6 +174,8 @@ export class Hud {
     this.root.id = 'bbq-hud';
 
     const bar = el('div', 'topbar', this.root);
+    this.levelV = el('span', 'v level', el('div', 'tb', bar));
+    this.levelV.textContent = '第 1 关';
     const tb1 = el('div', 'tb', bar);
     el('span', 'k', tb1).textContent = '营业额';
     this.moneyV = el('span', 'v', tb1);
@@ -205,6 +209,11 @@ export class Hud {
     this.guideEl.classList.add('show');
     clearTimeout(this.guideTimer);
     this.guideTimer = window.setTimeout(() => this.guideEl.classList.remove('show'), 2000);
+  }
+
+  setLevel(level: number, target: number): void {
+    this.target = target;
+    this.levelV.textContent = `第 ${level} 关`;
   }
 
   setMoney(v: number): void {
@@ -391,6 +400,6 @@ export class Hud {
   }
 
   levelTarget(): number {
-    return LEVEL.target;
+    return this.target;
   }
 }

@@ -1,0 +1,228 @@
+{
+ "ts": "2026-11-20T14-37-42Z",
+ "vp": {
+  "width": 390,
+  "height": 844,
+  "tag": "port"
+ },
+ "log": [
+  {
+   "step": "menu",
+   "t": "2026-11-20T14:38:03.881Z",
+   "menuReadyMs": 17661,
+   "text": "柳真真云南烤肉 | 炭火生香，小店开张。 | 取料 → 切配 → 炭烤 → 装盘 → 上菜 | 目标：3 分钟营业额 ¥180 | 开 店"
+  },
+  {
+   "step": "started",
+   "t": "2026-11-20T14:38:13.445Z",
+   "pos": [
+    0.5,
+    1.2
+   ],
+   "cap": "去料箱取料",
+   "cur": {
+    "a": "none",
+    "l": "去料箱取料"
+   },
+   "camOpacity": "0.55",
+   "hud": "营业额 ¥0 时间 3:00 评级"
+  },
+  {
+   "step": "joystick",
+   "t": "2026-11-20T14:38:48.954Z",
+   "from": [
+    0.5,
+    1.2
+   ],
+   "afterRight": [
+    1.86,
+    1.2
+   ],
+   "afterUp": [
+    1.86,
+    0.92
+   ],
+   "dx": 1.36,
+   "dz": -0.28,
+   "cap": "去料箱取料"
+  },
+  {
+   "step": "crate",
+   "t": "2026-11-20T14:39:07.620Z",
+   "cur": {
+    "a": "take-raw",
+    "l": "取 烤五花肉拼盘"
+   },
+   "capAtCrate": "取 烤五花肉拼盘",
+   "afterTake": {
+    "stage": "raw",
+    "dish": "pork"
+   },
+   "capAfterTake": "取 烤五花肉拼盘",
+   "afterSecondTap": {
+    "stage": "raw",
+    "dish": "pork"
+   },
+   "capAfterSecond": "手上有东西"
+  },
+  {
+   "step": "chop",
+   "t": "2026-11-20T14:39:42.921Z",
+   "capAtChop": "放上砧板",
+   "seq": [
+    {
+     "tap": 1,
+     "chopLeft": 3,
+     "held": "raw",
+     "cap": "放上砧板",
+     "carrying": null
+    },
+    {
+     "tap": 2,
+     "chopLeft": 2,
+     "held": "raw",
+     "cap": "切配 0/3",
+     "carrying": null
+    },
+    {
+     "tap": 3,
+     "chopLeft": 1,
+     "held": "raw",
+     "cap": "切配 1/3",
+     "carrying": null
+    },
+    {
+     "tap": 4,
+     "chopLeft": 0,
+     "held": "chopped",
+     "cap": "切配 2/3",
+     "carrying": null
+    },
+    {
+     "tap": 5,
+     "chopLeft": 0,
+     "held": null,
+     "cap": "取回切好的串",
+     "carrying": "chopped"
+    }
+   ]
+  },
+  {
+   "step": "grill-put",
+   "t": "2026-11-20T14:39:56.590Z",
+   "capAtGrill": "上烤炉",
+   "grill": [
+    {
+     "st": "chopped",
+     "gt": 0.1
+    },
+    null,
+    null
+   ],
+   "capAfter": "上烤炉"
+  },
+  {
+   "step": "grill-mid",
+   "t": "2026-11-20T14:40:05.709Z",
+   "grill": [
+    {
+     "st": "chopped",
+     "gt": 4.6
+    },
+    null,
+    null
+   ],
+   "cap": "烤制中…",
+   "cur": {
+    "a": "none",
+    "l": "烤制中…"
+   }
+  },
+  {
+   "step": "grill-cooked",
+   "t": "2026-11-20T14:40:18.593Z",
+   "grill": [
+    {
+     "st": "cooked",
+     "gt": 9.3
+    },
+    null,
+    null
+   ],
+   "done": [
+    true,
+    false,
+    false
+   ],
+   "cap": "取烤串",
+   "cur": {
+    "a": "take-grill",
+    "l": "取烤串"
+   }
+  },
+  {
+   "step": "grill-take",
+   "t": "2026-11-20T14:40:33.216Z",
+   "carrying": {
+    "stage": "cooked",
+    "dish": "pork"
+   },
+   "cap": "取烤串",
+   "cur": {
+    "a": "take-grill",
+    "l": "取烤串"
+   }
+  },
+  {
+   "step": "console",
+   "t": "2026-11-20T14:40:40.420Z",
+   "errors": 0,
+   "warnings": 6,
+   "errSample": [],
+   "warnKinds": [
+    "THREE.Clock: This module has been deprecated. Please use THR",
+    "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Usi",
+    "[.WebGL-0x212400115b00]GL Driver Message (OpenGL, Performanc"
+   ]
+  },
+  {
+   "step": "perf",
+   "t": "2026-11-20T14:40:41.299Z",
+   "calls": 78,
+   "tris": 9368,
+   "programs": 15
+  },
+  {
+   "step": "hud",
+   "t": "2026-11-20T14:40:42.033Z",
+   "vp": [
+    390,
+    844
+   ],
+   "top": [
+    68,
+    8,
+    255,
+    36
+   ],
+   "stick": [
+    22,
+    692,
+    130,
+    130
+   ],
+   "act": [
+    288,
+    738,
+    76,
+    76
+   ],
+   "card": null,
+   "dpr": 1
+  },
+  {
+   "step": "totalWallSeconds",
+   "t": "2026-11-20T14:40:42.034Z"
+  }
+ ]
+}

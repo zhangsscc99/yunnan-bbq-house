@@ -1,0 +1,279 @@
+{
+ "mode": "portrait",
+ "part": "L",
+ "vp": {
+  "width": 390,
+  "height": 844,
+  "isMobile": true,
+  "hasTouch": true,
+  "deviceScaleFactor": 1
+ },
+ "t": "2026-11-20T22:15:37.261Z",
+ "errors": [
+  "Failed to load resource: the server responded with a status of 404 (Not Found)"
+ ],
+ "warnings": [
+  "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+  "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.",
+  "[.WebGL-0x3e4c000c8700]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+  "[.WebGL-0x3e4c000c8700]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+  "[.WebGL-0x3e4c000c8700]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+  "[.WebGL-0x3e4c000c8700]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+ ],
+ "steps": {
+  "bootMs": 48418,
+  "framesAtPanel": 8,
+  "domReadyMs": 51118,
+  "startPanel": {
+   "card": {
+    "x": 58.5,
+    "y": 301.5,
+    "w": 272.9,
+    "h": 241,
+    "fs": "16px",
+    "disp": "block",
+    "txt": "柳真真云南烤肉 炭火生香，小店开张。取料 → 切配 → 炭烤 → 装盘 → 上菜 目标：3 分钟营业"
+   },
+   "target": {
+    "x": 89.5,
+    "y": 420.5,
+    "w": 210.9,
+    "h": 32,
+    "fs": "13px",
+    "disp": "block",
+    "txt": "目标：3 分钟营业额 ¥180"
+   },
+   "btn": {
+    "x": 120,
+    "y": 470.5,
+    "w": 150,
+    "h": 45,
+    "fs": "16px",
+    "disp": "inline-block",
+    "txt": "开 店"
+   },
+   "bodyText": "营业额 | ¥0 | 时间 | 3:00 | 评级 | 柳真真云南烤肉 | 炭火生香，小店开张。 | 取料 → 切配 → 炭烤 → 装盘 → 上菜 | 目标：3 分钟营业额 ¥180 | 开 店"
+  },
+  "geo-play": {
+   "vw": 390,
+   "vh": 844,
+   "dpr": 1,
+   "els": {
+    "#bbq-stick": {
+     "x": 22,
+     "y": 692,
+     "w": 130,
+     "h": 130,
+     "right": 152,
+     "bottom": 822,
+     "fs": "16px",
+     "disp": "block",
+     "txt": ""
+    },
+    "#bbq-act": {
+     "x": 288,
+     "y": 738,
+     "w": 76,
+     "h": 76,
+     "right": 364,
+     "bottom": 814,
+     "fs": "16px",
+     "disp": "flex",
+     "txt": "去料箱取料"
+    },
+    "#bbq-act .cap": {
+     "x": 301,
+     "y": 782.5,
+     "w": 50,
+     "h": 14,
+     "right": 351,
+     "bottom": 796.5,
+     "fs": "10px",
+     "disp": "block",
+     "txt": "去料箱取料"
+    },
+    "#bbq-orders": {
+     "x": 380,
+     "y": 54,
+     "w": 0,
+     "h": 0,
+     "right": 380,
+     "bottom": 54,
+     "fs": "16px",
+     "disp": "flex",
+     "txt": ""
+    },
+    "#bbq-hud": {
+     "x": 0,
+     "y": 0,
+     "w": 390,
+     "h": 844,
+     "right": 390,
+     "bottom": 844,
+     "fs": "16px",
+     "disp": "block",
+     "txt": "营业额¥0时间3:00评级"
+    },
+    "#bbq-status": null,
+    "#bbq-guide": {
+     "x": 0,
+     "y": 0,
+     "w": 0,
+     "h": 0,
+     "right": 0,
+     "bottom": 0,
+     "fs": "14px",
+     "disp": "none",
+     "txt": ""
+    },
+    "#bbq-chopbar": null,
+    "#bbq-popups": {
+     "x": 0,
+     "y": 0,
+     "w": 390,
+     "h": 844,
+     "right": 390,
+     "bottom": 844,
+     "fs": "16px",
+     "disp": "block",
+     "txt": ""
+    }
+   },
+   "overflow": [],
+   "overlaps": [
+    "#bbq-stick ∩ #bbq-hud = 16900px²",
+    "#bbq-stick ∩ #bbq-popups = 16900px²",
+    "#bbq-act ∩ #bbq-act .cap = 700px²",
+    "#bbq-act ∩ #bbq-hud = 5776px²",
+    "#bbq-act ∩ #bbq-popups = 5776px²",
+    "#bbq-act .cap ∩ #bbq-hud = 700px²",
+    "#bbq-act .cap ∩ #bbq-popups = 700px²",
+    "#bbq-hud ∩ #bbq-popups = 329160px²"
+   ]
+  },
+  "geo-small360x640": {
+   "vw": 360,
+   "vh": 640,
+   "dpr": 1,
+   "els": {
+    "#bbq-stick": {
+     "x": 22,
+     "y": 488,
+     "w": 130,
+     "h": 130,
+     "right": 152,
+     "bottom": 618,
+     "fs": "16px",
+     "disp": "block",
+     "txt": ""
+    },
+    "#bbq-act": {
+     "x": 258,
+     "y": 534,
+     "w": 76,
+     "h": 76,
+     "right": 334,
+     "bottom": 610,
+     "fs": "16px",
+     "disp": "flex",
+     "txt": "去料箱取料"
+    },
+    "#bbq-act .cap": {
+     "x": 271,
+     "y": 578.5,
+     "w": 50,
+     "h": 14,
+     "right": 321,
+     "bottom": 592.5,
+     "fs": "10px",
+     "disp": "block",
+     "txt": "去料箱取料"
+    },
+    "#bbq-orders": {
+     "x": 350,
+     "y": 54,
+     "w": 0,
+     "h": 0,
+     "right": 350,
+     "bottom": 54,
+     "fs": "16px",
+     "disp": "flex",
+     "txt": ""
+    },
+    "#bbq-hud": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 640,
+     "right": 360,
+     "bottom": 640,
+     "fs": "16px",
+     "disp": "block",
+     "txt": "营业额¥0时间2:59评级"
+    },
+    "#bbq-status": null,
+    "#bbq-guide": {
+     "x": 0,
+     "y": 0,
+     "w": 0,
+     "h": 0,
+     "right": 0,
+     "bottom": 0,
+     "fs": "14px",
+     "disp": "none",
+     "txt": ""
+    },
+    "#bbq-chopbar": null,
+    "#bbq-popups": {
+     "x": 0,
+     "y": 0,
+     "w": 360,
+     "h": 640,
+     "right": 360,
+     "bottom": 640,
+     "fs": "16px",
+     "disp": "block",
+     "txt": ""
+    }
+   },
+   "overflow": [],
+   "overlaps": [
+    "#bbq-stick ∩ #bbq-hud = 16900px²",
+    "#bbq-stick ∩ #bbq-popups = 16900px²",
+    "#bbq-act ∩ #bbq-act .cap = 700px²",
+    "#bbq-act ∩ #bbq-hud = 5776px²",
+    "#bbq-act ∩ #bbq-popups = 5776px²",
+    "#bbq-act .cap ∩ #bbq-hud = 700px²",
+    "#bbq-act .cap ∩ #bbq-popups = 700px²",
+    "#bbq-hud ∩ #bbq-popups = 230400px²"
+   ]
+  },
+  "results": {
+   "panels": 1,
+   "txt": "营业额 | ¥0 | 时间 | 0:00 | 评级 | 打烊结算 | 目标达成，解锁下一关！ | 营业额 | ¥200 / ¥180 | 服务顾客 | 0 位 | 愤怒离店 | 0 位 | 废料 | 0 份 | 下 一 关 | 再 开 一 局"
+  },
+  "nextBtn": {
+   "x": 120,
+   "y": 486.5,
+   "w": 150,
+   "h": 45,
+   "fs": "16px",
+   "disp": "inline-block",
+   "txt": "下 一 关"
+  },
+  "afterNext": {
+   "panelsLeft": 0,
+   "state": {
+    "phase": "playing",
+    "money": 0,
+    "timeLeft": 179.6
+   },
+   "level": "2"
+  }
+ },
+ "perf": {
+  "calls": 64,
+  "tris": 8378,
+  "programs": 13
+ }
+}

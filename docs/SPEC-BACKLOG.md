@@ -330,3 +330,41 @@
 需求：先定位是 `spawnNow` 绕过了 `trySpawn` 的表冷却判断，还是 `freeTables()` 在三客时的边界问题；若为设计（上限 2），改 `GAME-DESIGN §4` 与 `LEVEL.maxDiners` 二选一。
 验收：e2e 断言 `spawnNow` 返回 `true` 时 500ms 内 `customers.length` 递增 1，连续 3 次后 `customers.length===3` 且 `#bbq-orders .card` 数为 3；或文档与 `config.LEVEL.maxDiners` 一致。
 参考：`GAME-DESIGN §4` 关卡表。
+
+---
+
+## 走查追加需求（B 编号，第 7 轮 2026-11-20 22:47Z）
+
+> 线上 `server/dist` bundle `index-DKNOBCz4.js`（21:15Z 部署）；仓库 `dist/` 21:34Z 被并行 dev cron 重建成 `index-CB3xEvNT.js` 未部署（部署滞后，非回归）。
+> 本轮专项：首屏/入口 ①、摇杆 ②、三档分辨率 HUD 安全区与热区 ⑧、结算与「下一关」⑦、控制台 ⑩。
+> 环境：load 10–16、软渲染 1–2fps、冷启动 55–72s → **本轮不评首屏时延**，只评版式与信息传达；JS error 1 条（favicon 404）。
+
+### B-035 时间积分不得因 `dt` 钳制而慢于现实（低帧率时间膨胀）
+优先级：P1
+来源：第 7 轮走查（真手指拖摇杆 2.0s → 角色位移 **2.19m**；按 `GAME-DESIGN §6` 的 3.2 m/s 应为 6.4m，有效速度仅 **1.1 m/s / 34%**。根因 `src/main.ts` 的 `dt = Math.min(clock.getDelta(), 0.1)`：5fps 时每帧只推进 0.1s → 游戏时钟 0.5×，2fps 时 0.2×。结果：低端机上「180 秒关卡」真实耗时 6–15 分钟，而 HUD 仍显示 `3:00` 倒计时，玩家只会觉得"这关怎么这么长"）
+需求：把防穿模钳制与时间积分分开——① 物理/碰撞用钳制后的 `dt`（≤0.1）逐步 substep；② 游戏时钟（`timeLeft`、耐心、烤制）走**未钳制**的真实 `dt`（上限放到 0.5 并累加器补帧），或至少 `timeLeft` 用墙钟校正；③ 当 60 帧平均帧时间 >100ms 时，HUD 给一次「设备较慢，进度按真实时间」的提示（复用 `#bbq-guide`）。
+验收：e2e 在强制低帧（`--disable-gpu` 或 `__test.tick` 驱动的墙钟场景）下跑 60s 现实时间，断言 `timeLeft` 减少量 ≥54s（误差 ≤10%）；同一条件下摇杆 2s 位移 ≥5.5m；正常帧率下所有既有断言不变（无回归）。
+参考：`GAME-DESIGN §6`（3.2 m/s）、`TECH-STACK §4`（一切走 `flow.update(dt)`）；Overcooked 的关卡计时与渲染解耦。
+
+### B-036 首屏必须展示游戏本体（去掉重度虚化，给出"3 秒想玩"）
+优先级：P2
+来源：第 7 轮走查（`port-01`/`land-01`：`.bbq-panel` 用 `backdrop-filter: blur(3px)` + `rgba(12,8,5,.45)`，vision 两轮分别判「很难辨认店面细节」「烤炉、桌子、角色均无法明确辨认」，并把"露一手画面"列为扣分项；已是第 4 轮复现的同一问题）
+需求：① 遮罩降到 `blur(1px)` / `rgba(12,8,5,.28)`，让烤炉橙光与吊灯暖光透出来；② 首屏相机静态构图画在「烤炉 + 正在烤的串 + 一位顾客」上（不是空地）；③ 卡片里加一个 **2 秒循环的出餐动效预览**（哪怕只是串在炉上翻身的 sprite 序列）；④ 目标行下面补一句"最快 3 分钟出第一单"之类的钩子。
+验收：vision 只看首屏截图能说出"看到烤炉/桌子/角色"三者中**至少两者**；首屏到可点击 ≤3s（在网络与帧率正常的环境下测，本轮环境不作数）；e2e 断言首屏存在非遮罩的 3D 画布可见区域（采样中心区域亮度方差 > 阈值）。
+参考：`ART-DIRECTION §1/§3`；Overcooked 首屏直接给你看厨房在动。
+
+### B-037 补 `favicon.ico`，控制台不得有 404
+优先级：P2
+来源：第 7 轮走查（本机直连 `http://127.0.0.1:3035/bbq/` 时控制台唯一一条 error 就是 `Failed to load resource: 404`；`curl /bbq/favicon.ico` → 404。公网因 portfolio-proxy 兜底不显形，属只有开发者会看见的脏）
+需求：加一枚 32×32 + 180×180 apple-touch-icon（店招/炭火图标，与 `ART-DIRECTION §5` 皮肤一致），`index.html` 里加 `<link rel="icon">`；`server/index.js` 已支持 `.ico` 的 MIME。
+验收：`curl -o /dev/null -w '%{http_code} %{content_type}' http://127.0.0.1:3035/bbq/favicon.ico` → `200 image/x-icon`；走查脚本记录 `errors.length === 0`。
+参考：`TECH-STACK §4`（控制台零错误基线）。
+
+### B-038 顶部状态条与订单卡补稳定 id / data 属性
+优先级：P2
+来源：第 7 轮走查（`#bbq-hud` 下只有 `#bbq-orders`/`#bbq-bubbles`/`#bbq-popups`/`#bbq-grillbars`/`#bbq-chop`/`#bbq-guide` 有 id；「营业额/时间/评级」那一行是匿名 div，本轮探针按 `#bbq-status` 取值全部 `null`，历史 review 也只能全文匹配 `innerText`）
+需求：状态条容器 `id="bbq-status"`，内部三段加 `data-hud="money|time|stars"`；订单卡加 `data-slot="0|1|2"` 与 `data-dish`；顾客气泡加 `data-table`。
+验收：e2e 可分别断言 `#bbq-status [data-hud="time"]` 文本、`#bbq-orders .card[data-slot]` 数量与 `__game.customers` 一一对应；走查脚本不再需要 `innerText` 全文匹配。
+参考：上一轮 `B-029`（DOM 断言约定）。
+
+> **B-012 补充（第 7 轮，第 4 次复现）**：`money=200 → timeLeft 0` → 结算「目标达成，解锁下一关！」→ 点主按钮后 `phase=playing / money=0 / timeLeft=179.6 / localStorage.bbq.level='2'`，`land-05` vision 判「没有任何第2关/新关卡标识或新目标文案，与开局无可见变化」。代码侧确认 `config.LEVEL` 只有一组常量、`SAVE_KEYS.level` 全仓无读取方。**同时撤回第 4 轮「达标后点进去真的进 Lv.2」的结论**——当时只验到 `timeLeft` 重置，未验关卡参数变化。

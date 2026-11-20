@@ -59,6 +59,10 @@
 实测（`e2e/grill.mjs`，本地 3035 产物连跑 3 次全 PASS，0 flake）：竖屏条 **64×8px**、字 12px、徽标全在视口内、`pointer-events:none`；
 `t=4.6`→「烤制中」、`t=9.3`→「已熟 ✓」且 hex `#e8907b→#cd8e3a` 通道差 **94**、`t=12.6`→「焦了 ✗」 hex `#241d18`、取走后 `display:none`；横屏同样 64×8；0 JS error；draw calls 75（改前 78，未上升）。
 遗留：**金色烟雾在截图上仍不可辨**（vision 复核只看到灯光光晕）→ 转 P2「烟柱可见化」。
+**[done 13d6158 / 2026-11-20 20:10Z 部署 bundle `index-Cp4XgwTC.js`] 熟度条语义修正 + 焦糊预警**（走查第 4 轮 P1-1）：
+`gb-fill` 宽度改 `min(1, t/grillTime)`（熟即 100%，实测 100%）；`gb-mark` 移到条右端（实测 left 62/64 = 97%）当熟成目标线；
+新增 `warn` 态 `t ∈ [10,12)`：文案「快焦了 Ns」+ `.warn` class + 1s 闪烁动画 + fill 转橙红 `rgb(255,122,26)`（done 金 `rgb(240,192,96)`、burnt 暗红 `rgb(142,42,28)` 三态可区分）；burnt 文案「焦了 ✗」、fill 100%、warn class 移除。
+验收：`e2e/grill.mjs` 新增 A5–A7，公网产物完整 PASS 2 次（draw calls 75 未变）；另因宿主机 swap 打满（并发走查脚本 + swiftshader）出现多次 chromium 启动期崩溃（失败均在渲染首帧，非断言），3 连跑稳定性待负载回落后复测。
 原来源：第 1 轮走查（390×844 下烤炉进度条投影仅 16×2px、串 19×1–4px，`vision` 两次判定“看不到进度条/看不清熟度”，玩家只能掐秒表）
 需求：烤位进度条改为屏幕空间恒定尺寸（或按 `1/projScale` 反向缩放 ≥60×6px）；`grillT≥6` 串材质转金 + 站点上方飘金色烟 + 一声“叮”；`grillT≥12` 转黑 + 深灰烟 + `stage=waste`。
 【第 2/3 轮复测未修】第 3 轮（17:40Z，bundle `index-DqBNZH4C.js`）在 `stage='cooked', t≈9.6` 截帧，双端 vision 均判「看不到金黄/烟/进度条，像刚放上去的生肉」；同一产物第 3 次复现。

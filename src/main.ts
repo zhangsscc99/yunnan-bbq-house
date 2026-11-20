@@ -17,7 +17,7 @@ import type { Results } from './game/flow.ts';
 import { Hud } from './ui/hud.ts';
 import { Controls } from './ui/controls.ts';
 import { Panels } from './ui/panels.ts';
-import { LEVEL } from './config.ts';
+import { COOK, LEVEL } from './config.ts';
 import { spawnCustomer } from './game/customers.ts';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
@@ -69,6 +69,7 @@ const flow = new Flow(scene, kitchen.stations, dining.tables, kitchen.grillSlots
   onResults(r: Results) { panels.showResults(r, restart); },
 });
 flow.placePlayer();
+const chopBoard = kitchen.stations.find((st) => st.id === 'chop')!;
 
 function restart(): void {
   flow.startLevel();
@@ -112,6 +113,7 @@ renderer.setAnimationLoop(() => {
   // world-anchored bubbles
   if (flow.phase === 'playing') hud.updateBubbles(flow.customers);
   hud.updateGrill(flow.grill.slots);
+  hud.updateChop(chopBoard, COOK.chopTaps);
 
   renderer.render(scene, rig.cam);
 });
@@ -169,6 +171,7 @@ const hooks: TestHooks = {
       flow.update(dt, mv, i === 0 && pressed);
     }
     hud.updateGrill(flow.grill.slots);
+    hud.updateChop(chopBoard, COOK.chopTaps);
   },
   state() {
     const g = (s: string): unknown => {

@@ -6,6 +6,7 @@ import { DISHES, LEVEL } from '../config.ts';
 import { COOK } from '../config.ts';
 import type { Customer } from '../game/types.ts';
 import type { GrillSlot } from '../game/grill.ts';
+import type { StationRuntime } from '../game/types.ts';
 
 const CSS = `
 #bbq-hud { position: absolute; inset: 0; pointer-events: none; font-family: inherit; }
@@ -76,6 +77,22 @@ const CSS = `
 .gb.burnt .gb-fill { background: #8e2a1c; }
 .gb.burnt .gb-txt { color: #ff6a4a; }
 
+#bbq-chop { position: absolute; inset: 0; overflow: hidden; }
+#bbq-chop .cb {
+  position: absolute; left: 0; top: 0; display: none; flex-direction: column; align-items: center; gap: 3px;
+  background: rgba(24,16,12,.82); border: 1.5px solid rgba(232,180,90,.55);
+  border-radius: 9px; padding: 3px 7px 4px; white-space: nowrap; will-change: transform;
+}
+#bbq-chop .cb-bar {
+  position: relative; width: 64px; height: 8px; flex: none; border-radius: 4px;
+  background: rgba(245,232,216,.18); overflow: hidden;
+}
+#bbq-chop .cb-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #f0c060; border-radius: 4px; }
+#bbq-chop .cb-txt { font-size: 13px; line-height: 15px; font-weight: 700; color: #f5e8d8; }
+#bbq-chop .cb.done { border-color: #9ecb6a; }
+#bbq-chop .cb.done .cb-fill { background: #9ecb6a; }
+#bbq-chop .cb.done .cb-txt { color: #9ecb6a; }
+
 #bbq-guide {
   position: absolute; left: 50%; bottom: calc(150px + env(safe-area-inset-bottom));
   transform: translateX(-50%); display: none; max-width: 80vw; text-align: center;
@@ -135,6 +152,8 @@ export class Hud {
   private popupsEl: HTMLElement;
   private guideEl: HTMLElement;
   private grillEl: HTMLElement;
+  private chopEl: HTMLElement;
+  private cb: { root: HTMLElement; fill: HTMLElement; txt: HTMLElement; label: string; done: boolean } | null = null;
   private gbs: { root: HTMLElement; fill: HTMLElement; txt: HTMLElement; state: string; label: string }[] = [];
   private guideTimer = 0;
   private bubbleMap = new Map<number, Bubble>();
@@ -174,6 +193,8 @@ export class Hud {
     this.popupsEl.id = 'bbq-popups';
     this.grillEl = el('div', '', this.root);
     this.grillEl.id = 'bbq-grillbars';
+    this.chopEl = el('div', '', this.root);
+    this.chopEl.id = 'bbq-chop';
     this.guideEl = el('div', '', this.root);
     this.guideEl.id = 'bbq-guide';
   }
@@ -284,6 +305,34 @@ export class Hud {
       b.root.style.display = 'flex';
       b.root.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px) translate(-50%, -100%)`;
     });
+  }
+
+  /** screen-space chop progress over the board: 切配 n/total → 已切好 ✓; hidden while the board is empty */
+  updateChop(board: StationRuntime, total: number): void {
+    let b = this.cb;
+    if (!b) {
+      const root = el('div', 'cb', this.chopEl);
+      const bar = el('div', 'cb-bar', root);
+      b = this.cb = { root, fill: el('div', 'cb-fill', bar), txt: el('div', 'cb-txt', root), label: '', done: false };
+    }
+    this.cam.updateMatrixWorld();
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    this.tmp.set(board.pos.x - 0.4, board.topY + 0.38, board.pos.z).project(this.cam);
+    const x = (this.tmp.x * 0.5 + 0.5) * w;
+    const y = (-this.tmp.y * 0.5 + 0.5) * h;
+    if (!board.held || this.tmp.z > 1 || x < 0 || x > w || y < 0 || y > h) {
+      b.root.style.display = 'none';
+      return;
+    }
+    const n = total - board.chopLeft;
+    const done = board.chopLeft <= 0;
+    const label = done ? '已切好 ✓' : `切配 ${n}/${total}`;
+    if (label !== b.label) { b.label = label; b.txt.textContent = label; }
+    if (done !== b.done) { b.done = done; b.root.classList.toggle('done', done); }
+    b.fill.style.width = `${(n / total) * 100}%`;
+    b.root.style.display = 'flex';
+    b.root.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px) translate(-50%, -100%)`;
   }
 
   /** refresh world-anchored bubbles above customers: dish name + patience ring */

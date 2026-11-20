@@ -12,7 +12,6 @@ import type { Interaction, NextTarget } from './stations.ts';
 import { NextMarker } from './nextMarker.ts';
 import { Grill } from './grill.ts';
 import { Player } from './player.ts';
-import { ProgressBar } from './progressBar.ts';
 import { disposeTree } from '../core/dispose.ts';
 import { spawnCustomer, updateCustomer } from './customers.ts';
 import type { TableRuntime } from '../world/dining.ts';
@@ -56,7 +55,7 @@ export class Flow {
   private scene: THREE.Scene;
   private ev: FlowEvents;
   private highlighter: Highlighter;
-  private chopBar: ProgressBar;
+  private cuts: THREE.Mesh[] = [];
   private marker: NextMarker;
   private spawnT = 2.5;                  // first guest soon after open
   private ordersT = 0;                  // throttle for periodic onOrders refresh
@@ -83,7 +82,16 @@ export class Flow {
     this.marker = new NextMarker(scene);
     registerNavPoints(stations, tables);
     const chop = stations.find((st) => st.id === 'chop')!;
-    this.chopBar = new ProgressBar(scene, new THREE.Vector3(chop.pos.x - 0.4, chop.topY + 0.38, chop.pos.z), 0.7);
+    const cutGeo = new THREE.PlaneGeometry(0.012, 0.34);
+    const cutMat = new THREE.MeshBasicMaterial({ color: 0x2a1a10 });
+    for (let i = 0; i < COOK.chopTaps; i++) {
+      const m = new THREE.Mesh(cutGeo, cutMat);
+      m.rotation.set(-Math.PI / 2, 0, 0.12);
+      m.position.set(chop.pos.x - 0.4 + (i - 1) * 0.13, chop.topY + 0.032, chop.pos.z);
+      m.visible = false;
+      scene.add(m);
+      this.cuts.push(m);
+    }
     // register station footprints for range checks
     for (const def of STATIONS) {
       const xs = def.cells.map((c) => c[0]);
@@ -141,7 +149,7 @@ export class Flow {
       if (s.held) { this.scene.remove(s.held.obj); s.held = null; }
       s.chopLeft = 0;
     }
-    this.chopBar.set(-1);
+    this.cuts.forEach((m) => { m.visible = false; });
     this.spawnPlayer();
     this.ev.onPhase('playing');
     this.ev.onMoney(0);
@@ -363,7 +371,8 @@ export class Flow {
     }
     if (this.denyT > 0) this.denyT -= dt;
     const board = this.station('chop');
-    this.chopBar.set(board.held ? (COOK.chopTaps - board.chopLeft) / COOK.chopTaps : -1);
+    const done = board.held ? COOK.chopTaps - board.chopLeft : 0;
+    this.cuts.forEach((m, i) => { m.visible = i < done; });
 
     // grill
     this.grill.update(dt);

@@ -64,8 +64,11 @@ function buildSkewer(dish: DishId, stage: ItemStage): THREE.Group {
   const g = new THREE.Group();
   const stick = new THREE.Mesh(stickGeo, stickMat);
   stick.rotation.z = Math.PI / 2;
+  const cut = stage !== 'raw';   // chopped pieces are smaller and tighter than the raw block
+  stick.scale.y = cut ? 0.82 : 1;
   g.add(stick);
 
+  const gap = cut ? 0.048 : 0.06;
   const burnt = stage === 'waste';
   const m = dishMat(dish, stage);
   g.userData.meat = m;
@@ -74,22 +77,23 @@ function buildSkewer(dish: DishId, stage: ItemStage): THREE.Group {
     // noodle bundle: 3 small tori along the stick
     for (let i = -1; i <= 1; i++) {
       const n = new THREE.Mesh(noodleGeo, m);
-      n.position.set(i * 0.055, 0, 0);
+      n.position.set(i * (cut ? 0.046 : 0.055), 0, 0);
       n.rotation.y = Math.PI / 2;
-      n.scale.setScalar(0.9);
+      n.scale.setScalar(cut ? 0.74 : 0.9);
       g.add(n);
     }
   } else {
     for (let i = -1; i <= 1; i++) {
       const geo = dish === 'mushroom' ? cylGeo : cubeGeo;
       const p = new THREE.Mesh(geo, m);
-      p.position.set(i * 0.06, 0.01, 0);
+      p.position.set(i * gap, 0.01, 0);
+      if (cut) p.scale.setScalar(0.82);
       if (dish === 'mushroom') p.rotation.z = i * 0.25;
       g.add(p);
       // pork belly: alternate a fat stripe
       if (dish === 'pork' && !burnt) {
         const fat = new THREE.Mesh(cubeGeo, fatMat);
-        fat.scale.set(1.02, 0.32, 1.02);
+        fat.scale.set(1.02 * (cut ? 0.82 : 1), 0.32 * (cut ? 0.82 : 1), 1.02 * (cut ? 0.82 : 1));
         fat.position.copy(p.position);
         g.add(fat);
       }

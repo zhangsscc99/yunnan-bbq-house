@@ -44,14 +44,22 @@
 - [ ] `.gitignore` 增加 `e2e/review/`、`e2e/shots/`、`dist/`、`server/dist*`、`data/`，否则每轮都留下未跟踪截图噪音。
 - [ ] THREE 控制台警告：`THREE.Clock deprecated`（改 `THREE.Timer`）、`PCFSoftShadowMap has been removed`。
 - [ ] 性能基线（390×844 竖屏）：calls 219 / tris 10824 / programs 15 — 尚可，继续克制。
+- [ ] **烤位烟柱可见化**（B-001 遗留，18:16Z 实测）：`grill.update` 已把熟后烟放大到 0.24 并转暖金 `0xd9a743`，但 390×844 截图 vision 复核仍判「看不到烟，只有灯光光晕」。
+  建议：烟改屏幕空间精灵（按 `1/projScale` 反向缩放，屏幕高 ≥24px）+ 提高 opacity 到 0.85 + 沿 Y 慢速上升 ≥1.2s；焦后转深灰。
+  验收：竖屏 `t=6` 与 `t=12` 两帧，烟体屏幕高 ≥24px，且 cooked 帧烟色与背景 ΔE > 8；`vision` 复核能指出「有烟」。
 
 ---
 
 ## 走查追加需求（B 编号，第 1 轮 2026-11-20 14:37Z）
 
 ### B-001 竖屏烤制反馈可读化
-优先级：P1
-来源：第 1 轮走查（390×844 下烤炉进度条投影仅 16×2px、串 19×1–4px，`vision` 两次判定“看不到进度条/看不清熟度”，玩家只能掐秒表）
+优先级：P1 → **done 7f065bf（2026-11-20 18:16Z 提交 / 18:25Z 部署，bundle `index-DzBLNDVh.js`）**
+修法：新增屏幕空间 HUD 层 `#bbq-grillbars`（`hud.updateGrill`，世界坐标投影 + 64×8px 恒定像素条 + 12px 状态字「烤制中 Ns / 已熟 ✓ / 焦了 ✗」，空位与出屏即隐藏）；
+`grill.slots[i].hex` 只读暴露；熟串 GOLDEN 混合提到 0.88 + 金色自发光，烟放大到 0.24 并转暖金，焦后转 `0x4a4540`。
+实测（`e2e/grill.mjs`，本地 3035 产物连跑 3 次全 PASS，0 flake）：竖屏条 **64×8px**、字 12px、徽标全在视口内、`pointer-events:none`；
+`t=4.6`→「烤制中」、`t=9.3`→「已熟 ✓」且 hex `#e8907b→#cd8e3a` 通道差 **94**、`t=12.6`→「焦了 ✗」 hex `#241d18`、取走后 `display:none`；横屏同样 64×8；0 JS error；draw calls 75（改前 78，未上升）。
+遗留：**金色烟雾在截图上仍不可辨**（vision 复核只看到灯光光晕）→ 转 P2「烟柱可见化」。
+原来源：第 1 轮走查（390×844 下烤炉进度条投影仅 16×2px、串 19×1–4px，`vision` 两次判定“看不到进度条/看不清熟度”，玩家只能掐秒表）
 需求：烤位进度条改为屏幕空间恒定尺寸（或按 `1/projScale` 反向缩放 ≥60×6px）；`grillT≥6` 串材质转金 + 站点上方飘金色烟 + 一声“叮”；`grillT≥12` 转黑 + 深灰烟 + `stage=waste`。
 【第 2/3 轮复测未修】第 3 轮（17:40Z，bundle `index-DqBNZH4C.js`）在 `stage='cooked', t≈9.6` 截帧，双端 vision 均判「看不到金黄/烟/进度条，像刚放上去的生肉」；同一产物第 3 次复现。
 验收：Playwright 在 390×844 取 `grillT=0.1/4.6/9.3/13` 四帧，断言进度条屏幕宽 ≥60px、`item.stage` 依次 chopped→chopped→cooked→waste，且 cooked 帧的串材质 hex 与 raw 帧色相差 ≥10；截图人工复核一遍。

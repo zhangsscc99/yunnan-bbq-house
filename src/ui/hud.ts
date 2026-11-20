@@ -64,12 +64,16 @@ const CSS = `
   background: rgba(245,232,216,.18); overflow: hidden;
 }
 .gb .gb-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #f0c060; border-radius: 4px; }
-.gb .gb-mark { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: rgba(24,16,12,.85); }
+.gb .gb-mark { position: absolute; right: 0; top: 0; bottom: 0; width: 2px; background: rgba(24,16,12,.85); }
 .gb .gb-txt { font-size: 12px; line-height: 14px; font-weight: 700; color: #f5e8d8; }
 .gb.done { border-color: #f0c060; }
 .gb.done .gb-txt { color: #f0c060; }
 .gb.burnt { border-color: #e05a3a; }
-.gb.burnt .gb-fill { background: #e05a3a; }
+.gb.warn { border-color: #ff7a1a; animation: gb-warn 1s ease-in-out infinite; }
+.gb.warn .gb-fill { background: #ff7a1a; }
+.gb.warn .gb-txt { color: #ff9a40; }
+@keyframes gb-warn { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+.gb.burnt .gb-fill { background: #8e2a1c; }
 .gb.burnt .gb-txt { color: #ff6a4a; }
 
 #bbq-guide {
@@ -267,15 +271,16 @@ export class Hud {
         return;
       }
       const t = item.grillT;
-      const state = t >= COOK.burnTime ? 'burnt' : t >= COOK.grillTime ? 'done' : 'cooking';
-      const label = state === 'burnt' ? '焦了 ✗' : state === 'done' ? '已熟 ✓' : `烤制中 ${Math.ceil(COOK.grillTime - t)}s`;
+      const state = t >= COOK.burnTime ? 'burnt' : t >= COOK.burnTime - 2 ? 'warn' : t >= COOK.grillTime ? 'done' : 'cooking';
+      const label = state === 'burnt' ? '焦了 ✗' : state === 'warn' ? `快焦了 ${Math.ceil(COOK.burnTime - t)}s` : state === 'done' ? '已熟 ✓' : `烤制中 ${Math.ceil(COOK.grillTime - t)}s`;
       if (label !== b.label) { b.label = label; b.txt.textContent = label; }
       if (state !== b.state) {
         b.state = state;
         b.root.classList.toggle('done', state === 'done');
+        b.root.classList.toggle('warn', state === 'warn');
         b.root.classList.toggle('burnt', state === 'burnt');
       }
-      b.fill.style.width = `${Math.min(1, t / COOK.burnTime) * 100}%`;
+      b.fill.style.width = `${Math.min(1, t / COOK.grillTime) * 100}%`;
       b.root.style.display = 'flex';
       b.root.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px) translate(-50%, -100%)`;
     });

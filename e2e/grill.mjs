@@ -167,6 +167,60 @@ try {
   await page.close();
 }
 
+// ---- A5–A7: B-021 three-state doneness bar (cooked 100% / warn flashing / burnt) ----
+{
+  const { page: p5, errors: errs5 } = await open(BASE, { width: 390, height: 844 });
+  try {
+    const si = await putSkewerOnGrill(p5);
+    const probe = () => p5.evaluate((i) => {
+      const root = document.querySelector(`#bbq-grillbars .gb[data-slot="${i}"]`);
+      const bar = root.querySelector('.gb-bar').getBoundingClientRect();
+      const fill = root.querySelector('.gb-fill');
+      const mark = root.querySelector('.gb-mark').getBoundingClientRect();
+      const it = window.__game.grill.slots[i].item;
+      return {
+        text: root.querySelector('.gb-txt').textContent, warn: root.classList.contains('warn'),
+        anim: getComputedStyle(root).animationName, animDur: getComputedStyle(root).animationDuration,
+        fillW: fill.getBoundingClientRect().width, barW: bar.width, markL: mark.left - bar.left,
+        fillColor: getComputedStyle(fill).backgroundColor, stage: it?.stage, t: it?.grillT,
+      };
+    }, si);
+
+    await sim(p5, 8.5);
+    const c = await probe();
+    assert.equal(c.stage, 'cooked');
+    assert.match(c.text, /已熟/);
+    assert.ok(c.t > 8 && c.t < 9.5, `A5) t=${c.t}`);
+    assert.ok(c.fillW >= c.barW * 0.95, `A5) cooked fill ${c.fillW}/${c.barW} < 95%`);
+    assert.ok(c.markL >= c.barW * 0.92, `A5) gb-mark left ${c.markL}/${c.barW} < 92%`);
+    assert.equal(c.warn, false, 'A5) warn must not be set when merely cooked');
+    console.log(`PASS A5) t=${c.t.toFixed(1)} 「${c.text}」 fill=${(c.fillW / c.barW * 100).toFixed(0)}% mark.left=${c.markL.toFixed(1)}/${c.barW}`);
+
+    await sim(p5, 1.9);
+    const w = await probe();
+    assert.ok(w.t >= 10 && w.t < 12, `A6) t=${w.t}`);
+    assert.match(w.text, /快焦了/, `A6) text "${w.text}"`);
+    assert.equal(w.warn, true, 'A6) warn class missing');
+    assert.notEqual(w.anim, 'none', 'A6) no animation on warn');
+    assert.ok(parseFloat(w.animDur) <= 1, `A6) animation period ${w.animDur} > 1s`);
+    assert.notEqual(w.fillColor, c.fillColor, `A6) warn fill colour same as done: ${w.fillColor}`);
+    assert.ok(w.fillW >= w.barW * 0.95, `A6) warn fill ${w.fillW}/${w.barW}`);
+    assert.equal(w.stage, 'cooked', 'A6) stage must still be cooked');
+    console.log(`PASS A6) t=${w.t.toFixed(1)} 「${w.text}」 warn anim=${w.anim} ${w.animDur} fill ${c.fillColor} -> ${w.fillColor} stage=${w.stage}`);
+
+    await sim(p5, 2.1);
+    const bt = await probe();
+    assert.ok(bt.t >= 12, `A7) t=${bt.t}`);
+    assert.match(bt.text, /焦了/, `A7) text "${bt.text}"`);
+    assert.ok(bt.fillW >= bt.barW * 0.99, `A7) burnt fill ${bt.fillW}/${bt.barW}`);
+    assert.equal(bt.warn, false, 'A7) warn class not removed');
+    assert.notEqual(bt.fillColor, w.fillColor, 'A7) burnt fill colour equals warn');
+    assert.notEqual(bt.fillColor, c.fillColor, 'A7) burnt fill colour equals done');
+    console.log(`PASS A7) t=${bt.t.toFixed(1)} 「${bt.text}」 fill=100% warn=false fill ${bt.fillColor}`);
+    assert.equal(errs5.length, 0, `A5-7) JS errors:\n${errs5.join('\n')}`);
+  } finally { await p5.close(); }
+}
+
 // ---- A4 draw calls: identical scenario (t=9.3, cooked, smoke up) vs the pre-change build ----
 async function callsAt93(url) {
   const { page: p, errors: errs } = await open(url, { width: 390, height: 844 });

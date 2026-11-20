@@ -299,10 +299,10 @@ export class Flow {
       }
       case 'discard': {
         if (p.carrying) {
-          const wasWaste = p.carrying.stage === 'waste';
+          const countsWaste = p.carrying.stage === 'waste' || p.carrying.stage === 'plated';
           disposeTree(p.carrying.obj);
           p.setCarrying(null);
-          if (wasWaste) this.waste += 1;
+          if (countsWaste) this.waste += 1;
           this.ev.onPopup(it.station!.pos.clone(), '丢弃', 'warn');
         }
         break;

@@ -48,6 +48,16 @@ const CSS = `
 .bubble svg { flex: none; }
 .bubble.angry { border-color: #e05a3a; color: #ff9a80; }
 
+#bbq-guide {
+  position: absolute; left: 50%; bottom: calc(150px + env(safe-area-inset-bottom));
+  transform: translateX(-50%); display: none; max-width: 80vw; text-align: center;
+  background: rgba(24,16,12,.82); border: 1.5px solid rgba(232,180,90,.7);
+  border-radius: 14px; padding: 8px 16px; font-size: 14px; font-weight: 700;
+  color: #f0c060; white-space: nowrap;
+}
+#bbq-guide.show { display: block; animation: bbq-guide-in .2s ease-out; }
+@keyframes bbq-guide-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
 #bbq-popups { position: absolute; inset: 0; overflow: hidden; }
 .popup {
   position: absolute; transform: translate(-50%, -50%);
@@ -95,6 +105,8 @@ export class Hud {
   private ordersEl: HTMLElement;
   private bubblesEl: HTMLElement;
   private popupsEl: HTMLElement;
+  private guideEl: HTMLElement;
+  private guideTimer = 0;
   private bubbleMap = new Map<number, Bubble>();
   private lastMoney = -1;
   private lastSec = -1;
@@ -130,6 +142,16 @@ export class Hud {
     this.bubblesEl.id = 'bbq-bubbles';
     this.popupsEl = el('div', '', this.root);
     this.popupsEl.id = 'bbq-popups';
+    this.guideEl = el('div', '', this.root);
+    this.guideEl.id = 'bbq-guide';
+  }
+
+  /** one shared guide toast, visible for 2s (re-press restarts the timer, never stacks) */
+  showGuide(text: string): void {
+    this.guideEl.textContent = text;
+    this.guideEl.classList.add('show');
+    clearTimeout(this.guideTimer);
+    this.guideTimer = window.setTimeout(() => this.guideEl.classList.remove('show'), 2000);
   }
 
   setMoney(v: number): void {

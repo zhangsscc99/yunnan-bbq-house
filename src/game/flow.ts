@@ -25,6 +25,7 @@ export interface FlowEvents {
   onOrders(customers: Customer[]): void;
   onPopup(worldPos: THREE.Vector3, text: string, kind: 'money' | 'warn' | 'ok'): void;
   onAction(action: Interaction): void;      // current button semantics
+  onGuide(text: string): void;              // action pressed with nothing in reach
   onResults(r: Results): void;
 }
 
@@ -104,6 +105,7 @@ export class Flow {
   private spawnPlayer(): void {
     const s = cellToWorld(PLAYER_SPAWN[0], PLAYER_SPAWN[1]);
     this.player.obj.position.set(s.x, 0, s.z);
+    this.player.obj.rotation.y = 0;   // face +z: the crate row
   }
 
   /** where the player should head next; null outside the playing phase */
@@ -304,7 +306,8 @@ export class Flow {
         break;
       }
       case 'none':
-        this.denyT = 0.25;
+        if (it.guide) this.ev.onGuide(it.label);
+        else this.denyT = 0.25;
         break;
     }
   }

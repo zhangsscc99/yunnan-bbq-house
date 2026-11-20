@@ -163,7 +163,7 @@ export class Controls {
     });
   }
 
-  setAction(icon: string, caption: string, enabled: boolean, deny: boolean): void {
+  setAction(icon: string, caption: string, enabled: boolean, deny: boolean, guide = false): void {
     if (icon !== this.lastIcon) {
       this.lastIcon = icon;
       this.actIcon.innerHTML = ICONS[icon] ?? ICONS.none;
@@ -172,7 +172,7 @@ export class Controls {
       this.lastCap = caption;
       this.actCap.textContent = caption;
     }
-    this.act.style.opacity = enabled ? '1' : '0.55';
+    this.act.style.opacity = enabled || guide ? '1' : '0.55';
     if (deny !== this.deny) {
       this.deny = deny;
       this.act.classList.toggle('deny', deny);

@@ -65,6 +65,7 @@ const flow = new Flow(scene, kitchen.stations, dining.tables, kitchen.grillSlots
   onOrders(customers) { hud.setOrders(customers); },
   onPopup(pos, text, kind) { hud.popup(pos, text, kind); },
   onAction(a: Interaction) { currentAction = a; },
+  onGuide(text: string) { hud.showGuide(text); },
   onResults(r: Results) { panels.showResults(r, restart); },
 });
 flow.placePlayer();
@@ -106,7 +107,7 @@ renderer.setAnimationLoop(() => {
 
   // action button semantics
   const enabled = currentAction.action !== 'none';
-  controls.setAction(currentAction.icon, currentAction.label, enabled, flow.denyActive());
+  controls.setAction(currentAction.icon, currentAction.label, enabled, flow.denyActive(), !!currentAction.guide);
 
   // world-anchored bubbles
   if (flow.phase === 'playing') hud.updateBubbles(flow.customers);

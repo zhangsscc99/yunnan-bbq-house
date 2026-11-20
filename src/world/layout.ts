@@ -41,7 +41,7 @@ export const TABLES: TableDef[] = [
 ];
 
 export const DOOR: [number, number] = [0.7, 0.4];      // customer entry (cell coords)
-export const PLAYER_SPAWN: [number, number] = [6, 5.2];
+export const PLAYER_SPAWN: [number, number] = [3, 4];
 
 const blocked = new Set<string>();
 for (const s of STATIONS) for (const [cx, cz] of s.cells) blocked.add(`${cx},${cz}`);

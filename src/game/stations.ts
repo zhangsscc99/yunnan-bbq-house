@@ -15,6 +15,7 @@ export interface Interaction {
   table?: TableRuntime;
   icon: string;               // svg icon key for ui/controls
   glyph: string;              // world-space single-char marker
+  guide?: boolean;            // nothing in reach: button shows a "where to go" hint instead of a dead key
 }
 
 const META: Record<ActionKind, { icon: string; glyph: string }> = {
@@ -135,7 +136,7 @@ export function resolveInteraction(
     }
   }
 
-  if (!nearStation) return mk('none', nextHint(carrying, grill));
+  if (!nearStation) return { ...mk('none', nextHint(carrying, grill)), guide: true };
 
   switch (nearStation.kind) {
     case 'crate':

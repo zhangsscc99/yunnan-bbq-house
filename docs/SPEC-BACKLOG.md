@@ -264,8 +264,10 @@
 验收：双端 + 4 个角落位置（`teleport(±5,±4.5)`）截图，逐列亮度均值**不存在连续 ≥24px 且 <26 的近黑列**；`npx tsc --noEmit` 通过；draw calls 仍 ≤120。
 参考：Overcooked 关卡外始终有可读场景边界。
 
-### B-026 上错菜必须有出路指引（错菜 → 垃圾桶）
+### [done dd628f5 / 2026-11-20 21:15Z 部署 bundle `index-DKNOBCz4.js`] B-026 上错菜必须有出路指引（错菜 → 垃圾桶）
 优先级：P1
+修法：`stations.ts` 抽出 `matchingGuest()`，`nextTarget()` 的 `plated` 无匹配顾客时返回 `bin`（不再 null）；`nextHint()` 加 `hasGuest` 参数 → 「去垃圾桶丢掉」；错桌边按钮文案 `这桌要的是 烤菌子 · 去垃圾桶丢掉`（别桌有人点则「· 送去别桌」）；`flow.ts` 的 `discard` 对 `plated` 也 `waste+1`。
+验收实物：`e2e/wrong-dish.mjs` 四条（A1 hint.id=bin / A2 按钮含「丢」/ A3 discard 后 waste 0→1 / A4 正确菜 hint=t2 且「上菜」）对公网产物连跑 2 次全 PASS、0 JS error；`smoke.mjs` 回归 OK（67 calls / 8674 tris）；tsc+build 通过。
 来源：第 5 轮走查（端烤五花肉走到点菌子的客桌：按钮 `action='none'`/opacity .55/文案「这桌要的是 烤菌子」，走开则退回「送去客桌」，`state().hint === null`，全程无「丢」字样）
 需求：`nextHint()` 在 `plated` 且当前无匹配 `seated` 顾客时返回「去垃圾桶丢弃」；`#bbq-act` 在错菜状态下给一次 2s toast（复用 `#bbq-guide`）说明"这盘没人要，去垃圾桶丢掉"；`discard` 接受 `plated` 并计 `waste`。
 验收：e2e 断言——错菜状态下 `state().hint.id === 'bin'`；按钮或 toast 文本含「丢」；走到垃圾桶按一次后 `carrying=null && waste+1`；连跑 3 次无 flake。

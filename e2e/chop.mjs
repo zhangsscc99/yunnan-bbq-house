@@ -49,7 +49,11 @@ async function at(page, id, want) {
 }
 /** a real pointer press on #bbq-act, then let the render loop consume it (two rAFs) */
 async function tapAct(page) {
-  await page.click('#bbq-act', { timeout: 10000 });
+  const { cx, cy } = await page.evaluate(() => {
+    const r = document.querySelector('#bbq-act').getBoundingClientRect();
+    return { cx: r.x + r.width / 2, cy: r.y + r.height / 2 };
+  });
+  await page.touchscreen.tap(cx, cy);
   await raf2(page);
 }
 

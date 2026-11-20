@@ -40,12 +40,12 @@ const CSS = `
 #bbq-bubbles { position: absolute; inset: 0; overflow: hidden; }
 .bubble {
   position: absolute; transform: translate(-50%, -100%);
-  background: rgba(24,16,12,.78); border: 1.5px solid rgba(232,180,90,.55);
-  border-radius: 10px; padding: 4px 8px; font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(24,16,12,.8); border: 1.5px solid rgba(232,180,90,.55);
+  border-radius: 16px; padding: 3px 10px 3px 4px; font-size: 12px; font-weight: 600;
   color: #f5e8d8; white-space: nowrap; transition: opacity .2s;
 }
-.bubble .pat { display: block; height: 3px; border-radius: 2px; margin-top: 3px;
-  background: #f0c060; }
+.bubble svg { flex: none; }
 .bubble.angry { border-color: #e05a3a; color: #ff9a80; }
 
 #bbq-popups { position: absolute; inset: 0; overflow: hidden; }
@@ -68,6 +68,18 @@ const STAR = (filled: boolean): string => `
   <path d="M12 2.6l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.5 6.1 20.6l1.2-6.5L2.5 9.5l6.6-.9z"/>
 </svg>`;
 
+const RING_R = 12;
+const RING_C = 2 * Math.PI * RING_R;
+
+interface Bubble {
+  root: HTMLElement;
+  arc: SVGElement;
+  nm: HTMLElement;
+  label: string;
+  frac: number;
+  angry: boolean;
+}
+
 function el(tag: string, cls: string, parent: HTMLElement): HTMLElement {
   const e = document.createElement(tag);
   e.className = cls;
@@ -83,7 +95,7 @@ export class Hud {
   private ordersEl: HTMLElement;
   private bubblesEl: HTMLElement;
   private popupsEl: HTMLElement;
-  private bubbleMap = new Map<number, HTMLElement>();
+  private bubbleMap = new Map<number, Bubble>();
   private lastMoney = -1;
   private lastSec = -1;
   private cam: THREE.Camera;
@@ -179,7 +191,7 @@ export class Hud {
     };
   }
 
-  /** refresh world-anchored bubbles above customers */
+  /** refresh world-anchored bubbles above customers: dish name + patience ring */
   updateBubbles(customers: Customer[]): void {
     const live = new Set<number>();
     for (const c of customers) {
@@ -187,26 +199,44 @@ export class Hud {
       live.add(c.id);
       let b = this.bubbleMap.get(c.id);
       if (!b) {
-        b = el('div', 'bubble', this.bubblesEl);
+        const root = el('div', 'bubble', this.bubblesEl);
+        root.innerHTML = `<svg width="26" height="26" viewBox="0 0 30 30">
+          <circle cx="15" cy="15" r="${RING_R}" fill="none" stroke="rgba(240,192,96,.22)" stroke-width="3.5"/>
+          <circle class="arc" cx="15" cy="15" r="${RING_R}" fill="none" stroke="#f0c060" stroke-width="3.5"
+            stroke-linecap="round" stroke-dasharray="${RING_C}" stroke-dashoffset="0" transform="rotate(-90 15 15)"/></svg>
+          <span class="nm"></span>`;
+        b = {
+          root,
+          arc: root.querySelector('.arc') as SVGElement,
+          nm: root.querySelector('.nm') as HTMLElement,
+          label: '', frac: -1, angry: false,
+        };
         this.bubbleMap.set(c.id, b);
       }
       const head = c.obj.position.clone();
       head.y += 1.35;
       const p = this.project(head);
-      if (!p) { b.style.opacity = '0'; continue; }
-      b.style.opacity = '1';
-      b.style.left = `${p.x}px`;
-      b.style.top = `${p.y}px`;
+      if (!p) { b.root.style.opacity = '0'; continue; }
+      b.root.style.opacity = '1';
+      b.root.style.left = `${p.x}px`;
+      b.root.style.top = `${Math.max(p.y, 66)}px`;
       const frac = c.phase === 'eating' ? 1 : Math.max(0, c.patience / c.patienceMax);
       const angry = c.phase === 'seated' && frac < 0.25;
-      b.classList.toggle('angry', angry);
       const label = c.phase === 'walking-in' ? '…' : c.phase === 'eating' ? '用餐中' : DISHES[c.dish].name;
-      const col = frac < 0.25 ? '#e05a3a' : '#f0c060';
-      b.innerHTML = `${label}<span class="pat" style="width:${(frac * 100).toFixed(0)}%;background:${col}"></span>`;
+      if (label !== b.label) { b.label = label; b.nm.textContent = label; }
+      if (Math.abs(frac - b.frac) > 0.005) {
+        b.frac = frac;
+        b.arc.setAttribute('stroke-dashoffset', String(RING_C * (1 - frac)));
+      }
+      if (angry !== b.angry) {
+        b.angry = angry;
+        b.root.classList.toggle('angry', angry);
+        b.arc.setAttribute('stroke', angry ? '#e05a3a' : '#f0c060');
+      }
     }
     for (const [id, b] of this.bubbleMap) {
       if (!live.has(id)) {
-        b.remove();
+        b.root.remove();
         this.bubbleMap.delete(id);
       }
     }

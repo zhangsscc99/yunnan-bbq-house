@@ -55,6 +55,46 @@ export function nextHint(carrying: Item | null, grill: Grill): string {
   }
 }
 
+export interface NextTarget {
+  kind: 'station' | 'table';
+  id: string;
+  pos: { x: number; z: number };
+}
+
+// where the player stands for each station / table (filled once by the Flow)
+const NAV = new Map<string, { x: number; z: number }>();
+
+export function registerNavPoints(stations: StationRuntime[], tables: TableRuntime[]): void {
+  NAV.clear();
+  for (const s of stations) NAV.set(s.id, { x: s.usePos.x, z: s.usePos.z });
+  for (const t of tables) NAV.set(t.id, { x: t.usePos.x, z: t.usePos.z });
+}
+
+/** world-space counterpart of nextHint: the spot to walk to next, or null if there is none */
+export function nextTarget(
+  carrying: Item | null,
+  grill: Grill,
+  tables: TableRuntime[],
+  customers: Customer[],
+): NextTarget | null {
+  const at = (kind: NextTarget['kind'], id: string): NextTarget | null => {
+    const pos = NAV.get(id);
+    return pos ? { kind, id, pos: { x: pos.x, z: pos.z } } : null;
+  };
+  switch (carrying?.stage) {
+    case 'raw': return at('station', 'chop');
+    case 'chopped': return at('station', 'grill');
+    case 'cooked': return at('station', 'plate');
+    case 'waste': return at('station', 'bin');
+    case 'plated': {
+      const guest = customers.find((c) => c.phase === 'seated' && c.dish === carrying.dish
+        && tables.some((t) => t.id === c.table));
+      return guest ? at('table', guest.table) : null;
+    }
+    default: return at('station', grill.readySlot() ? 'grill' : 'crate-pork');
+  }
+}
+
 export function resolveInteraction(
   p: THREE.Vector3,
   carrying: Item | null,

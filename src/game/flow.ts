@@ -7,8 +7,9 @@ import { COOK, DISHES, LEVEL, PLAYER, SAVE_KEYS } from '../config.ts';
 import type { DishId } from '../config.ts';
 import type { StationRuntime, Customer, Item, GamePhase } from './types.ts';
 import { createItem, setItemStage } from './items.ts';
-import { resolveInteraction, Highlighter, setFootprint } from './stations.ts';
-import type { Interaction } from './stations.ts';
+import { resolveInteraction, Highlighter, setFootprint, nextTarget, registerNavPoints } from './stations.ts';
+import type { Interaction, NextTarget } from './stations.ts';
+import { NextMarker } from './nextMarker.ts';
 import { Grill } from './grill.ts';
 import { Player } from './player.ts';
 import { ProgressBar } from './progressBar.ts';
@@ -55,6 +56,7 @@ export class Flow {
   private ev: FlowEvents;
   private highlighter: Highlighter;
   private chopBar: ProgressBar;
+  private marker: NextMarker;
   private spawnT = 2.5;                  // first guest soon after open
   private chopFlash = 0;
   private denyT = 0;
@@ -76,6 +78,8 @@ export class Flow {
     this.grill = new Grill(grillSlots);
     this.grill.attachTo(scene);
     this.highlighter = new Highlighter(scene);
+    this.marker = new NextMarker(scene);
+    registerNavPoints(stations, tables);
     const chop = stations.find((st) => st.id === 'chop')!;
     this.chopBar = new ProgressBar(scene, new THREE.Vector3(chop.pos.x - 0.4, chop.topY + 0.38, chop.pos.z), 0.7);
     // register station footprints for range checks
@@ -100,6 +104,13 @@ export class Flow {
   private spawnPlayer(): void {
     const s = cellToWorld(PLAYER_SPAWN[0], PLAYER_SPAWN[1]);
     this.player.obj.position.set(s.x, 0, s.z);
+  }
+
+  /** where the player should head next; null outside the playing phase */
+  get hint(): NextTarget | null {
+    return this.phase === 'playing'
+      ? nextTarget(this.player.carrying, this.grill, this.tables, this.customers)
+      : null;
   }
 
   get stationById(): Map<string, StationRuntime> {
@@ -302,7 +313,10 @@ export class Flow {
 
   update(dt: number, move: THREE.Vector2, actionPressed: boolean): void {
     this.highlighter.update(dt);
-    if (this.phase !== 'playing') return;
+    if (this.phase !== 'playing') {
+      this.marker.set(null);
+      return;
+    }
 
     // timer
     this.timeLeft -= dt;
@@ -329,6 +343,8 @@ export class Flow {
     } else {
       this.highlighter.hide();
     }
+    this.marker.set(this.current.action === 'none' ? this.hint : null);
+    this.marker.update(dt);
     this.ev.onAction(this.current);
     if (actionPressed) this.act(this.current);
 

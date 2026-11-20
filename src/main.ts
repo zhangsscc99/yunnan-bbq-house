@@ -179,6 +179,7 @@ const hooks: TestHooks = {
       served: flow.served,
       angry: flow.angry,
       waste: flow.waste,
+      hint: ((h) => h ? { kind: h.kind, id: h.id, x: +h.pos.x.toFixed(2), z: +h.pos.z.toFixed(2) } : null)(flow.hint),
       carrying: flow.player.carrying
         ? { dish: flow.player.carrying.dish, stage: flow.player.carrying.stage }
         : null,

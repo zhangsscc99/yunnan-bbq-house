@@ -1,6 +1,6 @@
 // E2E smoke: drives the real game via __test hooks. __test.tick(dt,n) steps
 // the simulation synchronously, so wall-clock render rate doesn't matter.
-// Asserts: 拿料→切→烤→装盘→上菜→收款 + 烤焦丢弃 + 耐心归零愤怒离店.
+// Asserts: next-step hint (料箱→切配台→烤炉→装盘台→桌→料箱), 拿料→切→烤→装盘→上菜→收款 + 烤焦丢弃 + 耐心归零愤怒离店.
 // Usage: node e2e/smoke.mjs   (set BBQ_URL; default dev :5176)
 
 const { chromium } = await import('playwright');
@@ -54,10 +54,22 @@ const actionIs = async (want, desc) => {
   return s;
 };
 
+// hint must name the expected target and sit on that station/table (±0.3)
+async function hintIs(id, kind) {
+  const s = await check(`hint=${id}`, (s) => s.hint?.id === id);
+  assert.equal(s.hint.kind, kind, `hint kind for ${id}`);
+  const ref = (kind === 'table' ? s.tables : s.stations)[id];
+  assert.ok(ref, `no state entry for ${id}`);
+  assert.ok(Math.abs(s.hint.x - ref.x) <= 0.3 && Math.abs(s.hint.z - ref.z) <= 0.3,
+    `hint (${s.hint.x},${s.hint.z}) off target ${id} (${ref.x},${ref.z})`);
+  return s;
+}
+
 // --- start (pause auto-spawn for deterministic guests) ---
 await test('start()');
 await test('pauseSpawns(true)');
 assert.equal((await state()).phase, 'playing');
+await hintIs('crate-pork', 'station');
 
 // --- seat a customer who wants pork ---
 assert.equal(await test("spawnNow('pork')"), true, 'no free table for spawn');
@@ -73,6 +85,7 @@ await sim(0.1);
 await actionIs('take-raw', 'action=take-raw at crate');
 await act();
 await check('carrying raw', (s) => s.carrying?.stage === 'raw');
+await hintIs('chop', 'station');
 console.log('PASS 取料(raw skewer)');
 
 // --- 切配: place + 3 taps + pick up ---
@@ -85,6 +98,7 @@ for (let i = 0; i < 3; i++) await act();                // 3 taps
 await check('chopped on board', (s) => s.chop?.held === 'chopped');
 await act();                                            // pick up
 await check('carrying chopped', (s) => s.carrying?.stage === 'chopped');
+await hintIs('grill', 'station');
 console.log('PASS 切配(3 taps → chopped)');
 
 // --- 炭烤: place, sim 6.5s, take ---
@@ -96,8 +110,14 @@ await check('on grill', (s) => s.grill.some((g) => g && g.stage === 'chopped') &
 await sim(6.5);
 await check('cooked on grill', (s) => s.grill.some((g) => g && g.stage === 'cooked'));
 await actionIs('take-grill', 'action=take-grill');
+await test("teleportToStation('crate-pork')");           // empty-handed + ready skewer → grill beats crate
+await sim(0.1);
+await hintIs('grill', 'station');
+await test("teleportToStation('grill')");
+await sim(0.1);
 await act();
 await check('carrying cooked', (s) => s.carrying?.stage === 'cooked');
+await hintIs('plate', 'station');
 console.log('PASS 炭烤(6s → cooked)');
 
 // --- 装盘 ---
@@ -106,6 +126,7 @@ await sim(0.1);
 await actionIs('plate', 'action=plate');
 await act();
 await check('carrying plated', (s) => s.carrying?.stage === 'plated');
+await hintIs(guest.table, 'table');
 console.log('PASS 装盘');
 
 // --- 上菜 + 收款 ---
@@ -117,6 +138,7 @@ await act();
 const paid = await check('money in', (s) => s.money > money0);
 assert.equal(paid.served, 1);
 assert.equal(paid.carrying, null);
+await hintIs('crate-pork', 'station');
 console.log(`PASS 上菜→收款 +¥${paid.money}`);
 
 // --- 烤焦 → 丢弃 ---
@@ -136,11 +158,13 @@ await sim(13);                                          // > burnTime → waste
 await check('burnt on grill', (s) => s.grill.some((g) => g && g.stage === 'waste'));
 await act();                                            // take burnt
 await check('carrying waste', (s) => s.carrying?.stage === 'waste');
+await hintIs('bin', 'station');
 await test("teleportToStation('bin')");
 await sim(0.1);
 await actionIs('discard', 'action=discard at bin');
 await act();
 await check('waste counted', (s) => s.waste === 1 && !s.carrying);
+await hintIs('crate-pork', 'station');
 console.log('PASS 烤焦→丢弃(waste=1)');
 
 // --- 耐心归零 → 愤怒离店 ---

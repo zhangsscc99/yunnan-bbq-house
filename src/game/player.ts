@@ -20,6 +20,8 @@ const blobGeo = new THREE.CircleGeometry(0.3, 14);
 const blobMat = new THREE.MeshBasicMaterial({
   color: 0x000000, transparent: true, opacity: 0.32, depthWrite: false,
 });
+blobGeo.userData.shared = true;
+blobMat.userData.shared = true;
 
 // merge every same-material part in place → ~7 draws per character
 function collapse(parts: THREE.Group): void {

@@ -153,6 +153,7 @@ export class Grill {
       (p.sprite.material as THREE.SpriteMaterial).opacity = 0.5 * (1 - k);
       if (k >= 1) {
         this.group.remove(p.sprite);
+        (p.sprite.material as THREE.Material).dispose();
         this.puffs.splice(i, 1);
       }
     }
@@ -164,7 +165,7 @@ export class Grill {
       s.item = null;
       s.barBg.visible = s.barFill.visible = false;
     }
-    for (const p of this.puffs) this.group.remove(p.sprite);
+    for (const p of this.puffs) { this.group.remove(p.sprite); (p.sprite.material as THREE.Material).dispose(); }
     this.puffs = [];
   }
 }

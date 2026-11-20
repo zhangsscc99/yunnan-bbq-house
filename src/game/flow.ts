@@ -12,6 +12,7 @@ import type { Interaction } from './stations.ts';
 import { Grill } from './grill.ts';
 import { Player } from './player.ts';
 import { ProgressBar } from './progressBar.ts';
+import { disposeTree } from '../core/dispose.ts';
 import { spawnCustomer, updateCustomer } from './customers.ts';
 import type { TableRuntime } from '../world/dining.ts';
 import { STATIONS, PLAYER_SPAWN, cellToWorld } from '../world/layout.ts';
@@ -116,7 +117,7 @@ export class Flow {
     this.waste = 0;
     this.spawnT = 2.0;
     // clear leftovers
-    for (const c of this.customers) this.scene.remove(c.obj);
+    for (const c of this.customers) { this.scene.remove(c.obj); disposeTree(c.obj); }
     this.customers.length = 0;
     for (const t of this.tables) { t.guest = null; t.cooldown = 0; }
     this.grill.reset();
@@ -284,6 +285,7 @@ export class Flow {
       case 'discard': {
         if (p.carrying) {
           const wasWaste = p.carrying.stage === 'waste';
+          disposeTree(p.carrying.obj);
           p.setCarrying(null);
           if (wasWaste) this.waste += 1;
           this.ev.onPopup(it.station!.pos.clone(), '丢弃', 'warn');
@@ -361,7 +363,7 @@ export class Flow {
           table.guest = null;
           table.cooldown = LEVEL.tableCooldown;
           const plate = (cc as unknown as { _plate?: THREE.Object3D })._plate;
-          if (plate) this.scene.remove(plate);
+          if (plate) { this.scene.remove(plate); disposeTree(plate); }
           const i = this.customers.indexOf(cc);
           if (i >= 0) this.customers.splice(i, 1);
           this.ev.onOrders(this.customers);

@@ -8,6 +8,7 @@ import type { DishId } from '../config.ts';
 import type { Customer } from './types.ts';
 import type { TableRuntime } from '../world/dining.ts';
 import { buildChibi } from './player.ts';
+import { disposeTree } from '../core/dispose.ts';
 
 const WALK_SPEED = 1.6;
 
@@ -148,6 +149,7 @@ export function updateCustomer(
       if (stepToward(c, door, dt)) {
         c.phase = 'gone';
         ctx.scene.remove(c.obj);
+        disposeTree(c.obj);
         ctx.onGone(c);
       }
       break;

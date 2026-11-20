@@ -22,6 +22,10 @@ const plateMat = new THREE.MeshStandardMaterial({ color: 0xe8e2d4, roughness: 0.
 const bowlMat = new THREE.MeshStandardMaterial({ color: 0x7a4a30, roughness: 0.5, side: THREE.DoubleSide });
 const fatMat = new THREE.MeshStandardMaterial({ color: 0xf5d0b8, roughness: 0.6 });
 
+for (const r of [stickGeo, cubeGeo, cylGeo, noodleGeo, plateGeo, plateRimGeo, bowlGeo, stickMat, plateMat, bowlMat, fatMat]) {
+  r.userData.shared = true;
+}
+
 const GOLDEN = new THREE.Color(0xcf7d2a);
 const CHAR = new THREE.Color(0x241d18);
 const RAW_TINT = new THREE.Color(0xffe8e0);

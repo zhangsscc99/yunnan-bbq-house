@@ -1,0 +1,103 @@
+{
+ "view": "port",
+ "shots": [
+  "/tmp/r5c-port/port-01-hud.png",
+  "/tmp/r5c-port/port-02-bot-end.png",
+  "/tmp/r5c-port/port-03-settle-bot.png",
+  "/tmp/r5c-port/port-04-scene-two-guests.png",
+  "/tmp/r5c-port/port-05-scene-kitchen.png"
+ ],
+ "errors": [],
+ "warns": [
+  "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+  "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+ ],
+ "hudLive": {
+  "act": {
+   "fs": "16px",
+   "x": 288,
+   "y": 738,
+   "w": 76,
+   "h": 76,
+   "op": "1"
+  },
+  "cap": {
+   "fs": "10px",
+   "x": 301,
+   "y": 783,
+   "w": 50,
+   "h": 14,
+   "op": "1"
+  },
+  "stick": {
+   "fs": "16px",
+   "x": 22,
+   "y": 692,
+   "w": 130,
+   "h": 130,
+   "op": "0.85"
+  },
+  "orders": {
+   "fs": "16px",
+   "x": 380,
+   "y": 54,
+   "w": 0,
+   "h": 0,
+   "op": "1"
+  },
+  "top": null,
+  "hudRoot": {
+   "fs": "16px",
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "op": "1"
+  },
+  "money": null
+ },
+ "hudTexts": [],
+ "bot": {
+  "dishes": 12,
+  "last": [
+   {
+    "dish": "pork",
+    "table": "t1",
+    "money": 514,
+    "served": 10,
+    "timeLeft": 26.6
+   },
+   {
+    "dish": "pork",
+    "table": "t4",
+    "money": 575,
+    "served": 11,
+    "timeLeft": 10.8
+   },
+   {
+    "dish": "pork",
+    "table": "t1",
+    "money": 575,
+    "served": 11,
+    "timeLeft": 0
+   }
+  ],
+  "finalPhase": "results",
+  "simSecondsUsed": 180
+ },
+ "botState": {
+  "money": 575,
+  "served": 11,
+  "angry": 0,
+  "waste": 0,
+  "timeLeft": 0
+ },
+ "settle": "打烊结算\n目标达成，解锁下一关！\n营业额\n¥575 / ¥180\n服务顾客\n11 位\n愤怒离店\n0 位\n废料\n0 份\n下 一 关\n再 开 一 局",
+ "stars": [
+  "stars-big"
+ ],
+ "perf": {
+  "calls": 87,
+  "tris": 9666
+ }
+}

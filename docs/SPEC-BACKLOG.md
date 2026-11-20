@@ -75,7 +75,7 @@
 优先级：P0（已止血，防复发）
 来源：第 1 轮走查（13:37Z–14:28Z 公网 502 约 50 分钟：仓库默认 3031 被 Saltline 的 pm2 serve 占用，proxy 指 3035；`pm2 list` 里没有 yunnan-bbq）
 需求：端口只在 `ecosystem.config.cjs` 定义一次，`server/index.js`/`ci-deploy.sh`/文档全部读它（或读同一 `.env`）；`ci-deploy.sh` 健康检查打 proxy 实际使用的端口；`pm2 save` 后校验只有一个 yunnan-bbq 实例。
-验收：`pm2 delete yunnan-bbq && bash scripts/ci-deploy.sh` 在干净环境一把过（DEPLOY OK），随后 `curl /bbq/` 与 `/bbq/api/health` 均 200；人为占用 3035 时脚本必须失败并回滚，不许静默。
+验收：`pm2 delete yunnan-bbq && bash scripts/ci-deploy.sh` 在干净环境一把过（DEPLOY OK），随后 `curl /bbq/` 与 `curl 127.0.0.1:3035/api/health` 均 200；人为占用 3035 时脚本必须失败并回滚，不许静默。**注意**：公网 `/bbq/api/health` 目前被 proxy 的 SPA 兜底吃掉（返回 index.html，200 假阳性），健康检查只能打本机端口，或先修 proxy 把 `/bbq/api/*` 直通。
 参考：本轮 502 事故时间线（PRODUCT-REVIEW P0-1）。
 
 ### B-006 阴影接口与 THREE 警告清零

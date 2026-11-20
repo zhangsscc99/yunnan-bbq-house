@@ -45,7 +45,7 @@
 1. **公网 502，持续约 50 分钟（13:37Z 观测 → 14:29Z 恢复）**
    - 复现：`curl -si https://openfolio.uk/bbq/` → `HTTP/2 502`；`pm2 list | grep bbq` 无 yunnan-bbq；`ss -ltnp | grep 3031` → `node /www/moved/.../pm2/lib/API/Serve.js`（Saltline 的 `pm2 serve` 占着 3031）；proxy `BBQ_URL` 默认 `127.0.0.1:3035`，指向空端口。
    - 截图：本轮无（502 无画面可截）；证据为 curl 头 + pm2/ss 输出（见本轮 run json 之外的 shell 记录）。
-   - 现状：14:29Z 起 `pm2 id 33 yunnan-bbq` online，`PORT=3035` 已全仓统一（commit `1511938`），`/bbq/` 200。**验收：**`curl -o /dev/null -w '%{http_code}' https://openfolio.uk/bbq/` 连续 3 次 200 + `curl /bbq/api/health` 返回 `{"ok":true}` + `pm2 list` 只有 1 个 yunnan-bbq 实例。
+   - 现状：14:29Z 起 `pm2 id 33 yunnan-bbq` online，`PORT=3035` 已全仓统一（commit `1511938`），`/bbq/` 200。**验收：**`curl -o /dev/null -w '%{http_code}' https://openfolio.uk/bbq/` 连续 3 次 200 + `curl 127.0.0.1:3035/api/health` 返回 `{"ok":true}`（注意：**公网 `/bbq/api/health` 返回的是 index.html，200 假阳性**，见 P2-7）+ `pm2 list` 只有 1 个 yunnan-bbq 实例。
 
 ### P1 明显缺陷
 1. **竖屏烤制反馈不可读**（本作核心循环的关键反馈缺失）
@@ -72,6 +72,7 @@
 4. 左上遮阳篷/布幔边缘锯齿破碎（`land-02-start` 左上角）。
 5. 切配可加长按连切（≥0.25s 按住自动推进），5 次点按 → 1 次按住。
 6. 无加载指示：软件渲染下首帧 6–17s 是纯黑背景；真机基线未知，建议首屏先出 HUD 骨架 + 进度点。
+7. **公网 `/bbq/api/health` 返回 index.html（200 假阳性）**：本机 `127.0.0.1:3035/api/health` 正常返回 `{"ok":true}`，但经 proxy 后 `/bbq/api/health` 落到 SPA 兜底。外部监控若打这个地址会永远“健康”。**验收：**公网该路径返回 `application/json` + `{"ok":true}`，或监控改用 `/bbq/assets/<hash>.js` 200 + 首帧 `__game.phase` 双重校验。
 
 ### 与本轮 SPEC 的差距（引用条款）
 - **GAME-DESIGN §7**「烤熟：串变金黄 + 『叮』+ 站点上方飘烟变金」→ 现状：无音效、无可见变金、烟在 0.14 缩放（≈6px）下不可辨；进度条 16×2px。**→ P1-1**

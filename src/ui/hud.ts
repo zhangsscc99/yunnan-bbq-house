@@ -36,6 +36,9 @@ const CSS = `
 #bbq-orders .card .nm { font-size: 13px; color: #f5e8d8; font-weight: 600; line-height: 1.25; }
 #bbq-orders .card .pr { font-size: 11px; color: #f0c060; font-weight: 600; }
 #bbq-orders .card.angry { border-color: rgba(224,90,58,.8); }
+@media (max-width: 430px) {
+  #bbq-orders { top: calc(max(8px, env(safe-area-inset-top)) + 46px); }
+}
 
 #bbq-bubbles { position: absolute; inset: 0; overflow: hidden; }
 .bubble {

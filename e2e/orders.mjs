@@ -3,7 +3,7 @@
 // Usage: E2E_BASE=http://127.0.0.1:5176/bbq/ node e2e/orders.mjs
 
 const { chromium } = await import('playwright');
-const { mkdirSync } = await import('node:fs');
+const { mkdirSync, existsSync } = await import('node:fs');
 const { default: assert } = await import('node:assert/strict');
 
 const BASE = process.env.E2E_BASE ?? 'https://openfolio.uk/bbq/';
@@ -87,6 +87,54 @@ try {
   assert.ok(c.angry >= 1 && c.angryOk, `c) seated cards must carry .angry (angry=${c.angry}/${c.n})`);
   console.log(`PASS c) 耐心<25% → ${c.angry}/${c.n} 张卡 .angry`);
   await page.screenshot({ path: 'e2e/shots/orders-angry.png', timeout: 90000 }).catch(() => {});
+
+  // d) HUD layout: top status strip must not intersect any order card (>= 8px gap), must not be squeezed,
+  //    and cards must stay inside the viewport — portrait 390x844 first, then landscape 844x390.
+  const layout = () => page.evaluate(() => {
+    const bar = document.querySelector('#bbq-hud .topbar');
+    const rect = (e) => { const r = e.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom }; };
+    const br = rect(bar);
+    const cards = [...document.querySelectorAll('#bbq-orders .card')].map(rect);
+    const gap = (c) => Math.max(c.l - br.r, br.l - c.r, c.t - br.b, br.t - c.b);   // > 0 => separated on some axis
+    return {
+      iw: window.innerWidth, ih: window.innerHeight, bar: br, cards,
+      overlap: cards.map((c) => !(br.r <= c.l || c.r <= br.l || br.b <= c.t || c.b <= br.t)),
+      gaps: cards.map(gap), maxRight: Math.max(...cards.map((c) => c.r)),
+      sw: bar.scrollWidth, cw: bar.clientWidth, barInView: br.l >= 0 && br.r <= window.innerWidth,
+    };
+  });
+  const checkLayout = (tag, L) => {
+    assert.ok(L.cards.length >= 1, `${tag}) need >=1 order card`);
+    assert.ok(L.overlap.every((o) => o === false), `${tag}) topbar overlaps a card: ${JSON.stringify(L)}`);
+    assert.ok(L.gaps.every((g) => g >= 8), `${tag}) topbar/card gap < 8px: ${L.gaps.join(',')}`);
+    assert.ok(L.sw <= L.cw, `${tag}) topbar squeezed/truncated (scrollWidth ${L.sw} > clientWidth ${L.cw})`);
+    assert.ok(L.barInView, `${tag}) topbar outside viewport`);
+    assert.ok(L.maxRight <= L.iw - 6, `${tag}) card right ${L.maxRight} > innerWidth-6 (${L.iw - 6})`);
+  };
+  const shot = async (path) => {
+    await page.screenshot({ path, timeout: 90000 });
+    assert.ok(existsSync(path), `screenshot missing: ${path}`);
+  };
+  const keepCards = () => page.evaluate(() => {      // keep the guests from walking off / leaving angry during the resize
+    window.__test.setPatience(60);
+    window.__test.tick(0.05, 2);
+  });
+
+  await keepCards();
+  const dP = await layout();
+  assert.deepEqual([dP.iw, dP.ih], [390, 844], 'd) portrait viewport');
+  checkLayout('d 竖屏', dP);
+  await shot('e2e/shots/hud-portrait.png');
+  console.log(`PASS d) 竖屏 390x844 状态条 [${dP.bar.l.toFixed(0)}..${dP.bar.r.toFixed(0)}]x[${dP.bar.t.toFixed(0)}..${dP.bar.b.toFixed(0)}] 与 ${dP.cards.length} 张卡不相交，最小间隙 ${Math.min(...dP.gaps).toFixed(0)}px，scrollWidth ${dP.sw}<=${dP.cw}`);
+
+  await page.setViewportSize({ width: 844, height: 390 });
+  await page.waitForFunction(() => window.innerWidth === 844, null, { timeout: 10000 });
+  await keepCards();
+  const dL = await layout();
+  assert.deepEqual([dL.iw, dL.ih], [844, 390], 'd) landscape viewport');
+  checkLayout('d 横屏', dL);
+  await shot('e2e/shots/hud-landscape.png');
+  console.log(`PASS d) 横屏 844x390 状态条 [${dL.bar.l.toFixed(0)}..${dL.bar.r.toFixed(0)}] 与 ${dL.cards.length} 张卡不相交，最小间隙 ${Math.min(...dL.gaps).toFixed(0)}px，卡片右端 ${dL.maxRight.toFixed(0)} <= ${dL.iw - 6}`);
 
   assert.equal(errors.length, 0, `js errors:\n${errors.join('\n')}`);
   console.log('ORDERS OK');

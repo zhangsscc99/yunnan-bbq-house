@@ -1,0 +1,484 @@
+{
+  "view": "port",
+  "url": "https://openfolio.uk/bbq/",
+  "shots": [
+    "01-title",
+    "02-idle",
+    "03-angry",
+    "04-served",
+    "05-results-pass",
+    "06-next-level"
+  ],
+  "errors": [],
+  "warns": [
+    "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+  ],
+  "loadSec": 18,
+  "httpText": "营业额\n¥0\n时间\n3:00\n评级\n柳真真云南烤肉\n炭火生香，小店开张。\n取料 → 切配 → 炭烤 → 装盘 → 上菜\n目标：3 分钟营业额 ¥180\n开 店",
+  "idle": {
+    "s": {
+      "phase": "playing",
+      "money": 0,
+      "timeLeft": 177.9875,
+      "served": 0,
+      "angry": 0,
+      "waste": 0,
+      "hint": {
+        "kind": "station",
+        "id": "crate-pork",
+        "x": -4.5,
+        "z": 2
+      },
+      "carrying": null,
+      "action": "none",
+      "actionLabel": "去料箱取料",
+      "player": {
+        "x": -2.5,
+        "z": 0
+      },
+      "stations": {
+        "bin": {
+          "x": -5.5,
+          "z": 2
+        },
+        "crate-pork": {
+          "x": -4.5,
+          "z": 2
+        },
+        "crate-mush": {
+          "x": -3.5,
+          "z": 2
+        },
+        "crate-mix": {
+          "x": -2.5,
+          "z": 2
+        },
+        "chop": {
+          "x": -1,
+          "z": 2
+        },
+        "grill": {
+          "x": 1.5,
+          "z": 2
+        },
+        "plate": {
+          "x": 4,
+          "z": 2
+        }
+      },
+      "tables": {
+        "t1": {
+          "x": -3.3,
+          "z": -1.2000000000000002
+        },
+        "t2": {
+          "x": 0.2999999999999998,
+          "z": -1.2000000000000002
+        },
+        "t3": {
+          "x": 3.9000000000000004,
+          "z": -1.2000000000000002
+        },
+        "t4": {
+          "x": 2.0999999999999996,
+          "z": 0.7999999999999998
+        }
+      },
+      "customers": [
+        {
+          "id": 1,
+          "dish": "mixian",
+          "phase": "walking-in",
+          "patience": 100,
+          "table": "t3",
+          "x": -4.8,
+          "z": -4.4
+        }
+      ],
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      },
+      "calls": 71,
+      "tris": 10320
+    },
+    "hud": "营业额 | ¥0 | 时间 | 2:58 | 评级 | …",
+    "act": "去料箱取料"
+  },
+  "rects": {
+    "#bbq-orders": {
+      "x": 380,
+      "y": 54,
+      "w": 0,
+      "h": 0
+    },
+    "#bbq-stick": {
+      "x": 22,
+      "y": 692,
+      "w": 130,
+      "h": 130
+    },
+    "#bbq-act": {
+      "x": 288,
+      "y": 738,
+      "w": 76,
+      "h": 76
+    },
+    "#bbq-guide": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+    }
+  },
+  "angry": {
+    "seated": true,
+    "seat": {
+      "t": 1.7,
+      "dish": "pork"
+    },
+    "trace": [
+      {
+        "t": 0.05,
+        "phase": "walking-in",
+        "patience": 100,
+        "angry": 0,
+        "pop": "",
+        "hud": "营业额 | ¥0 | 时间 | 2:57 | 评级 | 烤五花肉拼盘 | ¥48 · 等待 | …"
+      },
+      {
+        "t": 0.55,
+        "phase": "walking-in",
+        "patience": 100,
+        "angry": 0,
+        "pop": "",
+        "hud": "营业额 | ¥0 | 时间 | 2:56 | 评级 | 烤五花肉拼盘 | ¥48 · 等待 | …"
+      },
+      {
+        "t": 1.05,
+        "phase": "walking-in",
+        "patience": 100,
+        "angry": 0,
+        "pop": "",
+        "hud": "营业额 | ¥0 | 时间 | 2:56 | 评级 | 烤五花肉拼盘 | ¥48 · 等待 | …"
+      },
+      {
+        "t": 1.55,
+        "phase": "walking-in",
+        "patience": 100,
+        "angry": 0,
+        "pop": "",
+        "hud": "营业额 | ¥0 | 时间 | 2:55 | 评级 | 烤五花肉拼盘 | ¥48 · 等待 | …"
+      },
+      {
+        "t": 2.05,
+        "phase": "walking-in",
+        "patience": 100,
+        "angry": 0,
+        "pop": "",
+        "hud": "营业额 | ¥0 | 时间 | 2:55 | 评级 | 烤五花肉拼盘 | ¥48 · 等待 | …"
+      },
+      {
+        "t": 2.55,
+        "phase": "walking-in",
+        "patience": 100,
+        "angry": 0,
+        "pop": "",
+        "hud": "营业额 | ¥0 | 时间 | 2:54 | 评级 | 烤五花肉拼盘 | ¥48 · 等待 | …"
+      },
+      {
+        "t": 3.05,
+        "phase": "walking-in",
+        "patience": 100,
+        "angry": 1,
+        "pop": "愤怒离店",
+        "hud": "营业额 | ¥0 | 时间 | 2:54 | 评级 | … | 愤怒离店"
+      },
+      {
+        "t": 3.55,
+        "phase": "walking-in",
+        "patience": 100,
+        "angry": 1,
+        "pop": "愤怒离店",
+        "hud": "营业额 | ¥0 | 时间 | 2:53 | 评级 | … | 愤怒离店"
+      },
+      {
+        "t": 4.05,
+        "phase": "walking-in",
+        "patience": 100,
+        "angry": 1,
+        "pop": "愤怒离店",
+        "hud": "营业额 | ¥0 | 时间 | 2:53 | 评级 | … | 愤怒离店"
+      },
+      {
+        "t": 4.55,
+        "phase": "seated",
+        "patience": 99.85,
+        "angry": 1,
+        "pop": "愤怒离店",
+        "hud": "营业额 | ¥0 | 时间 | 2:52 | 评级 | 豆泥米线 | ¥26 · 等待 | … | 愤怒离店"
+      },
+      {
+        "t": 5.05,
+        "phase": "seated",
+        "patience": 99.35,
+        "angry": 1,
+        "pop": "愤怒离店",
+        "hud": "营业额 | ¥0 | 时间 | 2:52 | 评级 | 豆泥米线 | ¥26 · 等待 | … | 愤怒离店"
+      },
+      {
+        "t": 5.55,
+        "phase": "seated",
+        "patience": 98.85,
+        "angry": 1,
+        "pop": "愤怒离店",
+        "hud": "营业额 | ¥0 | 时间 | 2:51 | 评级 | 豆泥米线 | ¥26 · 等待 | … | 愤怒离店"
+      },
+      {
+        "t": 6.05,
+        "phase": "seated",
+        "patience": 98.35,
+        "angry": 1,
+        "pop": "愤怒离店",
+        "hud": "营业额 | ¥0 | 时间 | 2:51 | 评级 | 豆泥米线 | ¥26 · 等待 | … | 愤怒离店"
+      },
+      {
+        "t": 6.55,
+        "phase": "seated",
+        "patience": 97.85,
+        "angry": 1,
+        "pop": "愤怒离店",
+        "hud": "营业额 | ¥0 | 时间 | 2:50 | 评级 | 豆泥米线 | ¥26 · 等待 | … | 愤怒离店"
+      },
+      {
+        "t": 7.05,
+        "phase": "seated",
+        "patience": 97.35,
+        "angry": 1,
+        "pop": "愤怒离店",
+        "hud": "营业额 | ¥0 | 时间 | 2:50 | 评级 | 豆泥米线 | ¥26 · 等待 | … | 愤怒离店"
+      },
+      {
+        "t": 7.55,
+        "phase": "seated",
+        "patience": 96.85,
+        "angry": 1,
+        "pop": "愤怒离店",
+        "hud": "营业额 | ¥0 | 时间 | 2:49 | 评级 | 豆泥米线 | ¥26 · 等待 | … | 愤怒离店"
+      },
+      {
+        "t": 8.05,
+        "phase": "seated",
+        "patience": 96.35,
+        "angry": 1,
+        "pop": "愤怒离店",
+        "hud": "营业额 | ¥0 | 时间 | 2:49 | 评级 | 豆泥米线 | ¥26 · 等待 | … | 愤怒离店"
+      },
+      {
+        "t": 8.55,
+        "phase": "seated",
+        "patience": 95.85,
+        "angry": 1,
+        "pop": "愤怒离店",
+        "hud": "营业额 | ¥0 | 时间 | 2:48 | 评级 | 豆泥米线 | ¥26 · 等待 | … | 愤怒离店"
+      },
+      {
+        "t": 9.05,
+        "phase": "seated",
+        "patience": 95.35,
+        "angry": 1,
+        "pop": "愤怒离店",
+        "hud": "营业额 | ¥0 | 时间 | 2:48 | 评级 | 豆泥米线 | ¥26 · 等待 | … | 愤怒离店"
+      },
+      {
+        "t": 9.55,
+        "phase": "seated",
+        "patience": 94.85,
+        "angry": 1,
+        "pop": "愤怒离店",
+        "hud": "营业额 | ¥0 | 时间 | 2:47 | 评级 | 豆泥米线 | ¥26 · 等待 | … | 愤怒离店"
+      }
+    ],
+    "left": null,
+    "angerAfter": 1
+  },
+  "angryPopLater": {
+    "txt": "",
+    "n": 0
+  },
+  "chop": {
+    "trace": [
+      {
+        "step": "picked",
+        "carrying": {
+          "dish": "pork",
+          "stage": "raw"
+        },
+        "label": "去料箱取料"
+      },
+      {
+        "step": "atChop",
+        "chop": {
+          "held": null,
+          "chopLeft": 0
+        },
+        "label": "去料箱取料"
+      },
+      {
+        "step": "tap1",
+        "chop": {
+          "held": "raw",
+          "chopLeft": 3
+        },
+        "carrying": null,
+        "label": "去料箱取料"
+      },
+      {
+        "step": "tap2",
+        "chop": {
+          "held": "raw",
+          "chopLeft": 2
+        },
+        "carrying": null,
+        "label": "去料箱取料"
+      },
+      {
+        "step": "tap3",
+        "chop": {
+          "held": "raw",
+          "chopLeft": 1
+        },
+        "carrying": null,
+        "label": "去料箱取料"
+      },
+      {
+        "step": "tap4",
+        "chop": {
+          "held": "chopped",
+          "chopLeft": 0
+        },
+        "carrying": null,
+        "label": "去料箱取料"
+      }
+    ],
+    "chopHeld": {
+      "held": "chopped",
+      "chopLeft": 0
+    }
+  },
+  "serve": {
+    "trace": [
+      [
+        "picked",
+        {
+          "dish": "pork",
+          "stage": "raw"
+        }
+      ],
+      [
+        "chopDone",
+        {
+          "held": "chopped",
+          "chopLeft": 0
+        },
+        null,
+        "去料箱取料"
+      ],
+      [
+        "tookChopped",
+        {
+          "dish": "pork",
+          "stage": "chopped"
+        }
+      ],
+      [
+        "onGrill",
+        [
+          {
+            "stage": "chopped",
+            "t": 0.49999999999999994
+          },
+          null,
+          null
+        ]
+      ],
+      [
+        "offGrill",
+        {
+          "dish": "pork",
+          "stage": "cooked"
+        },
+        [
+          null,
+          null,
+          null
+        ]
+      ],
+      [
+        "plated",
+        {
+          "dish": "pork",
+          "stage": "plated"
+        }
+      ],
+      [
+        "served",
+        null
+      ]
+    ],
+    "tableId": "t1",
+    "preAct": "去料箱取料",
+    "post": {
+      "money": 60,
+      "served": 1,
+      "hud": "营业额 | ¥60 | 时间 | 2:44 | 评级 | 烤五花肉拼盘 | ¥48 · 用餐中 | 豆泥米线 | +¥60",
+      "pop": "+¥60",
+      "popN": 1
+    }
+  },
+  "popAfter": {
+    "txt": "",
+    "n": 0
+  },
+  "resultsPass": {
+    "panel": "打烊结算 | 目标达成，解锁下一关！ | 营业额 | ¥200 / ¥180 | 服务顾客 | 1 位 | 愤怒离店 | 0 位 | 废料 | 0 份 | 下 一 关 | 再 开 一 局",
+    "btns": [
+      {
+        "t": "下 一 关",
+        "disabled": false
+      },
+      {
+        "t": "再 开 一 局",
+        "disabled": false
+      }
+    ],
+    "state": {
+      "money": 200,
+      "served": 1,
+      "angry": 0,
+      "waste": 0,
+      "timeLeft": 0
+    }
+  },
+  "afterNext": {
+    "phase": "playing",
+    "money": 0,
+    "timeLeft": 178.28030000001186,
+    "level": "2",
+    "hud": "营业额 | ¥0 | 时间 | 2:59 | 评级",
+    "panel": null,
+    "btnText": null
+  },
+  "perf": {
+    "calls": 96,
+    "tris": 9322,
+    "programs": 13
+  },
+  "doneSec": 362
+}

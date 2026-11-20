@@ -1,0 +1,644 @@
+{
+  "view": "land",
+  "vp": {
+    "width": 844,
+    "height": 390
+  },
+  "url": "https://openfolio.uk/bbq/",
+  "shots": [
+    "01-title",
+    "02-idle",
+    "03-angry-leave",
+    "04-spam",
+    "05-served",
+    "06-results",
+    "07-next-level"
+  ],
+  "errors": [],
+  "warns": [
+    "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+  ],
+  "loadSec": 12,
+  "framesAtTitle": 21,
+  "title": "柳真真云南烤肉 | 炭火生香，小店开张。 | 取料 → 切配 → 炭烤 → 装盘 → 上菜 | 目标：3 分钟营业额 ¥180 | 开 店",
+  "idle": {
+    "phase": "playing",
+    "money": 0,
+    "timeLeft": 178.2063000000119,
+    "served": 0,
+    "angry": 0,
+    "waste": 0,
+    "hint": {
+      "kind": "station",
+      "id": "crate-pork",
+      "x": -4.5,
+      "z": 2
+    },
+    "carrying": null,
+    "action": "none",
+    "actionLabel": "去料箱取料",
+    "player": {
+      "x": -2.5,
+      "z": 0
+    },
+    "stations": {
+      "bin": {
+        "x": -5.5,
+        "z": 2
+      },
+      "crate-pork": {
+        "x": -4.5,
+        "z": 2
+      },
+      "crate-mush": {
+        "x": -3.5,
+        "z": 2
+      },
+      "crate-mix": {
+        "x": -2.5,
+        "z": 2
+      },
+      "chop": {
+        "x": -1,
+        "z": 2
+      },
+      "grill": {
+        "x": 1.5,
+        "z": 2
+      },
+      "plate": {
+        "x": 4,
+        "z": 2
+      }
+    },
+    "tables": {
+      "t1": {
+        "x": -3.3,
+        "z": -1.2000000000000002
+      },
+      "t2": {
+        "x": 0.2999999999999998,
+        "z": -1.2000000000000002
+      },
+      "t3": {
+        "x": 3.9000000000000004,
+        "z": -1.2000000000000002
+      },
+      "t4": {
+        "x": 2.0999999999999996,
+        "z": 0.7999999999999998
+      }
+    },
+    "customers": [],
+    "grill": [
+      null,
+      null,
+      null
+    ],
+    "chop": {
+      "held": null,
+      "chopLeft": 0
+    },
+    "calls": 68,
+    "tris": 8676
+  },
+  "idleHud": {
+    "hud": "营业额 | ¥0 | 时间 | 2:59 | 评级",
+    "act": "去料箱取料",
+    "popups": "",
+    "guide": "",
+    "popupNodes": 0,
+    "panel": null
+  },
+  "hudRects": {
+    "#bbq-status": null,
+    "#bbq-hud": {
+      "x": 0,
+      "y": 0,
+      "w": 844,
+      "h": 390
+    },
+    "#bbq-stick": {
+      "x": 22,
+      "y": 238,
+      "w": 130,
+      "h": 130
+    },
+    "#bbq-act": {
+      "x": 742,
+      "y": 284,
+      "w": 76,
+      "h": 76
+    },
+    "#bbq-orders": {
+      "x": 834,
+      "y": 8,
+      "w": 0,
+      "h": 0
+    }
+  },
+  "angry": {
+    "seated": true,
+    "seat": {
+      "t": 1.7,
+      "dish": "pork",
+      "patience": 75
+    },
+    "trace": [
+      {
+        "t": 0.05,
+        "phase": "seated",
+        "patience": 2.95,
+        "angry": 0,
+        "pop": "",
+        "guide": ""
+      },
+      {
+        "t": 0.55,
+        "phase": "seated",
+        "patience": 2.45,
+        "angry": 0,
+        "pop": "",
+        "guide": ""
+      },
+      {
+        "t": 1.05,
+        "phase": "seated",
+        "patience": 1.95,
+        "angry": 0,
+        "pop": "",
+        "guide": ""
+      },
+      {
+        "t": 1.55,
+        "phase": "seated",
+        "patience": 1.45,
+        "angry": 0,
+        "pop": "",
+        "guide": ""
+      },
+      {
+        "t": 2.05,
+        "phase": "seated",
+        "patience": 0.95,
+        "angry": 0,
+        "pop": "",
+        "guide": ""
+      },
+      {
+        "t": 2.55,
+        "phase": "seated",
+        "patience": 0.45,
+        "angry": 0,
+        "pop": "",
+        "guide": ""
+      },
+      {
+        "t": 3.05,
+        "phase": "leaving-angry",
+        "patience": 0,
+        "angry": 1,
+        "pop": "愤怒离店",
+        "guide": ""
+      }
+    ],
+    "leftFrame": {
+      "t": 3.05,
+      "pop": "愤怒离店",
+      "guide": "",
+      "angry": 1,
+      "x": -4.1,
+      "z": -2.4
+    },
+    "after": {
+      "phase": "playing",
+      "angry": 1,
+      "money": 0,
+      "hud": "营业额 | ¥0 | 时间 | 2:54 | 评级 | 愤怒离店"
+    }
+  },
+  "spam": {
+    "before": {
+      "carrying": null,
+      "crate": {
+        "x": -4.5,
+        "z": 2
+      }
+    },
+    "labels": [
+      "去料箱取料",
+      "去料箱取料",
+      "去料箱取料",
+      "去料箱取料",
+      "去料箱取料",
+      "去料箱取料"
+    ],
+    "afterCrate": {
+      "dish": "pork",
+      "stage": "raw"
+    },
+    "grill": [
+      null,
+      null,
+      null
+    ],
+    "carrying": {
+      "dish": "pork",
+      "stage": "raw"
+    },
+    "waste": 0,
+    "act": "去料箱取料"
+  },
+  "chain": {
+    "chain": [
+      {
+        "tag": "seated",
+        "carrying": null,
+        "money": 0,
+        "served": 0,
+        "action": "none",
+        "label": "去料箱取料",
+        "hint": "crate-pork"
+      },
+      {
+        "tag": "atCrate",
+        "carrying": null,
+        "money": 0,
+        "served": 0,
+        "action": "take-raw",
+        "label": "取 烤五花肉拼盘",
+        "hint": "crate-pork"
+      },
+      {
+        "tag": "picked",
+        "carrying": {
+          "dish": "pork",
+          "stage": "raw"
+        },
+        "money": 0,
+        "served": 0,
+        "action": "none",
+        "label": "手上有东西",
+        "hint": "chop"
+      },
+      {
+        "tag": "chopped",
+        "carrying": null,
+        "money": 0,
+        "served": 0,
+        "action": "chop",
+        "label": "切配 2/3",
+        "hint": "crate-pork"
+      },
+      {
+        "tag": "atGrill",
+        "carrying": null,
+        "money": 0,
+        "served": 0,
+        "action": "none",
+        "label": "去料箱取料",
+        "hint": "crate-pork"
+      },
+      {
+        "tag": "onGrill",
+        "carrying": null,
+        "money": 0,
+        "served": 0,
+        "action": "none",
+        "label": "去料箱取料",
+        "hint": "crate-pork"
+      },
+      {
+        "tag": "cooked6.5",
+        "carrying": null,
+        "money": 0,
+        "served": 0,
+        "action": "none",
+        "label": "去料箱取料",
+        "hint": "crate-pork"
+      },
+      {
+        "tag": "takenOff",
+        "carrying": null,
+        "money": 0,
+        "served": 0,
+        "action": "none",
+        "label": "去料箱取料",
+        "hint": "crate-pork"
+      },
+      {
+        "tag": "plated",
+        "carrying": null,
+        "money": 0,
+        "served": 0,
+        "action": "none",
+        "label": "去料箱取料",
+        "hint": "crate-pork"
+      },
+      {
+        "tag": "served",
+        "carrying": null,
+        "money": 0,
+        "served": 0,
+        "action": "none",
+        "label": "去料箱取料",
+        "hint": "crate-pork"
+      }
+    ],
+    "preAct": "去切配台",
+    "preHud": "营业额 | ¥0 | 时间 | 2:47 | 评级 | 烤五花肉拼盘 | ¥48 · 等待 | 烤菌子 | 已切好 ✓",
+    "postHud": "营业额 | ¥0 | 时间 | 2:47 | 评级 | 烤五花肉拼盘 | ¥48 · 等待 | 烤菌子 | 已切好 ✓ | 去料箱取料",
+    "popNow": "",
+    "popNodes": 0,
+    "tableId": "t1",
+    "state": {
+      "phase": "playing",
+      "money": 0,
+      "timeLeft": 166.09999999999684,
+      "served": 0,
+      "angry": 0,
+      "waste": 0,
+      "hint": {
+        "kind": "station",
+        "id": "crate-pork",
+        "x": -4.5,
+        "z": 2
+      },
+      "carrying": null,
+      "action": "none",
+      "actionLabel": "去料箱取料",
+      "player": {
+        "x": -3.3,
+        "z": -1.2000000000000002
+      },
+      "stations": {
+        "bin": {
+          "x": -5.5,
+          "z": 2
+        },
+        "crate-pork": {
+          "x": -4.5,
+          "z": 2
+        },
+        "crate-mush": {
+          "x": -3.5,
+          "z": 2
+        },
+        "crate-mix": {
+          "x": -2.5,
+          "z": 2
+        },
+        "chop": {
+          "x": -1,
+          "z": 2
+        },
+        "grill": {
+          "x": 1.5,
+          "z": 2
+        },
+        "plate": {
+          "x": 4,
+          "z": 2
+        }
+      },
+      "tables": {
+        "t1": {
+          "x": -3.3,
+          "z": -1.2000000000000002
+        },
+        "t2": {
+          "x": 0.2999999999999998,
+          "z": -1.2000000000000002
+        },
+        "t3": {
+          "x": 3.9000000000000004,
+          "z": -1.2000000000000002
+        },
+        "t4": {
+          "x": 2.0999999999999996,
+          "z": 0.7999999999999998
+        }
+      },
+      "customers": [
+        {
+          "id": 3,
+          "dish": "pork",
+          "phase": "seated",
+          "patience": 63.00000000000068,
+          "table": "t1",
+          "x": -4.1,
+          "z": -2.4
+        }
+      ],
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "chop": {
+        "held": "chopped",
+        "chopLeft": 0
+      },
+      "calls": 90,
+      "tris": 10804
+    }
+  },
+  "popupAfter": {
+    "txt": "",
+    "n": 0
+  },
+  "results": {
+    "panel": "打烊结算 | 离目标还差 ¥180 | 营业额 | ¥0 / ¥180 | 服务顾客 | 0 位 | 愤怒离店 | 0 位 | 废料 | 0 份 | 下 一 关 | 再 开 一 局",
+    "btns": [
+      "下 一 关",
+      "再 开 一 局"
+    ],
+    "state": {
+      "phase": "results",
+      "money": 0,
+      "timeLeft": 0,
+      "served": 0,
+      "angry": 0,
+      "waste": 0,
+      "hint": null,
+      "carrying": null,
+      "action": "none",
+      "actionLabel": "去料箱取料",
+      "player": {
+        "x": -3.3,
+        "z": -1.2000000000000002
+      },
+      "stations": {
+        "bin": {
+          "x": -5.5,
+          "z": 2
+        },
+        "crate-pork": {
+          "x": -4.5,
+          "z": 2
+        },
+        "crate-mush": {
+          "x": -3.5,
+          "z": 2
+        },
+        "crate-mix": {
+          "x": -2.5,
+          "z": 2
+        },
+        "chop": {
+          "x": -1,
+          "z": 2
+        },
+        "grill": {
+          "x": 1.5,
+          "z": 2
+        },
+        "plate": {
+          "x": 4,
+          "z": 2
+        }
+      },
+      "tables": {
+        "t1": {
+          "x": -3.3,
+          "z": -1.2000000000000002
+        },
+        "t2": {
+          "x": 0.2999999999999998,
+          "z": -1.2000000000000002
+        },
+        "t3": {
+          "x": 3.9000000000000004,
+          "z": -1.2000000000000002
+        },
+        "t4": {
+          "x": 2.0999999999999996,
+          "z": 0.7999999999999998
+        }
+      },
+      "customers": [
+        {
+          "id": 3,
+          "dish": "pork",
+          "phase": "seated",
+          "patience": 61.43040000003643,
+          "table": "t1",
+          "x": -4.1,
+          "z": -2.4
+        }
+      ],
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "chop": {
+        "held": "chopped",
+        "chopLeft": 0
+      },
+      "calls": 91,
+      "tris": 10806
+    }
+  },
+  "afterNext": {
+    "phase": "results",
+    "money": 0,
+    "timeLeft": 0,
+    "served": 0,
+    "angry": 0,
+    "waste": 0,
+    "hint": null,
+    "carrying": null,
+    "action": "none",
+    "actionLabel": "去料箱取料",
+    "player": {
+      "x": -3.3,
+      "z": -1.2000000000000002
+    },
+    "stations": {
+      "bin": {
+        "x": -5.5,
+        "z": 2
+      },
+      "crate-pork": {
+        "x": -4.5,
+        "z": 2
+      },
+      "crate-mush": {
+        "x": -3.5,
+        "z": 2
+      },
+      "crate-mix": {
+        "x": -2.5,
+        "z": 2
+      },
+      "chop": {
+        "x": -1,
+        "z": 2
+      },
+      "grill": {
+        "x": 1.5,
+        "z": 2
+      },
+      "plate": {
+        "x": 4,
+        "z": 2
+      }
+    },
+    "tables": {
+      "t1": {
+        "x": -3.3,
+        "z": -1.2000000000000002
+      },
+      "t2": {
+        "x": 0.2999999999999998,
+        "z": -1.2000000000000002
+      },
+      "t3": {
+        "x": 3.9000000000000004,
+        "z": -1.2000000000000002
+      },
+      "t4": {
+        "x": 2.0999999999999996,
+        "z": 0.7999999999999998
+      }
+    },
+    "customers": [
+      {
+        "id": 3,
+        "dish": "pork",
+        "phase": "seated",
+        "patience": 61.43040000003643,
+        "table": "t1",
+        "x": -4.1,
+        "z": -2.4
+      }
+    ],
+    "grill": [
+      null,
+      null,
+      null
+    ],
+    "chop": {
+      "held": "chopped",
+      "chopLeft": 0
+    },
+    "calls": 91,
+    "tris": 10806
+  },
+  "afterNextStore": {
+    "level": null,
+    "money": 0,
+    "timeLeft": 0,
+    "hud": "营业额 | ¥0 | 时间 | 0:00 | 评级 | 烤五花肉拼盘 | ¥48 · 等待 | 烤五花肉拼盘 | 已切好 ✓",
+    "panel": "打烊结算 | 离目标还差 ¥180 | 营业额 | ¥0 / ¥180 | 服务顾客 | 0 位 | 愤怒离店 | 0 位 | 废料 | 0 份 | 下 一 关 | 再 开 一 局",
+    "target": 0
+  },
+  "perf": {
+    "calls": 91,
+    "tris": 10806,
+    "programs": 15
+  },
+  "doneSec": 223
+}

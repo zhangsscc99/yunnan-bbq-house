@@ -293,3 +293,40 @@
 需求：把这条写进 `docs/TECH-STACK.md §4` 的 e2e 约定并落成一个 helper（`readHudAfterFrames(sel, n=2)`）；禁止用 `locator.click()` 点游戏内 HUD，改用 `touchscreen.tap(rect.center)`。
 验收：新增/修改的 e2e 脚本 0 处 `locator.click()` 点 HUD；连跑 3 次稳定；helper 有注释说明原因。
 参考：本仓 `e2e/orders.mjs` 注释「低帧率下按钮文案落后一帧」。
+
+> 第 6 轮（20:37Z）新增。剧本覆盖 ③ 取料/切配 ④ 烤炉 ⑤ 装盘上菜 ⑧ 竖屏 HUD（三单同屏几何）⑩ 控制台；双端 4 次独立运行 JS error 0，线上 bundle 与 `dist/` 一致。
+
+### B-030 切配反馈可读化（刀痕 + 进度条 + 切菜音效）
+优先级：P1
+来源：第 6 轮走查（`chopLeft 3→2→1→0` 数值正确、按钮文案 `切配 0/3→1/3` 也正确，但砧板/串/刀像素**零变化**；`port-03`/`land-02` 两次 vision 均判「看不见进度条或刀痕」；`src/game/progressBar.ts` 的世界空间 sprite 在 390×844 下实际不可辨）
+需求：每成功切一刀给出三重反馈——① 串体形态变化（分段/被切开的角度）② 砧板旁屏幕空间进度条（复用 `.gb` 规格 64×8 + 12px 文本，`hud.updateChop()`）③ 一声短促刀响（音频系统未就绪时先挂起，不阻塞 ①②）。同时把 `.cap` 字号提到 13px（并入 `B-008`）。
+验收：e2e 断言——每按一次 `#bbq-act` 后 `#bbq-chopbar .fill` 宽度单调递增，且 `#bbq-chopbar` 在视野内 `display!=none`；三段截图（0/1/3 刀）串体取色或轮廓有可见差异；vision 盲测只看图能说出"切了 2 刀"；连跑 3 次无 flake。
+参考：Overcooked 切菜的"每刀一次"手感（刀痕 + 小块飞出 + 音效）。
+
+### B-031 上菜收钱必须有可见正反馈，并与卡片金额对齐
+优先级：P1
+来源：第 6 轮走查（装盘→到桌→按「送去客桌」：`money 0→59`、`served 0→1`、顾客 `eating`；但 400ms 采样 `#bbq-popups .popup` 数为 **0**，`port-10` vision「没有 +¥48、金币飞出、营业额跳动」；卡片 ¥48 vs 实收 ¥59 差额无解释。与 `B-022` 同源，本条补"飘字必须先出现"的机器断言）
+需求：① `serve` 事件必须在 200ms 内于餐桌上方生成 `.popup.money`（文本 `+¥59`，字号 ≥17px，抬升动画后淡出，时长 ≥900ms）② 营业额数字同步做一次 1.15 倍放大回弹 ③ 订单卡金额文案改为「¥48 · 含小费」或 `¥48–¥62` 区间，与 `tipRate` 自洽。
+验收：e2e 用 `MutationObserver` 抓 `#bbq-popups` 子节点，断言上菜后出现 `.popup.money`、文本正则 `/^\+¥\d+$/`、`left/top` 落在餐桌屏幕投影 ±60px 内；`#bbq-hud .money` 在上菜帧发生 class 变化；vision 只看图能读出"收到 59 元"。
+参考：Overcooked 上菜的金币飞出 + 音效。
+
+### B-032 横屏 HUD 不得压在世界外区域
+优先级：P2
+来源：第 6 轮走查（`land-08` vision 量测右侧 x≈730→844 纯黑 114px ≈13.5%；同帧 `#bbq-orders` x=692..834、`#bbq-act` x=742..818 全部落在黑区上，vision 判「按钮悬在虚空里，HUD 缺统一安全边距」）
+需求：在 `B-025`（相机夹紧/补背景）之外，HUD 侧再做一层保险：横屏时若世界实际渲染宽度 < 视口宽，订单卡与动作键贴到**实际世界区域**的内缘（由 `__test` 暴露 worldRect），而不是贴视口边缘。
+验收：`teleport(±5,±4.5)` 四角 × 双端共 8 帧，脚本断言 `#bbq-orders`/`#bbq-act` 矩形内采样 5 点均非纯色（亮度 >26）；vision 不再出现"按钮浮在黑底上"的描述。
+参考：`B-025`；Overcooked 关卡外始终有可读边界。
+
+### B-033 烤制阶段的参与感：翻面 / 撒料小游戏
+优先级：P2
+来源：第 6 轮走查（`grillTime 6s / burnTime 12s`，从放上到取下中间**零操作**，5 个炉位同时烤时玩家只能看进度条；`land-07`/`port-07` 无任何"该翻面"的提示）
+需求：烤制 6s 内出现 1 次"翻面"窗口（连续 3s），期间按钮短暂切为「翻面」（不打断手上的其他动作：用第二指/或按钮长按 0.2s 触发）；不翻面则熟后直接进入 `waste` 的概率 +40%。同时给「快焦了」加一次短促提示音（已有 `B-021` 三态文案）。
+验收：e2e 断言——不翻面时 `stage` 由 `cooked` 直落 `waste` 的概率在 20 次采样中 ≥7 次；翻面后 20 次采样 0 次直落；按钮在窗口期 `actionLabel` 含「翻面」；连跑 3 次稳定。
+参考：Overcooked 2 煎锅/烤架的翻面手感；`B-012`（本项目自己的编号已用于「下一关假解锁」，本条为新编号）。
+
+### B-034 `spawnNow` 与 `maxDiners=3` 的一致性复核
+优先级：P2
+来源：第 6 轮走查（三单同屏测量时连续 `spawnNow('pork'|'mushroom'|'mixian')`，每步 `tick(0.05,30)`，结果只坐进 **2** 位、`mixian` 未出现，`GAME-DESIGN §4` 声明 Lv.1 上限 3 位）
+需求：先定位是 `spawnNow` 绕过了 `trySpawn` 的表冷却判断，还是 `freeTables()` 在三客时的边界问题；若为设计（上限 2），改 `GAME-DESIGN §4` 与 `LEVEL.maxDiners` 二选一。
+验收：e2e 断言 `spawnNow` 返回 `true` 时 500ms 内 `customers.length` 递增 1，连续 3 次后 `customers.length===3` 且 `#bbq-orders .card` 数为 3；或文档与 `config.LEVEL.maxDiners` 一致。
+参考：`GAME-DESIGN §4` 关卡表。

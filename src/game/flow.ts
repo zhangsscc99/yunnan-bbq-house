@@ -11,6 +11,7 @@ import { resolveInteraction, Highlighter, setFootprint } from './stations.ts';
 import type { Interaction } from './stations.ts';
 import { Grill } from './grill.ts';
 import { Player } from './player.ts';
+import { ProgressBar } from './progressBar.ts';
 import { spawnCustomer, updateCustomer } from './customers.ts';
 import type { TableRuntime } from '../world/dining.ts';
 import { STATIONS, PLAYER_SPAWN, cellToWorld } from '../world/layout.ts';
@@ -52,6 +53,7 @@ export class Flow {
   private scene: THREE.Scene;
   private ev: FlowEvents;
   private highlighter: Highlighter;
+  private chopBar: ProgressBar;
   private spawnT = 2.5;                  // first guest soon after open
   private chopFlash = 0;
   private denyT = 0;
@@ -73,6 +75,8 @@ export class Flow {
     this.grill = new Grill(grillSlots);
     this.grill.attachTo(scene);
     this.highlighter = new Highlighter(scene);
+    const chop = stations.find((st) => st.id === 'chop')!;
+    this.chopBar = new ProgressBar(scene, new THREE.Vector3(chop.pos.x - 0.4, chop.topY + 0.38, chop.pos.z), 0.7);
     // register station footprints for range checks
     for (const def of STATIONS) {
       const xs = def.cells.map((c) => c[0]);
@@ -121,6 +125,7 @@ export class Flow {
       if (s.held) { this.scene.remove(s.held.obj); s.held = null; }
       s.chopLeft = 0;
     }
+    this.chopBar.set(-1);
     this.spawnPlayer();
     this.ev.onPhase('playing');
     this.ev.onMoney(0);
@@ -334,6 +339,8 @@ export class Flow {
       }
     }
     if (this.denyT > 0) this.denyT -= dt;
+    const board = this.station('chop');
+    this.chopBar.set(board.held ? (COOK.chopTaps - board.chopLeft) / COOK.chopTaps : -1);
 
     // grill
     this.grill.update(dt);

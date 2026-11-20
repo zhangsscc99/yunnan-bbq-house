@@ -59,6 +59,7 @@ export class Flow {
   private chopBar: ProgressBar;
   private marker: NextMarker;
   private spawnT = 2.5;                  // first guest soon after open
+  private ordersT = 0;                  // throttle for periodic onOrders refresh
   private chopFlash = 0;
   private denyT = 0;
   current: Interaction = { action: 'none', label: '', icon: 'none', glyph: '' };
@@ -129,6 +130,7 @@ export class Flow {
     this.angry = 0;
     this.waste = 0;
     this.spawnT = 2.0;
+    this.ordersT = 0;
     // clear leftovers
     for (const c of this.customers) { this.scene.remove(c.obj); disposeTree(c.obj); }
     this.customers.length = 0;
@@ -367,8 +369,10 @@ export class Flow {
     this.grill.update(dt);
 
     // customers
+    let justSeated = false;
     for (const c of [...this.customers]) {
       const table = this.tables.find((t) => t.id === c.table)!;
+      const was = c.phase;
       updateCustomer(c, dt, {
         doorPos: this.doorPos,
         tablePos: table.pos,
@@ -388,8 +392,15 @@ export class Flow {
           this.ev.onOrders(this.customers);
         },
       });
+      if (was === 'walking-in' && c.phase === 'seated') justSeated = true;
     }
     for (const t of this.tables) if (t.cooldown > 0) t.cooldown -= dt;
+
+    this.ordersT += dt;
+    if (justSeated || this.ordersT >= 0.25) {
+      this.ordersT = 0;
+      this.ev.onOrders(this.customers);
+    }
 
     this.trySpawn(dt);
   }

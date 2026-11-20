@@ -13,26 +13,45 @@ const RUNS = Number(process.env.E2E_RUNS ?? 1);
 const CALLS_BUDGET = 4;
 const TAPS = 3;
 
-const browser = await chromium.launch({
-  headless: true,
-  args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--no-sandbox'],
-});
+const MAX_RETRIES = 2;
+const isEnvCrash = (e) => !(e instanceof assert.AssertionError) && /has been closed|Target page/.test(String(e?.message ?? e));
 
+/** one fresh browser per viewport/measurement; returned `close()` closes page then browser */
 async function open(url, viewport) {
-  const page = await browser.newPage({ viewport, hasTouch: true });
-  const errors = [];
-  page.on('crash', () => errors.push('PAGE CRASH'));
-  page.on('pageerror', (e) => errors.push(String(e)));
-  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
-  await page.goto(url, { waitUntil: 'commit', timeout: 20000 });
-  let frames = 0;
-  for (let i = 0; i < 60 && frames <= 30; i++) {
-    await page.waitForTimeout(1000);
-    frames = await page.evaluate(() => window.__frames ?? 0).catch(() => 0);
+  const browser = await chromium.launch({
+    headless: true,
+    args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--no-sandbox'],
+  });
+  try {
+    const page = await browser.newPage({ viewport, hasTouch: true });
+    const errors = [];
+    page.on('crash', () => errors.push('PAGE CRASH'));
+    page.on('pageerror', (e) => errors.push(String(e)));
+    page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+    await page.goto(url, { waitUntil: 'commit', timeout: 20000 });
+    let frames = 0;
+    for (let i = 0; i < 60 && frames <= 30; i++) {
+      await page.waitForTimeout(1000);
+      frames = await page.evaluate(() => window.__frames ?? 0).catch(() => 0);
+    }
+    assert.ok(frames > 30, `page never rendered frames (${url})`);
+    await page.evaluate(() => { window.__test.start(); window.__test.pauseSpawns(true); });
+    const close = async () => { await page.close().catch(() => {}); await browser.close().catch(() => {}); };
+    return { page, errors, close };
+  } catch (e) {
+    await browser.close().catch(() => {});
+    throw e;
   }
-  assert.ok(frames > 30, `page never rendered frames (${url})`);
-  await page.evaluate(() => { window.__test.start(); window.__test.pauseSpawns(true); });
-  return { page, errors };
+}
+
+/** retry only on environment crashes (closed page/browser); assertion failures propagate at once */
+async function withRetry(label, fn) {
+  for (let attempt = 0; ; attempt++) {
+    try { return await fn(); } catch (e) {
+      if (!isEnvCrash(e) || attempt >= MAX_RETRIES) throw e;
+      console.log(`RETRY ${label}: environment crash (${String(e.message).split('\n')[0]}) — retry ${attempt + 1}/${MAX_RETRIES}`);
+    }
+  }
 }
 
 const sim = (page, sec) => page.evaluate((s) => window.__test.tick(0.05, Math.round(s / 0.05)), sec);
@@ -82,8 +101,9 @@ const probe = (page) => page.evaluate(() => {
 });
 const overlap = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 
-async function runViewport(tag, viewport) {
-  const { page, errors } = await open(BASE, viewport);
+const runViewport = (tag, viewport) => withRetry(tag, () => runViewportOnce(tag, viewport));
+async function runViewportOnce(tag, viewport) {
+  const { page, errors, close } = await open(BASE, viewport);
   try {
     await at(page, 'crate-pork', 'take-raw'); await act(page);
     await at(page, 'chop', 'chop'); await act(page);
@@ -139,7 +159,7 @@ async function runViewport(tag, viewport) {
     assert.equal(errors.length, 0, `${tag} JS errors:\n${errors.join('\n')}`);
     console.log(`PASS ${tag} 0 JS error`);
   } finally {
-    await page.close();
+    await close();
   }
 }
 
@@ -152,8 +172,9 @@ async function freshCalls(page) {
   await page.waitForTimeout(600);
   return page.evaluate(() => window.__perf.calls);
 }
-async function callsChopped(url) {
-  const { page, errors } = await open(url, { width: 390, height: 844 });
+const callsChopped = (url) => withRetry(`calls ${url}`, () => callsChoppedOnce(url));
+async function callsChoppedOnce(url) {
+  const { page, errors, close } = await open(url, { width: 390, height: 844 });
   try {
     await at(page, 'crate-pork', 'take-raw'); await act(page);
     await at(page, 'chop', 'chop'); await act(page);
@@ -161,7 +182,7 @@ async function callsChopped(url) {
     const calls = await freshCalls(page);
     assert.equal(errors.length, 0, `JS errors at ${url}:\n${errors.join('\n')}`);
     return calls;
-  } finally { await page.close(); }
+  } finally { await close(); }
 }
 
 for (let run = 1; run <= RUNS; run++) {
@@ -179,5 +200,4 @@ if (REF) {
   console.log(`INFO draw calls (chopped skewer on board) = ${after} (set E2E_REF=<pre-change build url> to assert the +${CALLS_BUDGET} budget)`);
 }
 
-await browser.close();
 console.log('CHOP OK');

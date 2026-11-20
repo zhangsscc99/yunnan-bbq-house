@@ -13,7 +13,7 @@ import { Grill } from './grill.ts';
 import { Player } from './player.ts';
 import { spawnCustomer, updateCustomer } from './customers.ts';
 import type { TableRuntime } from '../world/dining.ts';
-import { STATIONS } from '../world/layout.ts';
+import { STATIONS, PLAYER_SPAWN, cellToWorld } from '../world/layout.ts';
 
 export interface FlowEvents {
   onPhase(phase: GamePhase): void;
@@ -88,8 +88,13 @@ export class Flow {
   }
 
   placePlayer(): void {
-    this.player.obj.position.set(0.5, 0, 1.2); // PLAYER_SPAWN (6,5.2) → world
+    this.spawnPlayer();
     this.scene.add(this.player.obj);
+  }
+
+  private spawnPlayer(): void {
+    const s = cellToWorld(PLAYER_SPAWN[0], PLAYER_SPAWN[1]);
+    this.player.obj.position.set(s.x, 0, s.z);
   }
 
   get stationById(): Map<string, StationRuntime> {
@@ -116,8 +121,7 @@ export class Flow {
       if (s.held) { this.scene.remove(s.held.obj); s.held = null; }
       s.chopLeft = 0;
     }
-    const spawn = { x: 0.5, z: 1.2 };
-    this.player.obj.position.set(spawn.x, 0, spawn.z);
+    this.spawnPlayer();
     this.ev.onPhase('playing');
     this.ev.onMoney(0);
     this.ev.onOrders(this.customers);

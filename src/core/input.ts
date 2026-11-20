@@ -11,7 +11,7 @@ export class Input {
   /** joystick contribution (controls.ts writes this) */
   readonly stick = new THREE.Vector2();
   private keys = new Set<string>();
-  private actionQueued = false;
+  private actionQueued = 0;
   private _onFirstGesture: (() => void) | null = null;
 
   attach(): void {
@@ -35,7 +35,7 @@ export class Input {
     this.keys.add(k);
     this.onGesture();
     if (k === ' ' || k === 'enter') {
-      this.actionQueued = true;
+      this.queueAction();
       e.preventDefault();
     }
   };
@@ -46,15 +46,21 @@ export class Input {
 
   /** ui/controls.ts calls this on the big button */
   pressAction(): void {
-    this.actionQueued = true;
+    this.queueAction();
     this.onGesture();
   }
 
-  /** edge-triggered: true once per press */
+  // presses are counted, not flagged: two taps inside one (slow) frame must
+  // still become two actions (chop ×3), drained one per consumeAction()
+  private queueAction(): void {
+    this.actionQueued = Math.min(this.actionQueued + 1, 4);
+  }
+
+  /** edge-triggered: true once per queued press */
   consumeAction(): boolean {
-    const a = this.actionQueued;
-    this.actionQueued = false;
-    return a;
+    if (this.actionQueued <= 0) return false;
+    this.actionQueued -= 1;
+    return true;
   }
 
   update(): void {

@@ -42,7 +42,7 @@ if (frames <= 30) { console.error('FAIL — page never rendered frames'); proces
 const state = () => page.evaluate(() => window.__test.state());
 const test = (expr) => page.evaluate(`window.__test.${expr}`);
 
-async function until(desc, fn, tries = 40) {
+async function until(desc, fn, tries = 200) {
   for (let i = 0; i < tries; i++) {
     const v = await fn();
     if (v) return v;
@@ -54,6 +54,15 @@ async function until(desc, fn, tries = 40) {
 await test('start()');
 await test('pauseSpawns(true)');
 await test('tick(0.05, 2)');
+
+// wait on frames, not wall-clock: under swiftshader the HUD is only written on a rendered frame
+const f0 = await page.evaluate(() => window.__frames ?? 0);
+await page.evaluate(() => window.__test.tick(0.05, 3));
+for (let i = 0; i < 300; i++) {
+  if (await page.evaluate(() => window.__frames ?? 0) >= f0 + 3) break;
+  await page.waitForTimeout(100);
+}
+assert.ok(await page.evaluate(() => window.__frames ?? 0) >= f0 + 3, 'frames did not advance by 3 within 30s');
 
 // a) opening state: nothing in reach
 const s0 = await state();

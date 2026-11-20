@@ -2,7 +2,7 @@
 // All share a tiny set of geometries and per-dish materials.
 
 import * as THREE from 'three';
-import { DISHES } from '../config.ts';
+import { COOK, DISHES } from '../config.ts';
 import type { DishId } from '../config.ts';
 import type { Item, ItemStage } from './types.ts';
 
@@ -20,13 +20,35 @@ const bowlGeo = new THREE.CylinderGeometry(0.09, 0.06, 0.07, 14, 1, true);
 const stickMat = new THREE.MeshStandardMaterial({ color: 0xc9a876, roughness: 0.8 });
 const plateMat = new THREE.MeshStandardMaterial({ color: 0xe8e2d4, roughness: 0.3, metalness: 0.05 });
 const bowlMat = new THREE.MeshStandardMaterial({ color: 0x7a4a30, roughness: 0.5, side: THREE.DoubleSide });
-const charMat = new THREE.MeshStandardMaterial({ color: 0x241d18, roughness: 0.9 });
 const fatMat = new THREE.MeshStandardMaterial({ color: 0xf5d0b8, roughness: 0.6 });
 
-function dishMat(dish: DishId, cooked: boolean): THREE.MeshStandardMaterial {
-  const base = new THREE.Color(DISHES[dish].hue);
-  if (cooked) base.lerp(new THREE.Color(0xd98a3d), 0.45);
-  return new THREE.MeshStandardMaterial({ color: base, roughness: 0.55 });
+const GOLDEN = new THREE.Color(0xcf7d2a);
+const CHAR = new THREE.Color(0x241d18);
+const RAW_TINT = new THREE.Color(0xffe8e0);
+
+/** meat colour for a stage; `t` = seconds on the grill (chopped → golden → char) */
+export function meatColor(dish: DishId, stage: ItemStage, grillT = 0, out = new THREE.Color()): THREE.Color {
+  out.set(DISHES[dish].hue);
+  if (stage === 'raw') return out.lerp(RAW_TINT, 0.28);
+  if (stage === 'waste') return out.copy(CHAR);
+  if (stage === 'cooked' || stage === 'plated') {
+    out.lerp(GOLDEN, 0.7);
+    if (stage === 'cooked' && grillT > COOK.grillTime) {
+      out.lerp(CHAR, Math.min(1, (grillT - COOK.grillTime) / (COOK.burnTime - COOK.grillTime)) * 0.6);
+    }
+    return out;
+  }
+  return out.lerp(GOLDEN, Math.min(1, grillT / COOK.grillTime) * 0.7);
+}
+
+/** live-tint a skewer while it sits on the grill */
+export function tintItem(item: Item): void {
+  const m = item.obj.userData.meat as THREE.MeshStandardMaterial | undefined;
+  if (m) meatColor(item.dish, item.stage, item.grillT, m.color);
+}
+
+function dishMat(dish: DishId, stage: ItemStage, grillT = 0): THREE.MeshStandardMaterial {
+  return new THREE.MeshStandardMaterial({ color: meatColor(dish, stage, grillT), roughness: 0.55 });
 }
 
 function buildSkewer(dish: DishId, stage: ItemStage): THREE.Group {
@@ -36,8 +58,8 @@ function buildSkewer(dish: DishId, stage: ItemStage): THREE.Group {
   g.add(stick);
 
   const burnt = stage === 'waste';
-  const cooked = stage === 'cooked' || stage === 'plated';
-  const m = burnt ? charMat : dishMat(dish, cooked);
+  const m = dishMat(dish, stage);
+  g.userData.meat = m;
 
   if (dish === 'mixian') {
     // noodle bundle: 3 small tori along the stick
@@ -75,7 +97,7 @@ function buildPlated(dish: DishId, skewer: THREE.Group): THREE.Group {
     const bowl = new THREE.Mesh(bowlGeo, bowlMat);
     g.add(bowl);
     for (let i = 0; i < 4; i++) {
-      const n = new THREE.Mesh(noodleGeo, dishMat(dish, true));
+      const n = new THREE.Mesh(noodleGeo, dishMat(dish, 'cooked'));
       n.position.set(((i * 31) % 7 - 3) * 0.008, 0.045 + (i % 2) * 0.008, ((i * 17) % 5 - 2) * 0.01);
       n.rotation.x = -Math.PI / 2 + (i % 3) * 0.2;
       n.scale.setScalar(0.55);
@@ -108,16 +130,22 @@ export function createItem(dish: DishId, stage: ItemStage = 'raw'): Item {
 
 // rebuild the mesh for a new stage (cheap: items are tiny, ≤40 live)
 export function setItemStage(item: Item, stage: ItemStage): void {
-  const parent = item.obj.parent;
-  const pos = item.obj.position.clone();
-  const rotY = item.obj.rotation.y;
+  const old = item.obj;
+  const parent = old.parent;
+  const pos = old.position.clone();
+  const rotY = old.rotation.y;
   item.stage = stage;
-  const skewer = stage === 'plated' ? item.obj : null;
-  item.obj =
-    stage === 'plated' && skewer
-      ? buildPlated(item.dish, skewer as THREE.Group)
-      : buildSkewer(item.dish, stage);
+  const plated = stage === 'plated' && item.dish !== 'mixian';
+  item.obj = stage === 'plated'
+    ? buildPlated(item.dish, old as THREE.Group)
+    : buildSkewer(item.dish, stage);
+  if (plated) item.obj.userData.meat = old.userData.meat;
   item.obj.position.copy(pos);
   item.obj.rotation.y = rotY;
+  // the previous mesh must leave the scene (plated skewers are re-parented into the plate)
+  if (!plated) {
+    old.parent?.remove(old);
+    (old.userData.meat as THREE.Material | undefined)?.dispose();
+  }
   if (parent) parent.add(item.obj);
 }

@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { COOK } from '../config.ts';
 import type { Item } from './types.ts';
-import { setItemStage } from './items.ts';
+import { setItemStage, tintItem } from './items.ts';
 
 export interface GrillSlot {
   item: Item | null;
@@ -121,6 +121,7 @@ export class Grill {
         setItemStage(s.item, 'cooked');
         s.done = true;
       }
+      tintItem(s.item);
       // smoke puffs while cooking; darker + faster when burning
       s.smokeT -= dt;
       if (s.smokeT <= 0) {

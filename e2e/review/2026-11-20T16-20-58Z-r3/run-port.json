@@ -1,0 +1,70 @@
+{
+  "shots": [
+    "/tmp/r3shots/port-01-title.png",
+    "/tmp/r3shots/port-02-joystick.png",
+    "/tmp/r3shots/port-03-chop-mid.png",
+    "/tmp/r3shots/port-04-grill-raw.png",
+    "/tmp/r3shots/port-05-grill-t3.png",
+    "/tmp/r3shots/port-06-grill-cooked.png",
+    "/tmp/r3shots/port-07-orders-wait.png",
+    "/tmp/r3shots/port-08-results.png"
+  ],
+  "errors": [],
+  "warns": [
+    "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+  ],
+  "titleText": "柳真真云南烤肉\n炭火生香，小店开张。\n取料 → 切配 → 炭烤 → 装盘 → 上菜\n目标：3 分钟营业额 ¥180\n开 店",
+  "chopMid": {
+    "held": "raw",
+    "chopLeft": 2
+  },
+  "chopDone": {
+    "held": "chopped",
+    "chopLeft": 0
+  },
+  "carry": {
+    "dish": "pork",
+    "stage": "chopped"
+  },
+  "atGrill": {
+    "a": "put-grill",
+    "l": "上烤炉"
+  },
+  "grill0": [
+    {
+      "stage": "chopped",
+      "t": 0.1
+    },
+    null,
+    null
+  ],
+  "grill3": [
+    {
+      "stage": "chopped",
+      "t": 4.7133000000119125
+    },
+    null,
+    null
+  ],
+  "grill65": [
+    {
+      "stage": "cooked",
+      "t": 9.613300000011924
+    },
+    null,
+    null
+  ],
+  "orders": {
+    "cards": 0,
+    "txt": []
+  },
+  "results": {
+    "phase": "results",
+    "verdict": "目标达成，解锁下一关！",
+    "btns": [
+      "下 一 关",
+      "再 开 一 局"
+    ]
+  }
+}

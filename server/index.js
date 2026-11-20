@@ -1,6 +1,6 @@
 // Yunnan BBQ House server: zero-dependency static server.
 // Serves the built client at /bbq/ plus a tiny health API.
-// Listens on 127.0.0.1:3031 only (behind the openfolio.uk gateway).
+// Listens on 127.0.0.1:3035 only (behind the openfolio.uk gateway).
 
 import http from 'node:http';
 import path from 'node:path';
@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PORT = Number(process.env.PORT) || 3031;
+const PORT = Number(process.env.PORT) || 3035;
 const HOST = process.env.HOST || '127.0.0.1';
 const DIST = path.join(__dirname, 'dist');
 const PREFIX = '/bbq';
@@ -68,7 +68,7 @@ const server = http.createServer((req, res) => {
     return health(req, res);
   }
   if (pathname === '/') {
-    return send(res, 302, '', { Location: `${PREFIX}/` });
+    return serveStatic(req, res, '/');
   }
   if (pathname === PREFIX) {
     return send(res, 301, '', { Location: `${PREFIX}/` });

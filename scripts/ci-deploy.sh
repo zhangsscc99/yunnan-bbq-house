@@ -27,7 +27,7 @@ pm2 save >/dev/null 2>&1 || true
 
 echo "[5/5] health check"
 for i in $(seq 1 25); do
-  if curl -sf http://127.0.0.1:3031/api/health >/dev/null; then
+  if curl -sf http://127.0.0.1:3035/api/health >/dev/null; then
     echo "DEPLOY OK"
     exit 0
   fi

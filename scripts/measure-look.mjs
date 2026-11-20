@@ -1,7 +1,7 @@
 // Look-metrics gate: loads the running game, starts a level, screenshots the
 // viewport and asserts luminance stats so "the scene got too dark" can't
 // regress silently. Software WebGL (SwiftShader) — we measure pixels.
-// Usage: node scripts/measure-look.mjs   (server must run, default :3031)
+// Usage: node scripts/measure-look.mjs   (server must run, default :3035)
 
 const { chromium } = await import('playwright');
 

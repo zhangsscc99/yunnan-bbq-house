@@ -5,7 +5,7 @@
 - Vite 7 + TypeScript 5.6(strict) + three.js 0.187 — 版本与 transport-ship-fps 对齐。
 - 无后端：静态站 + `server/index.js`(zero-dep node http) 反代到 `/bbq/`。
 - 进度持久化：`localStorage`(键 `bbq.level`, `bbq.best`)。
-- 部署：pm2 `yunnan-bbq`，127.0.0.1:3031，公网 `https://openfolio.uk/bbq/`。
+- 部署：pm2 `yunnan-bbq`，127.0.0.1:3035，公网 `https://openfolio.uk/bbq/`。
 
 ## 2. 目录结构 / 模块边界
 

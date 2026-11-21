@@ -1,0 +1,353 @@
+{
+  "tag": "land",
+  "viewport": {
+    "width": 844,
+    "height": 390
+  },
+  "shots": [
+    "/tmp/bbq-r19-local/land-01-title.png",
+    "/tmp/bbq-r19-local/land-02-entered.png",
+    "/tmp/bbq-r19-local/land-03-patience-low.png",
+    "/tmp/bbq-r19-local/land-04-after-zero.png",
+    "/tmp/bbq-r19-local/land-05-after-leave.png",
+    "/tmp/bbq-r19-local/land-06-results.png",
+    "/tmp/bbq-r19-local/land-07-after-next.png",
+    "/tmp/bbq-r19-local/land-08-hud.png"
+  ],
+  "errors": [],
+  "warns": [
+    "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+  ],
+  "steps": {
+    "timeToClickableMs": 6151,
+    "build": "f3661c3-202611211840",
+    "titleText": "柳真真云南烤肉\n炭火生香，小店开张。\n取料 → 切配 → 炭烤 → 装盘 → 上菜\n第 1 关 · 目标：3 分钟营业额 ¥180\n开 店",
+    "titleButtons": [
+      {
+        "t": "开 店",
+        "r": [
+          347,
+          244,
+          150,
+          45
+        ]
+      }
+    ],
+    "titleFonts": {
+      "fs": "16px",
+      "ff": "-apple-system, BlinkMacSystemFont, \"Ping",
+      "lh": "normal"
+    },
+    "afterStart": {
+      "phase": "playing",
+      "level": 1,
+      "levelTarget": 180,
+      "money": 0,
+      "timeLeft": 178.78333333333237,
+      "served": 0,
+      "angry": 0,
+      "waste": 0,
+      "hint": {
+        "kind": "station",
+        "id": "crate-pork",
+        "x": -4.5,
+        "z": 2
+      },
+      "carrying": null,
+      "action": "none",
+      "actionLabel": "去料箱取料",
+      "player": {
+        "x": -2.5,
+        "z": 0
+      },
+      "stations": {
+        "bin": {
+          "x": -5.5,
+          "z": 2
+        },
+        "crate-pork": {
+          "x": -4.5,
+          "z": 2
+        },
+        "crate-mush": {
+          "x": -3.5,
+          "z": 2
+        },
+        "crate-mix": {
+          "x": -2.5,
+          "z": 2
+        },
+        "chop": {
+          "x": -1,
+          "z": 2
+        },
+        "grill": {
+          "x": 1.5,
+          "z": 2
+        },
+        "plate": {
+          "x": 4,
+          "z": 2
+        }
+      },
+      "tables": {
+        "t1": {
+          "x": -3.3,
+          "z": -1.2000000000000002
+        },
+        "t2": {
+          "x": 0.2999999999999998,
+          "z": -1.2000000000000002
+        },
+        "t3": {
+          "x": 3.9000000000000004,
+          "z": -1.2000000000000002
+        },
+        "t4": {
+          "x": 2.0999999999999996,
+          "z": 0.7999999999999998
+        }
+      },
+      "customers": [],
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      },
+      "calls": 64,
+      "tris": 8444
+    },
+    "seated": [
+      {
+        "id": 1,
+        "dish": "mixian",
+        "phase": "seated",
+        "patience": 79.5833333333345,
+        "table": "t1",
+        "x": -4.1,
+        "z": -2.43
+      },
+      {
+        "id": 2,
+        "dish": "mushroom",
+        "phase": "seated",
+        "patience": 87.80000000000013,
+        "table": "t3",
+        "x": 3.1,
+        "z": -2.43
+      },
+      {
+        "id": 3,
+        "dish": "pork",
+        "phase": "seated",
+        "patience": 72.90000000000012,
+        "table": "t2",
+        "x": -0.5,
+        "z": -2.43
+      }
+    ],
+    "patienceLow": {
+      "c": [
+        {
+          "id": 1,
+          "dish": "mixian",
+          "phase": "seated",
+          "patience": 1.0000000000000044,
+          "table": "t1",
+          "x": -4.1,
+          "z": -2.43
+        },
+        {
+          "id": 2,
+          "dish": "mushroom",
+          "phase": "seated",
+          "patience": 1.0000000000000044,
+          "table": "t3",
+          "x": 3.1,
+          "z": -2.43
+        },
+        {
+          "id": 3,
+          "dish": "pork",
+          "phase": "seated",
+          "patience": 1.0000000000000044,
+          "table": "t2",
+          "x": -0.5,
+          "z": -2.43
+        }
+      ],
+      "hud": "1\n3\n2\n第 1 关\n营业额\n¥0\n时间\n2:35\n评级\n1\n豆泥米线\n¥26 · 等待\n2\n烤五花肉拼盘\n¥48 · 等待\n3\n烤菌子\n¥32 · 等待\n豆泥米线\n…\n去料箱取料"
+    },
+    "afterZero": {
+      "c": [],
+      "angry": 3,
+      "money": 0,
+      "hud": "第 1 关\n营业额\n¥0\n时间\n2:20\n评级\n去料箱取料"
+    },
+    "afterLeave": {
+      "c": [],
+      "angry": 3,
+      "tables": 0
+    },
+    "results": {
+      "phase": "results",
+      "panelText": "打烊结算\n离目标还差 ¥43\n营业额\n¥137 / ¥180\n服务顾客\n4 位\n愤怒离店\n2 位\n废料\n3 份\n再 开 一 局",
+      "btns": [
+        {
+          "t": "再 开 一 局",
+          "r": [
+            347,
+            292,
+            150,
+            40
+          ]
+        }
+      ],
+      "state": {
+        "phase": "results",
+        "level": 1,
+        "levelTarget": 180,
+        "money": 137,
+        "timeLeft": 0,
+        "served": 4,
+        "angry": 2,
+        "waste": 3,
+        "hint": null,
+        "carrying": null,
+        "action": "none",
+        "actionLabel": "去料箱取料",
+        "player": {
+          "x": -2.5,
+          "z": 0
+        },
+        "stations": {
+          "bin": {
+            "x": -5.5,
+            "z": 2
+          },
+          "crate-pork": {
+            "x": -4.5,
+            "z": 2
+          },
+          "crate-mush": {
+            "x": -3.5,
+            "z": 2
+          },
+          "crate-mix": {
+            "x": -2.5,
+            "z": 2
+          },
+          "chop": {
+            "x": -1,
+            "z": 2
+          },
+          "grill": {
+            "x": 1.5,
+            "z": 2
+          },
+          "plate": {
+            "x": 4,
+            "z": 2
+          }
+        },
+        "tables": {
+          "t1": {
+            "x": -3.3,
+            "z": -1.2000000000000002
+          },
+          "t2": {
+            "x": 0.2999999999999998,
+            "z": -1.2000000000000002
+          },
+          "t3": {
+            "x": 3.9000000000000004,
+            "z": -1.2000000000000002
+          },
+          "t4": {
+            "x": 2.0999999999999996,
+            "z": 0.7999999999999998
+          }
+        },
+        "customers": [],
+        "grill": [
+          null,
+          null,
+          null
+        ],
+        "chop": {
+          "held": null,
+          "chopLeft": 0
+        },
+        "calls": 64,
+        "tris": 8444
+      }
+    },
+    "nextBtnLabel": "再 开 一 局",
+    "afterNext": {
+      "level": 1,
+      "phase": "playing",
+      "money": 0,
+      "timeLeft": 178.4999999999988,
+      "target": 180
+    },
+    "hud": {
+      "vw": 844,
+      "vh": 390,
+      "els": [
+        {
+          "sel": "#bbq-stick",
+          "x": 16,
+          "y": 262,
+          "w": 112,
+          "h": 112,
+          "fs": "16px",
+          "txt": ""
+        },
+        {
+          "sel": "#bbq-act",
+          "x": 742,
+          "y": 298,
+          "w": 76,
+          "h": 76,
+          "fs": "16px",
+          "txt": "去料箱取料"
+        },
+        {
+          "sel": "#bbq-orders",
+          "x": 834,
+          "y": 150,
+          "w": 0,
+          "h": 0,
+          "fs": "16px",
+          "txt": ""
+        },
+        {
+          "sel": "#bbq-hud",
+          "x": 0,
+          "y": 0,
+          "w": 844,
+          "h": 390,
+          "fs": "16px",
+          "txt": "第 1 关 | 营业额 | ¥0 | 时间 | 2:39 | 评级"
+        }
+      ],
+      "all": [
+        {
+          "c": "DIV",
+          "id": "app",
+          "r": [
+            0,
+            0,
+            844,
+            390
+          ]
+        }
+      ]
+    }
+  }
+}

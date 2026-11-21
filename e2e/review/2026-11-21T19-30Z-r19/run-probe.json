@@ -1,0 +1,37 @@
+{
+  "shots": [
+    "/tmp/bbq-r19-local/port-09-rating-one-angry.png",
+    "/tmp/bbq-r19-local/port-10-results-win.png",
+    "/tmp/bbq-r19-local/port-11-after-win-next.png"
+  ],
+  "errors": [],
+  "notes": {
+    "afterOneAngry": {
+      "angry": 1,
+      "rating": [
+        "topbar:第 1 关\n营业额\n¥0\n时间\n2:52\n评级",
+        "tb:评级",
+        "k:评级",
+        "stars:"
+      ]
+    },
+    "hudText1": "第 1 关 | 营业额 | ¥0 | 时间 | 2:52 | 评级 | 愤怒离店",
+    "win": {
+      "phase": "results",
+      "level": 1,
+      "panel": "打烊结算\n目标达成，进入第 2 关\n营业额\n¥245 / ¥180\n服务顾客\n7 位\n愤怒离店\n1 位\n废料\n0 份\n进入第 2 关\n再 开 一 局",
+      "btns": [
+        "进入第 2 关",
+        "再 开 一 局"
+      ]
+    },
+    "afterWinClick": {
+      "clicked": "再 开 一 局",
+      "level": 1,
+      "phase": "playing",
+      "money": 0,
+      "timeLeft": 180,
+      "target": 180
+    }
+  }
+}

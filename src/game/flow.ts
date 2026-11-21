@@ -16,6 +16,8 @@ import { disposeTree } from '../core/dispose.ts';
 import { spawnCustomer, updateCustomer } from './customers.ts';
 import type { TableRuntime } from '../world/dining.ts';
 import { STATIONS, PLAYER_SPAWN, cellToWorld } from '../world/layout.ts';
+import { calcStars } from './stars.ts';
+import type { StarRating } from './stars.ts';
 
 export interface FlowEvents {
   onPhase(phase: GamePhase): void;
@@ -29,7 +31,7 @@ export interface FlowEvents {
 }
 
 export interface Results {
-  stars: number;
+  stars: StarRating;
   money: number;
   target: number;
   served: number;
@@ -162,7 +164,18 @@ export class Flow {
     this.spawnPlayer();
     this.ev.onPhase('playing');
     this.ev.onMoney(0);
+    this.ev.onTimeLeft(this.timeLeft);
     this.ev.onOrders(this.customers, this.tables);
+  }
+
+  starsNow(): StarRating {
+    return calcStars({
+      money: this.money,
+      target: this.cfg.target,
+      served: this.served,
+      angry: this.angry,
+      waste: this.waste,
+    });
   }
 
   /** advance only after a passed level that has a successor; otherwise no-op */
@@ -175,10 +188,7 @@ export class Flow {
   }
 
   endLevel(): void {
-    const r = this.money / this.cfg.target;
-    let stars = 1;
-    if (r >= 1 && this.angry === 0 && this.waste <= 1) stars = 3;
-    else if (r >= 1 || (r >= 0.7 && this.angry <= 1)) stars = 2;
+    const stars = this.starsNow();
     const res: Results = {
       stars, money: this.money, target: this.cfg.target,
       served: this.served, angry: this.angry, waste: this.waste,

@@ -96,7 +96,7 @@ export class Panels {
     p.innerHTML = `
       <div class="card">
         <h1>打烊结算</h1>
-        <div class="stars-big">${stars}</div>
+        <div class="stars-big" data-stars="${r.stars}" aria-label="评级 ${r.stars}/3">${stars}</div>
         <div class="verdict ${r.pass ? 'pass' : 'fail'}">${verdict}</div>
         <div class="row"><span>营业额</span><b>¥${r.money} / ¥${r.target}</b></div>
         <div class="row"><span>服务顾客</span><b>${r.served} 位</b></div>

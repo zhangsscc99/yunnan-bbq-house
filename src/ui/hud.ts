@@ -279,6 +279,7 @@ export class Hud {
   private ringMap = new Map<string, { ring: HTMLElement; num: HTMLElement }>();
   private lastMoney = -1;
   private lastSec = -1;
+  private lastStars = -1;
   private cam: THREE.Camera;
   private tmp = new THREE.Vector3();
   private ringPos = new THREE.Vector3();
@@ -310,7 +311,7 @@ export class Hud {
     this.starsEl = el('span', 'stars', tb3);
     this.moneyV.textContent = '¥0';
     this.timeV.textContent = '3:00';
-    this.starsEl.innerHTML = STAR(true) + STAR(true) + STAR(true);
+    this.setStars(1);
 
     this.ordersEl = el('div', '', this.root);
     this.ordersEl.id = 'bbq-orders';
@@ -448,8 +449,12 @@ export class Hud {
     this.timeV.classList.toggle('low', s <= 30);
   }
 
-  setStars(live: number): void {
-    this.starsEl.innerHTML = STAR(live >= 1) + STAR(live >= 2) + STAR(live >= 3);
+  setStars(stars: number): void {
+    if (stars === this.lastStars) return;
+    this.lastStars = stars;
+    this.starsEl.dataset.stars = String(stars);
+    this.starsEl.setAttribute('aria-label', `评级 ${stars}/3`);
+    this.starsEl.innerHTML = STAR(stars >= 1) + STAR(stars >= 2) + STAR(stars >= 3);
   }
 
   setOrders(customers: Customer[], tables?: TableRuntime[]): void {

@@ -64,9 +64,7 @@ const flow = new Flow(scene, kitchen.stations, dining.tables, kitchen.grillSlots
   onMoney(m: number) { hud.setMoney(m); },
   onTimeLeft(s: number) {
     hud.setTime(s);
-    // live stars preview: lose a star per angry guest / heavy waste
-    const live = flow.angry === 0 && flow.waste <= 1 ? 3 : flow.angry <= 1 ? 2 : 1;
-    hud.setStars(live);
+    hud.setStars(flow.starsNow());
   },
   onOrders(customers, tables) { hud.setOrders(customers, tables); },
   onPopup(pos, text, kind) { hud.popup(pos, text, kind); },

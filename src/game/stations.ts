@@ -58,8 +58,8 @@ export function nextHint(carrying: Item | null, grill: Grill, hasGuest: boolean)
     case 'raw': return '去切配台';
     case 'chopped': return '去烤炉';
     case 'cooked': return '去装盘台';
-    case 'plated': return hasGuest ? '送去客桌' : '去垃圾桶丢掉';
-    case 'waste': return '去垃圾桶';
+    case 'plated': return hasGuest ? '送去客桌' : '端菜等客下单';
+    case 'waste': return '去垃圾桶丢掉';
     default: return grill.readySlot() ? '去烤炉取串' : '去料箱取料';
   }
 }
@@ -104,7 +104,7 @@ export function nextTarget(
     case 'waste': return at('station', 'bin');
     case 'plated': {
       const guest = matchingGuest(carrying, tables, customers);
-      return guest ? at('table', guest.table) : at('station', 'bin');
+      return guest ? at('table', guest.table) : null;
     }
     default: return at('station', grill.readySlot() ? 'grill' : 'crate-pork');
   }
@@ -141,7 +141,7 @@ export function resolveInteraction(
 
   const hasGuest = carrying?.stage !== 'plated' || !!matchingGuest(carrying, tables, customers);
   const hintText = nextHint(carrying, grill, hasGuest);
-  const go = (station?: StationRuntime): Interaction => ({ ...mk('none', hintText, station), goto: true });
+  const go = (station?: StationRuntime): Interaction => ({ ...mk('none', hintText, station), goto: hasGuest });
 
   // serving wins when holding a plated dish near a waiting guest
   if (carrying?.stage === 'plated' && nearTable) {
@@ -150,7 +150,7 @@ export function resolveInteraction(
       if (guest.dish === carrying.dish) {
         return mk('serve', `上菜 ${DISHES[carrying.dish].name}`, undefined, nearTable);
       }
-      return { ...mk('none', `这桌要的是 ${DISHES[guest.dish].name} · ${hasGuest ? '送去别桌' : '去垃圾桶丢掉'}`, undefined, nearTable), goto: true };
+      return { ...mk('none', `这桌要的是 ${DISHES[guest.dish].name} · ${hasGuest ? '送去别桌' : '端走等单'}`, undefined, nearTable), goto: hasGuest };
     }
   }
 

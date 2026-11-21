@@ -12,11 +12,16 @@ const browser = await chromium.launch({
   headless: true,
   args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--no-sandbox'],
 });
-const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
+const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
 const errors = [];
-page.on('crash', () => console.error('PAGE CRASH'));
-page.on('pageerror', (e) => errors.push(String(e)));
-page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+const freshPage = async () => {
+  const p = await ctx.newPage();
+  p.on('crash', () => console.error('PAGE CRASH'));
+  p.on('pageerror', (e) => errors.push(String(e)));
+  p.on('console', (m) => { if (m.type() === 'error' && !/favicon/.test(m.location()?.url ?? '')) errors.push(m.text()); });
+  return p;
+};
+let page = await freshPage();
 
 const waitFrames = async () => {
   let frames = 0;
@@ -26,8 +31,35 @@ const waitFrames = async () => {
   }
   assert.ok(frames > 30, 'page never rendered frames');
 };
-// software-GL keeps the main thread busy, so a plain page.reload() can stall: navigate with a long timeout
-const reload = () => page.goto(BASE, { waitUntil: 'commit', timeout: 120000 });
+// same-page reload under SwiftShader randomly aborts the nav (frame detached), and a second page
+// stays rAF-throttled while the old one is alive — so close the old page first, then nav a fresh one
+// on the same context (shared localStorage); retry up to 3x if the nav aborts or the page never renders
+const reload = async () => {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const p = await freshPage();
+    let crashed = false;
+    p.on('crash', () => { crashed = true; });
+    await page.close().catch(() => {});
+    page = p;
+    try {
+      await p.bringToFront();
+      await p.goto(BASE, { waitUntil: 'commit', timeout: 120000 });
+      for (let i = 0; i < 20 && !crashed; i++) {                    // a dead page stays at 0 frames
+        await p.waitForTimeout(1500);
+        if (await p.evaluate(() => window.__frames ?? 0).catch(() => 0) > 0) break;
+      }
+      if (crashed || (await p.evaluate(() => window.__frames ?? 0).catch(() => 0)) <= 0)
+        throw new Error('fresh page never rendered (crash or stall)');
+      console.log(`reload: nav ok (attempt ${attempt})`);
+      return;
+    } catch (e) {
+      const msg = String(e).split('\n')[0];
+      await p.close().catch(() => {});
+      if (attempt === 3 || !/ERR_ABORTED|never rendered/.test(msg)) throw e;
+      console.log(`reload: attempt ${attempt} failed (${msg}), retrying`);
+    }
+  }
+};
 const state = () => page.evaluate(() => window.__test.state());
 const hudText = () => page.evaluate(() => document.querySelector('#bbq-hud .topbar')?.textContent ?? '');
 const panelText = () => page.evaluate(() => document.querySelector('.bbq-panel')?.textContent ?? '');

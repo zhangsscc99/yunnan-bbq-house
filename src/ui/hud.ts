@@ -89,18 +89,18 @@ const CSS = `
 #bbq-orders .card .ring svg { transform: rotate(-90deg); }
 #bbq-orders .card .txt { min-width: 0; }
 #bbq-orders .card .nm { font-size: 13px; color: #f5e8d8; font-weight: 600; line-height: 1.25; white-space: nowrap; }
-#bbq-orders .card .pr { font-size: 11px; color: #f0c060; font-weight: 600; white-space: nowrap; }
+#bbq-orders .card .pr { font-size: 13px; color: #f0c060; font-weight: 600; line-height: 1.2; white-space: nowrap; }
 #bbq-orders .card.angry { border-color: rgba(224,90,58,.8); }
 @media (max-width: 430px) {
   #bbq-orders { top: calc(max(8px, env(safe-area-inset-top)) + 52px); }
 }
+/* landscape (B-076): never shrink type (ART §5 HUD >= 13px) — wider card, two-line text column,
+   stacked between the table rings (top) and the action button (bottom) */
 @media (max-height: 450px) and (min-width: 600px) {
-  #bbq-orders { top: 164px; gap: 4px; }
-  #bbq-orders .card { padding: 3px 8px; gap: 6px; }
+  #bbq-orders { top: 150px; right: max(10px, env(safe-area-inset-right)); gap: 4px; max-width: 168px; }
+  #bbq-orders .card { box-sizing: border-box; max-width: 168px; min-width: 0; padding: 4px 8px; gap: 6px; }
   #bbq-orders .card .ring { width: 26px; height: 26px; }
   #bbq-orders .card .ring svg { width: 100%; height: 100%; }
-  #bbq-orders .card .nm { font-size: 12px; line-height: 1.2; }
-  #bbq-orders .card .pr { font-size: 10px; line-height: 1.2; }
 }
 
 #bbq-bubbles { position: absolute; inset: 0; overflow: hidden; }

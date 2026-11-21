@@ -1,5 +1,6 @@
-// Orthographic rig pitched 50°, lerping after the player. The player stays
-// in the lower third of frame via a lookAt target nudged -z.
+// Orthographic rig pitched 50°, lerping after the player. Portrait: the player stays
+// in the lower third of frame via a lookAt target nudged -z. Landscape (aspect >= 1.5):
+// the look-ahead is solved from halfH so the counter row clears the bottom HUD (B-072).
 
 import * as THREE from 'three';
 import { CAMERA } from '../config.ts';
@@ -11,6 +12,7 @@ export class CameraRig {
   private aspect = 1;
   private halfW = 1;
   private halfH = 1;
+  private lookAheadZ: number = CAMERA.lookAheadZ;
 
   constructor() {
     this.cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 80);
@@ -39,6 +41,7 @@ export class CameraRig {
     }
     this.halfH = halfH;
     this.halfW = halfH * this.aspect;
+    this.lookAheadZ = this.aspect >= CAMERA.landscapeAspect ? this.landscapeLookAhead(halfH, h) : CAMERA.lookAheadZ;
     const c = this.cam;
     c.top = halfH;
     c.bottom = -halfH;
@@ -46,6 +49,28 @@ export class CameraRig {
     c.right = this.halfW;
     c.updateProjectionMatrix();
     this.updateCam();
+  }
+
+  /**
+   * Landscape look-ahead solved from halfH (B-072). A point (y, z) sits y*cos(p) - (z - lookZ)*sin(p)
+   * above screen centre; require the counter-top centre line (benchTopY, benchZ) to stay
+   * hudBottomPx + hudMarginPx above the bottom edge once the player is at z >= benchFromZ.
+   * The result still goes through the world clamp in updateCam, so the view never leaves 12×9m.
+   */
+  private landscapeLookAhead(halfH: number, hPx: number): number {
+    const p = THREE.MathUtils.degToRad(CAMERA.pitchDeg);
+    const band = ((CAMERA.hudBottomPx + CAMERA.hudMarginPx) / Math.max(1, hPx)) * 2 * halfH;
+    const lookZ = CAMERA.benchZ - (halfH - band + CAMERA.benchTopY * Math.cos(p)) / Math.sin(p);
+    return Math.max(CAMERA.landscapeLookAheadZ, lookZ - CAMERA.benchFromZ);
+  }
+
+  /** read-only lens snapshot for tests / docs */
+  info(): { aspect: number; halfW: number; halfH: number; lookAheadZ: number; lookX: number; lookZ: number } {
+    const p = this.cam.position;
+    return {
+      aspect: this.aspect, halfW: this.halfW, halfH: this.halfH, lookAheadZ: this.lookAheadZ,
+      lookX: p.x - this.offset.x, lookZ: p.z - this.offset.z,
+    };
   }
 
   snapTo(p: THREE.Vector3): void {
@@ -74,7 +99,7 @@ export class CameraRig {
     const look = new THREE.Vector3(
       THREE.MathUtils.clamp(this.smooth.x, -limX, limX),
       0,
-      THREE.MathUtils.clamp(this.smooth.z + CAMERA.lookAheadZ, -limZ, limZ),
+      THREE.MathUtils.clamp(this.smooth.z + this.lookAheadZ, -limZ, limZ),
     );
     this.cam.position.copy(look).add(this.offset);
     this.cam.lookAt(look);

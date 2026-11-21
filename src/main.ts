@@ -6,7 +6,8 @@ import { createRenderer, createScene } from './core/renderer.ts';
 import { CameraRig } from './core/cameraRig.ts';
 import { buildLighting } from './core/lighting.ts';
 import { Input } from './core/input.ts';
-import { buildKitchen } from './world/kitchen.ts';
+import { buildKitchen, COUNTER_D } from './world/kitchen.ts';
+import { STATIONS } from './world/layout.ts';
 import { buildDining } from './world/dining.ts';
 import { buildProps } from './world/props.ts';
 import { mergeStatic } from './core/merge.ts';
@@ -169,6 +170,9 @@ interface TestHooks {
   start(): void;
   tick(dt?: number, n?: number, mx?: number, mz?: number): void;
   state(): Record<string, unknown>;
+  worldToScreen(x: number, y: number, z: number): { x: number; y: number; z: number };
+  stationGeom(): { id: string; kind: string; x: number; z: number; topY: number; w: number; d: number }[];
+  camera(): ReturnType<CameraRig['info']>;
 }
 const ZERO_MOVE = new THREE.Vector2(0, 0);
 const hooks: TestHooks = {
@@ -210,6 +214,20 @@ const hooks: TestHooks = {
     hud.updateChop(chopBoard, COOK.chopTaps);
     if (flow.phase === 'playing') hud.updateRings(flow.customers, dining.tables);
   },
+  // read-only: world point -> CSS px in the current viewport (same math as the HUD anchors)
+  worldToScreen(x, y, z) {
+    rig.cam.updateMatrixWorld();
+    const v = new THREE.Vector3(x, y, z).project(rig.cam);
+    return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight, z: v.z };
+  },
+  // read-only: counter footprint per station (centre x/z, top height, width along x, depth along z)
+  stationGeom() {
+    return kitchen.stations.map((st) => ({
+      id: st.id, kind: st.kind, x: st.pos.x, z: st.pos.z, topY: st.topY,
+      w: STATIONS.find((d) => d.id === st.id)?.cells.length ?? 1, d: COUNTER_D,
+    }));
+  },
+  camera() { return rig.info(); },
   state() {
     const g = (s: string): unknown => {
       const st = kitchen.stations.find((x) => x.id === s);

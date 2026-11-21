@@ -16,6 +16,15 @@ export const CAMERA = {
   worldHalfW: GRID.cols / 2,       // 6m: max visible half-width on the ground
   worldHalfD: GRID.rows / 2,       // 4.5m: half depth of the world
   portraitHalfH: 9,                // portrait: fixed half-height (old clamp ceiling), x-clamped to the world
+  // landscape lens (ART-DIRECTION §1, B-072): from the spawn row on, the counter row (cell z=7) must sit
+  // above the bottom HUD band. lookAheadZ is solved from halfH (see CameraRig.landscapeLookAhead).
+  landscapeAspect: 1.5,            // aspect >= this uses the landscape look-ahead below
+  landscapeLookAheadZ: 0.4,        // floor of the landscape look-ahead (+z = toward the counters)
+  benchZ: 3.0,                     // world z of the station row (cell z=7)
+  benchTopY: 0.72,                 // counter top height (world/kitchen.ts COUNTER_H)
+  benchFromZ: 0,                   // player z >= this (spawn row z=0) => counter row fully visible
+  hudBottomPx: 96,                 // bottom HUD band (joystick / action button) the counters must clear
+  hudMarginPx: 2,                  // extra clearance above the band (leaves headroom for dining rings @t2)
 };
 
 export const COLORS = {

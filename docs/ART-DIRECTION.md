@@ -22,7 +22,20 @@
   ≈20.7m 视野 > 12×9m 世界，是 B-025 横屏黑边的根因。
 - 相机跟随：目标 = 玩家位置，lerp 系数 0.12/帧(60fps 基准,dt 归一)，无震动；
   跟随目标经上面的 lookAt 夹紧后才落相机。
-- 玩家在画面中偏下：lookAt 目标向 -z 偏移 1.2m（偏移后同样参与夹紧）。
+- 玩家在画面中偏下：lookAt 目标向 -z 偏移 1.2m（偏移后同样参与夹紧）——**仅竖屏及 aspect < 1.5**。
+- **横屏 lens（aspect ≥ 1.5，B-072）**：`halfH/halfW` 仍按上面的横屏公式（844×390 → `halfH≈2.773`、
+  `halfW=6`、可见地面进深 ≈7.24m），但 look-ahead 改为按 `halfH` 反算、朝 **+z（台面排）**：
+  点 `(y, z)` 在屏幕中心上方 `y·cos(p) − (z − lookZ)·sin(p)`；要求玩家位于 `z ≥ benchFromZ=0`
+  （出生行起）时台面中线 `(benchTopY=0.72, benchZ=3.0)` 高出屏幕下缘 `hudBottomPx(96)+hudMarginPx(2)`：
+  `lookAheadZ = max(0.4, benchZ − (halfH − band + benchTopY·cos p)/sin p − benchFromZ)`，
+  `band = (96+2)/vh · 2·halfH`（844×390 → `lookAheadZ≈0.595`）。结果**照样经过上面的 lookAt 夹紧**
+  （844×390 `limZ≈0.88`），视野永不越出 12×9m 世界，且走到餐区（`t1..t3` 使用格 z=-1.2）时
+  `lookZ≈-0.60` 仍能完整框出三桌光圈与气泡。参数见 `config.ts CAMERA.landscape*/bench*/hud*`。
+- **工作站必须完整可见（横屏硬规则）**：`crate-pork/mush/mix`、`grill`、`plate` 的台面中线与台上物
+  （y=0.72…1.0m）`worldToScreen` 必须 `y ≤ vh−96`、`x ∈ [0,vw]`，整个台身（前沿底角/后沿顶角）在视口内；
+  横屏在出生点及各站点使用格都成立，竖屏在各站点使用格成立。走到餐区（z<0）时镜头随玩家转向餐桌，
+  这是 7.24m 进深下的取舍。回归：`e2e/landscape.mjs`。
+- 横屏摇杆 112px（竖屏 128px），底距 `max(16px, env(safe-area-inset-bottom))`，左 16px；动作键同步贴底距 `max(16px, env(safe-area-inset-bottom))`。
 
 ## 2. 构图与配色
 
@@ -64,5 +77,8 @@
 - 面板：`border-radius 12px; background rgba(24,16,12,.72);
   backdrop-filter blur(10px); border 1.5px solid rgba(232,180,90,.55)`。
 - 字色：主 `#f5e8d8`、数字 `#f0c060`(600+)、警示 `#e05a3a`、ok `#9ecb6a`。
-- 字号：HUD ≥13px；按钮图标用内联 SVG(禁 emoji 占位)。
-- 订单卡：右上竖排 ≤3 张，含 SVG 倒计时环(金→红)。
+- 字号：HUD ≥13px；按钮图标用内联 SVG(禁 emoji 占位)。**横屏不降级**（B-076）：矮屏
+  `@media (max-height:450px) and (min-width:600px)` 只许改位置/宽度/间距，禁止缩字；
+  订单卡 `.nm/.pr` 两端都 13px、`.tb-badge` 14px。
+- 订单卡：右上竖排 ≤3 张，含 SVG 倒计时环(金→红)。横屏改为加宽卡片（`max-width 168px`）+
+  两行文字列（菜名 / 价格·状态），`top:150px` 竖排，夹在桌位光圈与动作键之间，不压状态条、不越右缘。

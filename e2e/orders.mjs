@@ -388,9 +388,12 @@ try {
   // f) B-068b dual-viewport screenshots: rings, nums & cards in viewport, not occluded by HUD,
   //    peak opacity rgb color match & center-x alignment.
   // Landscape 844x390 (clean 3 active tables: t1, t2, t3)
+  // B-072: the landscape lens frames the counter row while the player is in the kitchen half, so the
+  // rings are probed with the player standing at the dining aisle (t2's serve spot), where they're served.
   await page.evaluate(() => {
     window.__test.start();
     window.__test.pauseSpawns(true);
+    window.__test.teleportToTable('t2');
     document.querySelectorAll('#bbq-popups .popup').forEach((p) => p.remove());
     window.__test.spawnNow('pork');       // t1
     window.__test.spawnNow('mushroom');   // t2

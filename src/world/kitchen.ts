@@ -19,7 +19,7 @@ export interface KitchenBuild {
 
 const WALL_H = 2.6;
 const COUNTER_H = 0.72;
-const COUNTER_D = 0.82;
+export const COUNTER_D = 0.82;
 
 function box(
   w: number, h: number, d: number,

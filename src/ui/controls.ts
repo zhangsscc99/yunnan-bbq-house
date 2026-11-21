@@ -37,6 +37,12 @@ const CSS = `
   #bbq-stick { left: 34px; bottom: 34px; }
   #bbq-act { right: 40px; bottom: 40px; }
 }
+/* landscape phones (B-072): smaller stick hugging the bottom so it covers less of the crate row */
+@media (max-height: 450px) and (min-width: 600px) {
+  #bbq-stick { box-sizing: border-box; width: 112px; height: 112px; left: 16px; bottom: max(16px, env(safe-area-inset-bottom)); }
+  #bbq-stick .nub { left: calc(50% - 28px); top: calc(50% - 28px); }
+  #bbq-act { bottom: max(16px, env(safe-area-inset-bottom)); }
+}
 `;
 
 // inline SVG action icons (no emoji — see ART-DIRECTION §5)

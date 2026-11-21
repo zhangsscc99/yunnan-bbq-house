@@ -687,8 +687,10 @@
 需求：① 文案去掉 `\u3000`，字距改 `letter-spacing: .12em`；② 所有面板按钮 `min-height: 44px`，主次按钮间距 ≥12px；③ 横屏（`aspect > 1.6`）卡片 `max-width: 420px`、副标题与流程行并排，避免窄高。
 验收：e2e——遍历 `.bbq-panel button`：`textContent` 不含 `\u3000`、`rect.height ≥ 44`；双端截图 vision 不得再判「字距怪异/按钮偏小」；连跑 3 次。
 
-### B-072 横屏必须完整看到工作台（crate-*/grill/plate 不被 HUD 与屏幕下缘切掉）
+### [done 63e536d] B-072 横屏必须完整看到工作台（crate-*/grill/plate 不被 HUD 与屏幕下缘切掉）
 优先级：P1
+- 修复（`63e536d`）：`src/config.ts` + `src/core/cameraRig.ts` 在 `aspect ≥ 1.5` 时由 `halfH` 反算朝 `+z` 的 `lookAheadZ = max(0.4, benchZ - (halfH - band + benchTopY·cos p)/sin p - benchFromZ)`（844×390 → `halfH=2.773 / halfW=6.000 / lookAheadZ=0.595`，仍经 `limZ=0.88` 世界夹紧）；`src/ui/controls.ts` 横屏摇杆缩至 112px、底距 `max(16px, env(safe-area-inset-bottom))`、左 16px，动作键同步贴底距 `max(16px, env(safe-area-inset-bottom))`；`src/main.ts` 补只读 `__test.worldToScreen` / `stationGeom` / `camera`；`docs/ART-DIRECTION.md §1` 同步。
+- 验收：`npx tsc --noEmit` + `npm run build` OK；`e2e/landscape.mjs` `E2E_RUNS=3` 连跑 3/3 全绿（`LANDSCAPE OK`）——844×390 下五站点 `crate-pork/mush/mix`、`grill`、`plate` 在出生点 `top≤292 ≤ 294 / box≤347`、各站点使用格 `top≤277 / box≤331`，竖屏 390×844 `top≤508 ≤ 748 / box≤544`；`#bbq-stick`、`#bbq-orders .card`、`#bbq-act` 两两不交叠、不出视口；回归 `e2e/camera-clamp.mjs`（10 帧 maxRun=0，`CAMERA CLAMP OK`）、`e2e/orders.mjs`（`ORDERS OK`）、`e2e/smoke.mjs`（63 calls / 8442 tris，`SMOKE OK`）全绿；`__perf.calls` 改前横屏 `{spawn:88,grill:76,t2:88}` / 竖屏 `{78,70,77}` → 改后横屏 `{76,72,87}` / 竖屏 `{78,70,77}`（均未增加）。
 来源：第 15 轮走查。`land-02-started.jpg` / `land-03-orders.jpg` vision 两次判「底部烤炉、料箱、备料台被屏幕下缘截断，工作区不完整」；`#bbq-stick` 底边 368（390−22），与台面屏幕投影重叠。
 需求：① `aspect ≥ 1.5` 时把相机 `lookAt` 的 −z 偏移从 1.2m 降到 0.4m（或按 `halfH` 反算），保证 z=2 那一排站点屏幕 y ≤ `vh−96`；② 横屏摇杆底距 ≥ `max(16px, safe-area)` 且尺寸从 128 降到 112，减少对左侧料架的遮挡；③ 若仍不足，允许横屏 `halfH` 略放宽到 `worldHalfD·sinP`（当前已是上限，需改世界取景比例，见 ART §1 待定项）。
 验收：e2e——横屏下对 `crate-pork/mush/mix`、`grill`、`plate` 的 `worldToScreen` 断言 `y ≤ vh−96` 且 `x ∈ [0,vw]`；`#bbq-stick` 与 `#bbq-orders`、台面 rect 交叠 = 0；双端截图 vision 不再出现「台面被截断」；连跑 3 次。
@@ -716,8 +718,10 @@
 - 实现：`.card[data-table=tX]` + `.tb-badge`（24px、14px 字）；卡片按 `TABLES` 桌序升序固定、最多 3 张；`#bbq-rings` 每桌一个椭圆地面环（128×58、3px 描边、opacity .55–.9 呼吸、`color-mix` 16% 填充）+ `.order-num` 桌号圆牌（28px、16px 字），四桌固定色 t1 金 / t2 绿 / t3 蓝 / t4 橙；气泡菜名降到 10px，`#bbq-bubbles` 内不再有 `.card`。
 - 验收：`tsc --noEmit` + `npm run build` OK；`e2e/orders.mjs` **连跑 3/3 全绿**（8 组断言：桌号绑定、升序且 +2s 稳定、环数=卡数、离店即移除、气泡无整卡、徽章 14px 无交叠、双端视口内且不被 HUD 遮挡）；双端截图 vision 独立判定「1/2/3 号卡 ↔ 同色同号桌一一对应」，横屏三卡不压状态条、不被裁切。
 - 新发现（下轮候选）：
-  - **B-076（P2）横屏订单卡缩字到 12px/10px**（`@media (max-height:450px) and (min-width:600px)`），与 ART §5「HUD 字号 ≥13px」冲突，且横屏本应更清楚；建议改为加宽卡片/两行布局而不是缩字。
-  - **B-072 未动**：横屏底部工作台裁切仍在，本轮只调整了订单卡位置，未验证 `crate-*/grill/plate` 是否完整可见。
+  - [done 63e536d] **B-076（P2）横屏订单卡缩字到 12px/10px**（`@media (max-height:450px) and (min-width:600px)`），与 ART §5「HUD 字号 ≥13px」冲突，且横屏本应更清楚；建议改为加宽卡片/两行布局而不是缩字。
+    - 修复（`63e536d`）：删掉横屏 `.nm 12px / .pr 10px` 缩字规则，统一 `.nm/.pr` 13px、`.tb-badge` 14px；横屏改为 `max-width: 168px`、`top: 150px`、`gap: 4px` 两行布局（菜名 / 价格·状态），`docs/ART-DIRECTION.md §5` 记横屏字号不降级。
+    - 验收：`e2e/landscape.mjs` `E2E_RUNS=3`（844×390 + 390×844）全绿（`LANDSCAPE OK`）：三卡 `x[676..834] y[150..284]` 不压状态条、不越右缘、不与摇杆/动作键交叠，文字零截断，`nm=13 / pr=13 / badge=14`；`e2e/orders.mjs` 回归全绿（`ORDERS OK`）。
+  - [done 63e536d] **B-072 未动**：横屏底部工作台裁切仍在，本轮只调整了订单卡位置，未验证 `crate-*/grill/plate` 是否完整可见。（已于 `63e536d` 闭环，详见上方 B-072 条目。）
 
 ---
 

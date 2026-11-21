@@ -7,6 +7,18 @@ import { COOK } from '../config.ts';
 import type { Customer } from '../game/types.ts';
 import type { GrillSlot } from '../game/grill.ts';
 import type { StationRuntime } from '../game/types.ts';
+import type { TableRuntime } from '../world/dining.ts';
+import { TABLES } from '../world/layout.ts';
+
+const TABLE_COLORS: Record<string, string> = {
+  t1: '#f0c060',
+  t2: '#7fd08a',
+  t3: '#6aa8e0',
+  t4: '#e08a6a',
+};
+const TABLE_ORDER = new Map<string, number>(TABLES.map((t, i) => [t.id, i + 1]));
+const tableOrder = (id: string): number => TABLE_ORDER.get(id) ?? 99;
+const tableColor = (id: string): string => TABLE_COLORS[id] ?? '#f0c060';
 
 const CSS = `
 #bbq-hud { position: absolute; inset: 0; pointer-events: none; font-family: inherit; }
@@ -24,33 +36,63 @@ const CSS = `
 #bbq-hud .stars { display: flex; gap: 1px; }
 #bbq-hud .stars svg { width: 15px; height: 15px; }
 
+#bbq-rings { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+#bbq-rings .order-ring {
+  position: absolute; left: 0; top: 0;
+  width: 96px; height: 40px; box-sizing: border-box;
+  border-radius: 50%;
+  border: 2px solid var(--rc, #f0c060);
+  box-shadow: inset 0 0 18px var(--rc, #f0c060), 0 0 10px var(--rc, #f0c060);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: bbq-ring-breathe 1.2s ease-in-out infinite;
+}
+@keyframes bbq-ring-breathe {
+  0%, 100% { opacity: .55; }
+  50% { opacity: .25; }
+}
+
 #bbq-orders {
   position: absolute; top: max(8px, env(safe-area-inset-top)); right: 10px;
-  display: flex; flex-direction: column; gap: 8px; max-width: 168px;
+  display: flex; flex-direction: column; gap: 8px; max-width: 196px;
 }
 #bbq-orders .card {
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; gap: 7px;
   background: rgba(24,16,12,.72); backdrop-filter: blur(10px);
   border: 1.5px solid rgba(232,180,90,.45); border-radius: 12px;
-  padding: 7px 10px; min-width: 120px;
+  padding: 7px 10px; min-width: 148px;
+}
+#bbq-orders .card .tb-badge {
+  width: 24px; height: 24px; flex: none; box-sizing: border-box;
+  border-radius: 7px; border: 1.5px solid #f0c060;
+  background: rgba(16,10,7,.9); color: #f0c060;
+  font-size: 14px; font-weight: 800; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  font-variant-numeric: tabular-nums;
 }
 #bbq-orders .card .ring { position: relative; width: 30px; height: 30px; flex: none; }
 #bbq-orders .card .ring svg { transform: rotate(-90deg); }
-#bbq-orders .card .nm { font-size: 13px; color: #f5e8d8; font-weight: 600; line-height: 1.25; }
-#bbq-orders .card .pr { font-size: 11px; color: #f0c060; font-weight: 600; }
+#bbq-orders .card .txt { min-width: 0; }
+#bbq-orders .card .nm { font-size: 13px; color: #f5e8d8; font-weight: 600; line-height: 1.25; white-space: nowrap; }
+#bbq-orders .card .pr { font-size: 11px; color: #f0c060; font-weight: 600; white-space: nowrap; }
 #bbq-orders .card.angry { border-color: rgba(224,90,58,.8); }
 @media (max-width: 430px) {
-  #bbq-orders { top: calc(max(8px, env(safe-area-inset-top)) + 46px); }
+  #bbq-orders { top: calc(max(8px, env(safe-area-inset-top)) + 52px); }
+}
+@media (max-height: 450px) and (min-width: 600px) {
+  #bbq-orders { top: 132px; gap: 6px; }
+  #bbq-orders .card { padding: 5px 8px; gap: 6px; }
 }
 
 #bbq-bubbles { position: absolute; inset: 0; overflow: hidden; }
 .bubble {
   position: absolute; transform: translate(-50%, -100%);
-  display: flex; align-items: center; gap: 6px;
-  background: rgba(24,16,12,.8); border: 1.5px solid rgba(232,180,90,.55);
-  border-radius: 16px; padding: 3px 10px 3px 4px; font-size: 12px; font-weight: 600;
-  color: #f5e8d8; white-space: nowrap; transition: opacity .2s;
+  display: flex; align-items: center; gap: 4px;
+  background: rgba(24,16,12,.76); border: 1.5px solid rgba(232,180,90,.5);
+  border-radius: 16px; padding: 2px 8px 2px 3px; font-size: 10px; font-weight: 600;
+  color: rgba(245,232,216,.88); white-space: nowrap; transition: opacity .2s;
 }
+.bubble .nm { font-size: 10px; line-height: 1.2; }
 .bubble svg { flex: none; }
 .bubble.angry { border-color: #e05a3a; color: #ff9a80; }
 
@@ -154,6 +196,7 @@ export class Hud {
   private moneyV: HTMLElement;
   private timeV: HTMLElement;
   private starsEl: HTMLElement;
+  private ringsEl: HTMLElement;
   private ordersEl: HTMLElement;
   private bubblesEl: HTMLElement;
   private popupsEl: HTMLElement;
@@ -164,10 +207,12 @@ export class Hud {
   private gbs: { root: HTMLElement; fill: HTMLElement; txt: HTMLElement; state: string; label: string }[] = [];
   private guideTimer = 0;
   private bubbleMap = new Map<number, Bubble>();
+  private ringMap = new Map<string, HTMLElement>();
   private lastMoney = -1;
   private lastSec = -1;
   private cam: THREE.Camera;
   private tmp = new THREE.Vector3();
+  private ringPos = new THREE.Vector3();
 
   constructor(uiRoot: HTMLElement, cam: THREE.Camera) {
     this.cam = cam;
@@ -177,6 +222,9 @@ export class Hud {
 
     this.root = el('div', '', uiRoot);
     this.root.id = 'bbq-hud';
+
+    this.ringsEl = el('div', '', this.root);
+    this.ringsEl.id = 'bbq-rings';
 
     const bar = el('div', 'topbar', this.root);
     this.levelV = el('span', 'v level', el('div', 'tb', bar));
@@ -239,14 +287,22 @@ export class Hud {
     this.starsEl.innerHTML = STAR(live >= 1) + STAR(live >= 2) + STAR(live >= 3);
   }
 
-  setOrders(customers: Customer[]): void {
-    const seated = customers.filter((c) => c.phase === 'seated' || c.phase === 'eating');
+  setOrders(customers: Customer[], tables?: TableRuntime[]): void {
+    const seated = customers
+      .filter((c) => c.phase === 'seated' || c.phase === 'eating')
+      .sort((a, b) => tableOrder(a.table) - tableOrder(b.table) || a.id - b.id);
     this.ordersEl.innerHTML = '';
     for (const c of seated.slice(0, 3)) {
       const card = el('div', 'card', this.ordersEl);
+      card.dataset.table = c.table;
+      const col = tableColor(c.table);
       if (c.patience / c.patienceMax < 0.25 && c.phase === 'seated') card.classList.add('angry');
+      const badge = el('div', 'tb-badge', card);
+      badge.textContent = String(tableOrder(c.table));
+      badge.style.borderColor = col;
+      badge.style.color = col;
       const ring = el('div', 'ring', card);
-      const frac = c.phase === 'eating' ? 1 : Math.max(0, c.patience / c.patienceMax);
+      const frac = c.phase === 'eating' ? 1 : Math.min(1, Math.max(0, c.patience / c.patienceMax));
       const r = 13;
       const circ = 2 * Math.PI * r;
       ring.innerHTML = `
@@ -255,9 +311,46 @@ export class Hud {
           <circle cx="15" cy="15" r="${r}" fill="none" stroke="${frac < 0.25 ? '#e05a3a' : '#f0c060'}"
             stroke-width="3" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${circ * (1 - frac)}"/>
         </svg>`;
-      const txt = el('div', '', card);
+      const txt = el('div', 'txt', card);
       el('div', 'nm', txt).textContent = DISHES[c.dish].name;
       el('div', 'pr', txt).textContent = `¥${DISHES[c.dish].price} · ${c.phase === 'eating' ? '用餐中' : '等待'}`;
+    }
+    if (tables) this.updateRings(customers, tables);
+  }
+
+  /** world-projected ground rings under tables with active orders (seated / eating) */
+  updateRings(customers: Customer[], tables: TableRuntime[]): void {
+    const active = new Set<string>();
+    for (const c of customers) {
+      if (c.phase === 'seated' || c.phase === 'eating') active.add(c.table);
+    }
+    this.cam.updateMatrixWorld();
+    const byId = new Map<string, TableRuntime>(tables.map((t) => [t.id, t]));
+    for (const tableId of active) {
+      const table = byId.get(tableId);
+      if (!table) continue;
+      let ring = this.ringMap.get(tableId);
+      if (!ring) {
+        ring = el('div', 'order-ring', this.ringsEl);
+        ring.dataset.orderRing = tableId;
+        ring.style.setProperty('--rc', tableColor(tableId));
+        this.ringMap.set(tableId, ring);
+      }
+      this.ringPos.set(table.pos.x, 0.2, table.pos.z);
+      const p = this.project(this.ringPos);
+      if (!p) {
+        ring.style.display = 'none';
+      } else {
+        ring.style.display = 'block';
+        ring.style.left = `${p.x}px`;
+        ring.style.top = `${p.y}px`;
+      }
+    }
+    for (const [tableId, ring] of this.ringMap) {
+      if (!active.has(tableId)) {
+        ring.remove();
+        this.ringMap.delete(tableId);
+      }
     }
   }
 
@@ -408,7 +501,7 @@ export class Hud {
       b.root.style.opacity = '1';
       b.root.style.left = `${p.x}px`;
       b.root.style.top = `${Math.max(p.y, 66)}px`;
-      const frac = c.phase === 'eating' ? 1 : Math.max(0, c.patience / c.patienceMax);
+      const frac = c.phase === 'eating' ? 1 : Math.min(1, Math.max(0, c.patience / c.patienceMax));
       const angry = c.phase === 'seated' && frac < 0.25;
       const label = c.phase === 'walking-in' ? '…' : c.phase === 'eating' ? '用餐中' : DISHES[c.dish].name;
       if (label !== b.label) { b.label = label; b.nm.textContent = label; }

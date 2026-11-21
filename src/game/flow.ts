@@ -21,7 +21,7 @@ export interface FlowEvents {
   onPhase(phase: GamePhase): void;
   onMoney(money: number): void;
   onTimeLeft(sec: number): void;
-  onOrders(customers: Customer[]): void;
+  onOrders(customers: Customer[], tables: TableRuntime[]): void;
   onPopup(worldPos: THREE.Vector3, text: string, kind: 'money' | 'warn' | 'ok'): void;
   onAction(action: Interaction): void;      // current button semantics
   onGuide(text: string): void;              // action pressed with nothing in reach
@@ -162,7 +162,7 @@ export class Flow {
     this.spawnPlayer();
     this.ev.onPhase('playing');
     this.ev.onMoney(0);
-    this.ev.onOrders(this.customers);
+    this.ev.onOrders(this.customers, this.tables);
   }
 
   /** advance only after a passed level that has a successor; otherwise no-op */
@@ -217,7 +217,7 @@ export class Flow {
       this.customers.push(spawnCustomer(this.scene, t, this.doorPos));
       const [a, b] = this.cfg.spawnEvery;
       this.spawnT = a + Math.random() * (b - a);
-      this.ev.onOrders(this.customers);
+      this.ev.onOrders(this.customers, this.tables);
     } else {
       this.spawnT = 3; // poll again soon
     }
@@ -308,7 +308,7 @@ export class Flow {
           this.served += 1;
           this.ev.onMoney(this.money);
           this.ev.onPopup(t.pos.clone(), `+¥${total}`, 'money');
-          this.ev.onOrders(this.customers);
+          this.ev.onOrders(this.customers, this.tables);
           // the plate itself clears when the guest leaves (kept simple)
           const obj = dish.obj;
           const orig = guest;
@@ -405,7 +405,7 @@ export class Flow {
         onAngry: (cc) => {
           this.angry += 1;
           this.ev.onPopup(cc.obj.position.clone().add(new THREE.Vector3(0, 1.2, 0)), '愤怒离店', 'warn');
-          this.ev.onOrders(this.customers);
+          this.ev.onOrders(this.customers, this.tables);
         },
         onGone: (cc) => {
           table.guest = null;
@@ -414,7 +414,7 @@ export class Flow {
           if (plate) { this.scene.remove(plate); disposeTree(plate); }
           const i = this.customers.indexOf(cc);
           if (i >= 0) this.customers.splice(i, 1);
-          this.ev.onOrders(this.customers);
+          this.ev.onOrders(this.customers, this.tables);
         },
       });
       if (was === 'walking-in' && c.phase === 'seated') justSeated = true;
@@ -424,7 +424,7 @@ export class Flow {
     this.ordersT += dt;
     if (justSeated || this.ordersT >= 0.25) {
       this.ordersT = 0;
-      this.ev.onOrders(this.customers);
+      this.ev.onOrders(this.customers, this.tables);
     }
 
     this.trySpawn(dt);

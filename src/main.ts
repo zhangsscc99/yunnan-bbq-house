@@ -65,7 +65,7 @@ const flow = new Flow(scene, kitchen.stations, dining.tables, kitchen.grillSlots
     const live = flow.angry === 0 && flow.waste <= 1 ? 3 : flow.angry <= 1 ? 2 : 1;
     hud.setStars(live);
   },
-  onOrders(customers) { hud.setOrders(customers); },
+  onOrders(customers, tables) { hud.setOrders(customers, tables); },
   onPopup(pos, text, kind) { hud.popup(pos, text, kind); },
   onAction(a: Interaction) { currentAction = a; },
   onGuide(text: string) { hud.showGuide(text); },
@@ -94,6 +94,7 @@ panels.showStart(flow.cfg.target, flow.cfg.duration, restart, flow.level);
 window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   rig.resize(window.innerWidth, window.innerHeight);
+  if (flow.phase === 'playing') hud.updateRings(flow.customers, dining.tables);
 });
 
 // ---- loop ----
@@ -143,8 +144,11 @@ function step(rawDt: number, draw = true, move?: THREE.Vector2): void {
   const enabled = currentAction.action !== 'none';
   controls.setAction(currentAction.icon, currentAction.label, enabled, flow.denyActive(), !!currentAction.guide);
 
-  // world-anchored bubbles
-  if (flow.phase === 'playing') hud.updateBubbles(flow.customers);
+  // world-anchored bubbles & table order rings
+  if (flow.phase === 'playing') {
+    hud.updateBubbles(flow.customers);
+    hud.updateRings(flow.customers, dining.tables);
+  }
   hud.updateGrill(flow.grill.slots);
   hud.updateChop(chopBoard, COOK.chopTaps);
 
@@ -204,6 +208,7 @@ const hooks: TestHooks = {
     for (let i = 0; i < n; i++) step(dt, false, mv);
     hud.updateGrill(flow.grill.slots);
     hud.updateChop(chopBoard, COOK.chopTaps);
+    if (flow.phase === 'playing') hud.updateRings(flow.customers, dining.tables);
   },
   state() {
     const g = (s: string): unknown => {

@@ -1,0 +1,266 @@
+{
+  "view": "land",
+  "shots": [
+    "/www/yunnan-bbq-house/e2e/review/2026-11-21T23-09Z-r24/land-01-chop-progress.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-21T23-09Z-r24/land-02-grill-cooked.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-21T23-09Z-r24/land-03-grill-burnt.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-21T23-09Z-r24/land-04-plated-guide.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-21T23-09Z-r24/land-05-serve-paid.png"
+  ],
+  "errors": [],
+  "warns": [
+    "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+  ],
+  "steps": {
+    "seatedGuest": [
+      {
+        "id": 1,
+        "phase": "seated",
+        "table": "t1"
+      }
+    ],
+    "start": {
+      "phase": "playing",
+      "level": 1,
+      "money": 0,
+      "timeLeft": 175.8
+    },
+    "atCrate": {
+      "action": "take-raw",
+      "label": "取 五花肉"
+    },
+    "afterPickup": {
+      "dish": "pork",
+      "stage": "raw"
+    },
+    "pickupSpam": {
+      "carrying": {
+        "dish": "pork",
+        "stage": "raw"
+      },
+      "money": 0
+    },
+    "chopBarAt2": [
+      {
+        "c": "cb",
+        "t": "切配 1/3",
+        "w": 80,
+        "h": 35
+      },
+      {
+        "c": "cb-bar",
+        "t": "",
+        "w": 64,
+        "h": 8
+      },
+      {
+        "c": "cb-fill",
+        "t": "",
+        "w": 21,
+        "h": 8
+      },
+      {
+        "c": "cb-txt",
+        "t": "切配 1/3",
+        "w": 48,
+        "h": 15
+      }
+    ],
+    "chopSeq": [
+      {
+        "held": "raw",
+        "chopLeft": 3
+      },
+      {
+        "held": "raw",
+        "chopLeft": 2
+      },
+      {
+        "held": "raw",
+        "chopLeft": 1
+      },
+      {
+        "held": "chopped",
+        "chopLeft": 0
+      }
+    ],
+    "afterChop": {
+      "dish": "pork",
+      "stage": "chopped"
+    },
+    "chopSpam": {
+      "carrying": {
+        "dish": "pork",
+        "stage": "chopped"
+      },
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      }
+    },
+    "atGrill": {
+      "action": "put-grill",
+      "label": "上烤炉"
+    },
+    "grillPlaced": [
+      {
+        "stage": "chopped",
+        "t": 0.09999999999999999
+      },
+      null,
+      null
+    ],
+    "grill6": [
+      {
+        "stage": "cooked",
+        "t": 6.099999999999984
+      },
+      null,
+      null
+    ],
+    "grillHud6": [
+      {
+        "txt": "已熟 ✓",
+        "w": 76,
+        "h": 34
+      },
+      {
+        "txt": "",
+        "w": 0,
+        "h": 0
+      },
+      {
+        "txt": "",
+        "w": 0,
+        "h": 0
+      }
+    ],
+    "grillBurnt": [
+      {
+        "stage": "waste",
+        "t": 14.10000000000028
+      },
+      null,
+      null
+    ],
+    "grillHudBurnt": [
+      "焦了 ✗",
+      "",
+      ""
+    ],
+    "afterBurntPick": {
+      "dish": "pork",
+      "stage": "waste"
+    },
+    "binActionWhileWaste": {
+      "a": "discard",
+      "l": "丢弃",
+      "g": null
+    },
+    "wasteAfterBin": {
+      "waste": 1,
+      "carrying": null
+    },
+    "grill2": [
+      {
+        "stage": "cooked",
+        "t": 6.299999999999983
+      },
+      null,
+      null
+    ],
+    "cooked": {
+      "dish": "pork",
+      "stage": "cooked"
+    },
+    "atPlate": {
+      "action": "plate",
+      "label": "装盘"
+    },
+    "plated": {
+      "dish": "pork",
+      "stage": "plated"
+    },
+    "platedGuide": {
+      "label": "1号桌",
+      "x": -3.3,
+      "y": 0.65,
+      "z": -2.4
+    },
+    "plateSpam": {
+      "carrying": {
+        "dish": "pork",
+        "stage": "plated"
+      },
+      "waste": 1
+    },
+    "guest": {
+      "id": 1,
+      "table": "t1",
+      "dish": "pork",
+      "patience": 46.5
+    },
+    "atTable": {
+      "action": "serve",
+      "label": "上菜 烤五花肉拼盘"
+    },
+    "afterServe": {
+      "money": 57,
+      "delta": 57,
+      "served": 1,
+      "carrying": null,
+      "guestPhase": "eating"
+    },
+    "serveSpam": {
+      "money": 57,
+      "served": 1
+    },
+    "popups": [],
+    "moneyHud": "1|第 1 关|营业额|¥57|时间|2:30|评级|1|烤五花肉拼盘|¥48 · 用餐中|用餐中|去料箱取料",
+    "hudGeo": {
+      "act": [
+        {
+          "t": "去料箱取料",
+          "x": 742,
+          "y": 298,
+          "w": 76,
+          "h": 76,
+          "b": 374
+        }
+      ],
+      "stick": [
+        {
+          "t": "",
+          "x": 44,
+          "y": 290,
+          "w": 56,
+          "h": 56,
+          "b": 346
+        }
+      ],
+      "orders": [
+        {
+          "t": "1|烤五花肉拼盘|¥48 · 用餐中",
+          "x": 675,
+          "y": 150,
+          "w": 159,
+          "h": 42,
+          "b": 192
+        }
+      ]
+    }
+  },
+  "notes": [],
+  "build": "5f7d148-202611212302",
+  "titleText": "柳真真云南烤肉\n炭火生香，小店开张。\n取料 → 切配 → 炭烤 → 装盘 → 上菜\n第 1 关 · 目标：3 分钟营业额 ¥180\n开 店",
+  "final": {
+    "money": 57,
+    "served": 1,
+    "angry": 0,
+    "waste": 1,
+    "timeLeft": 149.2,
+    "calls": 120,
+    "tris": 20002
+  }
+}

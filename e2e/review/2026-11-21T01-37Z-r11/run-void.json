@@ -1,0 +1,23 @@
+{
+ "info": {
+  "vw": 844,
+  "vh": 390,
+  "canvas": [
+   0,
+   0,
+   844,
+   390,
+   844,
+   390
+  ],
+  "cam": {
+   "fov": null
+  }
+ },
+ "shots": [
+  "e2e/review/2026-11-21T01-37Z-r11/land-void-0.png",
+  "e2e/review/2026-11-21T01-37Z-r11/land-void-1.png",
+  "e2e/review/2026-11-21T01-37Z-r11/land-void-2.png",
+  "e2e/review/2026-11-21T01-37Z-r11/land-void-3.png"
+ ]
+}

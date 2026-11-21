@@ -9,6 +9,8 @@ export class CameraRig {
   private target = new THREE.Vector3();
   private smooth = new THREE.Vector3();
   private aspect = 1;
+  private halfW = 1;
+  private halfH = 1;
 
   constructor() {
     this.cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 80);
@@ -25,18 +27,25 @@ export class CameraRig {
 
   resize(w: number, h: number): void {
     this.aspect = w / h;
-    // fit ~13.6m width in landscape, clamp so portrait stays playable
-    const halfH = THREE.MathUtils.clamp(
-      Math.max(CAMERA.halfHMin, CAMERA.halfHFitWidth / this.aspect),
-      CAMERA.halfHMin,
-      CAMERA.halfHMax,
-    );
+    // ground depth seen = 2*halfH / sin(pitch); width seen = 2*halfW (see ART-DIRECTION §1)
+    const sinP = Math.sin(THREE.MathUtils.degToRad(CAMERA.pitchDeg));
+    let halfH: number;
+    if (this.aspect >= 1) {
+      // landscape: fit world width, but never see more depth than the world has
+      halfH = Math.min(CAMERA.worldHalfW / this.aspect, CAMERA.worldHalfD * sinP);
+    } else {
+      // portrait: keep the old zoom, never wider than the world
+      halfH = Math.min(CAMERA.portraitHalfH, CAMERA.worldHalfW / this.aspect);
+    }
+    this.halfH = halfH;
+    this.halfW = halfH * this.aspect;
     const c = this.cam;
     c.top = halfH;
     c.bottom = -halfH;
-    c.left = -halfH * this.aspect;
-    c.right = halfH * this.aspect;
+    c.left = -this.halfW;
+    c.right = this.halfW;
     c.updateProjectionMatrix();
+    this.updateCam();
   }
 
   snapTo(p: THREE.Vector3): void {
@@ -57,10 +66,15 @@ export class CameraRig {
   }
 
   private updateCam(): void {
+    // lookAt = ground point at screen centre; keep the view rect inside the world,
+    // locking to the centre axis when the view is larger than the world.
+    const sinP = Math.sin(THREE.MathUtils.degToRad(CAMERA.pitchDeg));
+    const limX = Math.max(0, CAMERA.worldHalfW - this.halfW);
+    const limZ = Math.max(0, CAMERA.worldHalfD - this.halfH / sinP);
     const look = new THREE.Vector3(
-      this.smooth.x,
+      THREE.MathUtils.clamp(this.smooth.x, -limX, limX),
       0,
-      this.smooth.z + CAMERA.lookAheadZ,
+      THREE.MathUtils.clamp(this.smooth.z + CAMERA.lookAheadZ, -limZ, limZ),
     );
     this.cam.position.copy(look).add(this.offset);
     this.cam.lookAt(look);

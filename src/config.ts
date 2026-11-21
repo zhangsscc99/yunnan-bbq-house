@@ -12,9 +12,10 @@ export const CAMERA = {
   followLerp: 0.12,                // per-frame at 60fps
   lookAheadZ: -1.2,                // player sits lower-third: aim ahead(-z)
   dist: 12,                        // camera distance along view dir
-  halfHMin: 4.8,
-  halfHMax: 9,
-  halfHFitWidth: 6.8,              // want ~13.6m visible width
+  // framing (ART-DIRECTION §1): visible ground never leaves the GRID.cols x GRID.rows world
+  worldHalfW: GRID.cols / 2,       // 6m: max visible half-width on the ground
+  worldHalfD: GRID.rows / 2,       // 4.5m: half depth of the world
+  portraitHalfH: 9,                // portrait: fixed half-height (old clamp ceiling), x-clamped to the world
 };
 
 export const COLORS = {

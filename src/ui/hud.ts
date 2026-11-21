@@ -39,17 +39,32 @@ const CSS = `
 #bbq-rings { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 #bbq-rings .order-ring {
   position: absolute; left: 0; top: 0;
-  width: 96px; height: 40px; box-sizing: border-box;
+  width: 128px; height: 58px; box-sizing: border-box;
   border-radius: 50%;
-  border: 2px solid var(--rc, #f0c060);
-  box-shadow: inset 0 0 18px var(--rc, #f0c060), 0 0 10px var(--rc, #f0c060);
+  border: 3px solid var(--rc, #f0c060);
+  background: color-mix(in srgb, var(--rc, #f0c060) 16%, transparent);
+  box-shadow: 0 0 16px var(--rc, #f0c060);
   transform: translate(-50%, -50%);
   pointer-events: none;
   animation: bbq-ring-breathe 1.2s ease-in-out infinite;
 }
 @keyframes bbq-ring-breathe {
-  0%, 100% { opacity: .55; }
-  50% { opacity: .25; }
+  0%, 100% { opacity: .9; }
+  50% { opacity: .55; }
+}
+#bbq-rings .order-num {
+  position: absolute; left: 0; top: 0; z-index: 1;
+  width: 28px; height: 28px; box-sizing: border-box;
+  border-radius: 50%;
+  background: rgba(16, 10, 7, .92);
+  border: 2.5px solid var(--rc, #f0c060);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .55), 0 0 10px var(--rc, #f0c060);
+  color: var(--rc, #f0c060);
+  font-size: 16px; font-weight: 800; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  font-variant-numeric: tabular-nums;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
 
 #bbq-orders {
@@ -80,8 +95,12 @@ const CSS = `
   #bbq-orders { top: calc(max(8px, env(safe-area-inset-top)) + 52px); }
 }
 @media (max-height: 450px) and (min-width: 600px) {
-  #bbq-orders { top: 132px; gap: 6px; }
-  #bbq-orders .card { padding: 5px 8px; gap: 6px; }
+  #bbq-orders { top: 164px; gap: 4px; }
+  #bbq-orders .card { padding: 3px 8px; gap: 6px; }
+  #bbq-orders .card .ring { width: 26px; height: 26px; }
+  #bbq-orders .card .ring svg { width: 100%; height: 100%; }
+  #bbq-orders .card .nm { font-size: 12px; line-height: 1.2; }
+  #bbq-orders .card .pr { font-size: 10px; line-height: 1.2; }
 }
 
 #bbq-bubbles { position: absolute; inset: 0; overflow: hidden; }
@@ -207,7 +226,7 @@ export class Hud {
   private gbs: { root: HTMLElement; fill: HTMLElement; txt: HTMLElement; state: string; label: string }[] = [];
   private guideTimer = 0;
   private bubbleMap = new Map<number, Bubble>();
-  private ringMap = new Map<string, HTMLElement>();
+  private ringMap = new Map<string, { ring: HTMLElement; num: HTMLElement }>();
   private lastMoney = -1;
   private lastSec = -1;
   private cam: THREE.Camera;
@@ -318,7 +337,7 @@ export class Hud {
     if (tables) this.updateRings(customers, tables);
   }
 
-  /** world-projected ground rings under tables with active orders (seated / eating) */
+  /** world-projected ground rings + table number badges under tables with active orders (seated / eating) */
   updateRings(customers: Customer[], tables: TableRuntime[]): void {
     const active = new Set<string>();
     for (const c of customers) {
@@ -329,26 +348,37 @@ export class Hud {
     for (const tableId of active) {
       const table = byId.get(tableId);
       if (!table) continue;
-      let ring = this.ringMap.get(tableId);
-      if (!ring) {
-        ring = el('div', 'order-ring', this.ringsEl);
+      let entry = this.ringMap.get(tableId);
+      if (!entry) {
+        const col = tableColor(tableId);
+        const ring = el('div', 'order-ring', this.ringsEl);
         ring.dataset.orderRing = tableId;
-        ring.style.setProperty('--rc', tableColor(tableId));
-        this.ringMap.set(tableId, ring);
+        ring.style.setProperty('--rc', col);
+        const num = el('div', 'order-num', this.ringsEl);
+        num.dataset.orderNum = tableId;
+        num.textContent = String(tableOrder(tableId));
+        num.style.setProperty('--rc', col);
+        entry = { ring, num };
+        this.ringMap.set(tableId, entry);
       }
-      this.ringPos.set(table.pos.x, 0.2, table.pos.z);
+      this.ringPos.set(table.pos.x, 0.02, table.pos.z);
       const p = this.project(this.ringPos);
       if (!p) {
-        ring.style.display = 'none';
+        entry.ring.style.display = 'none';
+        entry.num.style.display = 'none';
       } else {
-        ring.style.display = 'block';
-        ring.style.left = `${p.x}px`;
-        ring.style.top = `${p.y}px`;
+        entry.ring.style.display = 'block';
+        entry.ring.style.left = `${p.x}px`;
+        entry.ring.style.top = `${p.y}px`;
+        entry.num.style.display = 'flex';
+        entry.num.style.left = `${p.x}px`;
+        entry.num.style.top = `${p.y + 34}px`;
       }
     }
-    for (const [tableId, ring] of this.ringMap) {
+    for (const [tableId, entry] of this.ringMap) {
       if (!active.has(tableId)) {
-        ring.remove();
+        entry.ring.remove();
+        entry.num.remove();
         this.ringMap.delete(tableId);
       }
     }

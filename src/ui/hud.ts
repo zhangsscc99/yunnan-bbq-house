@@ -288,15 +288,17 @@ export class Hud {
     e.dataset.ax = String(p.x);
     e.dataset.ay = String(p.y);
     const t0 = performance.now();
+    e.dataset.t0 = String(Math.round(t0));
+    const kill = (): void => { if (!e.isConnected) return; e.dataset.life = String(Math.round(performance.now() - t0)); e.remove(); };
     let frames = 0;
     const tick = (): void => {
       frames++;
-      if (performance.now() - t0 >= POPUP_LIFE_MS && frames >= 3) e.remove();
+      if (performance.now() - t0 >= POPUP_LIFE_MS && frames >= 3) kill();
       else if (performance.now() - t0 < POPUP_MAX_MS) requestAnimationFrame(tick);
-      else e.remove();
+      else kill();
     };
     requestAnimationFrame(tick);
-    setTimeout(() => e.remove(), POPUP_MAX_MS);
+    setTimeout(kill, POPUP_MAX_MS);
   }
 
   private project(v: THREE.Vector3): { x: number; y: number } | null {

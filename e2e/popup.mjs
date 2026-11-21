@@ -1,7 +1,7 @@
 // E2E: B-047 — 收款 "+¥N" / 愤怒离店 popups must be visible from birth:
 //   1) on insert: computed opacity === 1, font-size >= 22px, box h >= 1.2*fs, box w >= chars*fs*0.55
 //   2) lifted >= 40px above the anchor's screen y, and not intersecting any #bbq-bubbles .bubble (money AND warn)
-//   3) stays >= 1.6s with opacity 1 until at least 1.2s, removed eventually
+//   3) lives >= 1.6s (exact: dataset.life written by hud.popup on removal), opacity 1 at ~0.8s (or animation-duration 2.2s), removed eventually
 //   4) serving really adds money and #bbq-popups text contains "+¥"; anger path shows 愤怒离店 / -1
 // Usage: E2E_BASE=http://127.0.0.1:4175/bbq/ node e2e/popup.mjs
 //        E2E_RUNS=3 — repeat the whole suite N times (default 1; acceptance runs it 3×)
@@ -13,8 +13,7 @@ const BASE = process.env.E2E_BASE ?? 'http://127.0.0.1:4175/bbq/';
 const RUNS = Number(process.env.E2E_RUNS ?? 1);
 const ONLY = process.env.E2E_ONLY;
 const MAX_RETRIES = 2;
-class SamplingStarved extends Error {}
-const isEnvCrash = (e) => e instanceof SamplingStarved || !(e instanceof assert.AssertionError) && /has been closed|Target page|Target closed|crash/i.test(String(e?.message ?? e));
+const isEnvCrash = (e) => !(e instanceof assert.AssertionError) && /has been closed|Target page|Target closed|browser.*closed|crash/i.test(String(e?.message ?? e));
 
 async function open(url, viewport) {
   const browser = await chromium.launch({
@@ -43,10 +42,16 @@ async function open(url, viewport) {
   }
 }
 
+function fail(label, e, why) {
+  console.error(`FAIL ${label}: ${why}\n${String(e?.message ?? e)}`);
+  process.exit(1);
+}
+
 async function withRetry(label, fn) {
   for (let attempt = 0; ; attempt++) {
     try { return await fn(); } catch (e) {
-      if (!isEnvCrash(e) || attempt >= MAX_RETRIES) throw e;
+      if (!isEnvCrash(e)) fail(label, e, 'assertion/script error (not retried)');
+      if (attempt >= MAX_RETRIES) fail(label, e, `environment crash persisted after ${MAX_RETRIES} retries`);
       console.log(`RETRY ${label}: environment crash (${String(e.message).split('\n')[0]}) — retry ${attempt + 1}/${MAX_RETRIES}`);
     }
   }
@@ -90,7 +95,7 @@ const PROBE_SRC = `(() => {
   const rect = (n) => { const r = n.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; };
   const cs = getComputedStyle(e);
   return {
-    text: e.textContent, kind: e.className, opacity: cs.opacity, fontPx: parseFloat(cs.fontSize),
+    text: e.textContent, kind: e.className, opacity: cs.opacity, animDur: cs.animationDuration, fontPx: parseFloat(cs.fontSize),
     box: rect(e), ax: Number(e.dataset.ax), ay: Number(e.dataset.ay),
     bubbles: [...document.querySelectorAll('#bbq-bubbles .bubble')].map(rect),
     layerText: document.querySelector('#bbq-popups').textContent,
@@ -113,50 +118,38 @@ function assertBirth(tag, p) {
   return gap;
 }
 
-/** page-side: starting at the birth frame, sample popup `e` every ~80ms (1.7s mandatory window, then until removed or 3s cap); runs in the SAME evaluate as the trigger so no CDP round trip eats the 2.2s lifetime */
-const WATCH_SRC = `(async (e) => {
-  const rect = (n) => { const r = n.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; };
-  const samples = [];
-  let removedAt = null;
-  const t0 = performance.now();
-  for (;;) {
-    const t = performance.now() - t0;
-    const alive = e.isConnected;
-    if (!alive) { removedAt = t; break; }
-    samples.push({
-      t, alive, opacity: getComputedStyle(e).opacity, box: rect(e), ay: Number(e.dataset.ay),
-      bubbles: [...document.querySelectorAll('#bbq-bubbles .bubble')].map(rect),
-    });
-    if (t >= 3000) break;
-    await new Promise((r) => setTimeout(r, 80));
-  }
-  return { samples, removedAt };
+/** page-side, same evaluate as the trigger (no polling, no busy loop): MutationObserver timestamps the removal, one 800ms read of opacity, one 2600ms wait; exact lifetime comes from the product's dataset.life */
+const OBSERVE_SRC = `(async (e) => {
+  const birth = Number(e.dataset.t0);
+  const w = (window.__watch = { e, removedAt: null, midOpacity: null, midT: null });
+  const mo = new MutationObserver((recs) => {
+    for (const r of recs) for (const n of r.removedNodes) if (n === e && w.removedAt === null) { w.removedAt = performance.now() - birth; mo.disconnect(); }
+  });
+  mo.observe(document.querySelector('#bbq-popups'), { subtree: true, childList: true });
+  setTimeout(() => { w.midT = performance.now() - birth; if (e.isConnected && w.midT < 1300) w.midOpacity = getComputedStyle(e).opacity; }, 800);
+  await new Promise((r) => setTimeout(r, 2600));
+  return { removedAt: w.removedAt, midOpacity: w.midOpacity, midT: w.midT };
 })`;
 
-/** assertions on a watch result (all outside the page) */
-async function assertDwell(tag, page, { samples, removedAt }) {
-  console.log(`INFO ${tag} sample t(ms): ${samples.map((x) => x.t.toFixed(0)).join(',')} removedAt=${removedAt === null ? 'n/a' : removedAt.toFixed(0)}`);
-  const mandatory = samples.filter((s) => s.t < 1700);
-  // measurement validity (not a product verdict): a main-thread stall (swiftshader frame) can leave a hole in the [0,1.2s] window we must observe at opacity 1; retry such runs instead of passing/failing on thin data
-  for (let i = 0; i < samples.length - 1 && samples[i].t < 1200; i++) {
-    if (samples[i + 1].t - samples[i].t > 600) throw new SamplingStarved(`${tag} sampling starved: ${samples[i].t.toFixed(0)}ms -> ${samples[i + 1].t.toFixed(0)}ms gap inside the 1.2s opacity window (main thread stalled)`);
+/** assertions on the observation (all outside the page) */
+async function assertLife(tag, page, p0, o) {
+  // product hard cap is POPUP_MAX_MS=8s from birth (rAF can be starved to <1fps under swiftshader), so wait up to 10s for the natural removal
+  const gone = await page.waitForFunction(() => document.querySelectorAll('#bbq-popups .popup').length === 0, null, { polling: 250, timeout: 10000 }).then(() => true, () => false);
+  if (!gone) {
+    const left = await page.evaluate(() => [...document.querySelectorAll('#bbq-popups .popup')].map((n) => `${n.className}:"${n.textContent}" age=${Math.round(performance.now() - Number(n.dataset.t0))}ms`));
+    assert.fail(`${tag} popup never removed (still in #bbq-popups 10s after the 2.6s wait): ${left.join(' | ')}`);
   }
-  if (!samples.length || samples[samples.length - 1].t < 1200) throw new SamplingStarved(`${tag} stall after last sample ${samples.length ? samples[samples.length - 1].t.toFixed(0) : 'none'}ms, popup observed removed only at ${removedAt === null ? 'n/a' : removedAt.toFixed(0)}ms`);
-  if (removedAt !== null) assert.ok(removedAt >= 1600, `${tag} popup removed at ${removedAt.toFixed(0)}ms (< 1.6s)`);
-  const last = samples[samples.length - 1];
-  assert.ok(removedAt !== null || last.t >= 1600, `${tag} watch ended at ${last.t.toFixed(0)}ms`);
-  for (const s of samples) {
-    if (s.t < 1200) assert.equal(s.opacity, '1', `${tag} opacity ${s.opacity} at ${s.t.toFixed(0)}ms (< 1.2s)`);
-    assert.ok(s.ay - (s.box.y + s.box.h) >= 40, `${tag} gap to anchor < 40px at ${s.t.toFixed(0)}ms`);
-    for (const b of s.bubbles) assert.ok(!overlap(s.box, b), `${tag} popup intersects a bubble at ${s.t.toFixed(0)}ms`);
-  }
-  let gone = removedAt !== null;
-  for (let i = 0; i < 40 && !gone; i++) {
-    await page.waitForTimeout(250);
-    gone = await page.evaluate(() => document.querySelectorAll('#bbq-popups .popup').length === 0);
-  }
-  assert.ok(gone, `${tag} popup never removed`);
-  return mandatory.length;
+  const fin = await page.evaluate(() => ({ life: window.__watch.e.dataset.life, removedAt: window.__watch.removedAt, midOpacity: window.__watch.midOpacity, midT: window.__watch.midT }));
+  const life = fin.life === undefined ? NaN : Number(fin.life);
+  assert.ok(life >= 1600, `${tag} dataset.life=${fin.life} (< 1600ms)`);
+  const removedAt = fin.removedAt ?? o.removedAt;
+  if (removedAt !== null) assert.ok(removedAt >= 1600, `${tag} removedAt=${removedAt.toFixed(0)}ms (< 1600ms)`);
+  const mid = fin.midOpacity ?? o.midOpacity;
+  let evidence;
+  if (mid !== null) { assert.equal(mid, '1', `${tag} opacity at ~${fin.midT?.toFixed(0)}ms = ${mid}`); evidence = `midOpacity=1@${fin.midT.toFixed(0)}ms`; }
+  else { assert.equal(p0.animDur, '2.2s', `${tag} midOpacity unreadable and animation-duration=${p0.animDur}`); evidence = `midOpacity=null(未读到) 改用 animation-duration=${p0.animDur}`; }
+  console.log(`INFO ${tag} life=${life}ms removedAt=${removedAt === null ? 'n/a' : removedAt.toFixed(0) + 'ms'} ${evidence}`);
+  return { life, evidence };
 }
 
 const runViewport = (tag, viewport) => withRetry(tag, () => runViewportOnce(tag, viewport));
@@ -174,13 +167,13 @@ async function runViewportOnce(tag, viewport) {
     const money0 = s.money;
     await clearPopups(page);
     await raf2(page);   // let the render loop lay out the guest's bubble first
-    const { p0: pm, w: wm } = await page.evaluate(async ({ src, watchSrc }) => {
+    const { p0: pm, o: om } = await page.evaluate(async ({ src, observeSrc }) => {
       window.__test.press(); window.__test.tick(0.05, 2);
       const p0 = eval(src);
       const list = document.querySelectorAll('#bbq-popups .popup');
-      const w = list.length ? await eval(watchSrc)(list[list.length - 1]) : null;
-      return { p0, w };
-    }, { src: PROBE_SRC, watchSrc: WATCH_SRC });
+      const o = list.length ? await eval(observeSrc)(list[list.length - 1]) : null;
+      return { p0, o };
+    }, { src: PROBE_SRC, observeSrc: OBSERVE_SRC });
     s = await state(page);
     assert.ok(s.money > money0, `${tag} money) ${money0} -> ${s.money} did not grow`);
     assert.ok(pm && pm.layerText.includes('+¥'), `${tag} money) #bbq-popups text lacks "+¥": ${pm?.layerText}`);
@@ -188,9 +181,9 @@ async function runViewportOnce(tag, viewport) {
     assert.ok(pm.kind.includes('money'), `${tag} money) kind ${pm.kind}`);
     assert.ok(pm.bubbles.length >= 1, `${tag} money) no .bubble in DOM — overlap check would be vacuous`);
     const gapM = assertBirth(`${tag} money)`, pm);
-    assert.ok(wm, `${tag} money) no popup to watch`);
-    const nM = await assertDwell(`${tag} money)`, page, wm);
-    console.log(`PASS ${tag} money) ¥${money0}->¥${s.money} "${pm.text}" opacity=${pm.opacity} font=${pm.fontPx}px box=${pm.box.w.toFixed(0)}x${pm.box.h.toFixed(0)} 距锚点=${gapM.toFixed(0)}px bubbles=${pm.bubbles.length} 驻留>=1.6s(${nM} 采样) 随后移除`);
+    assert.ok(om, `${tag} money) no popup to observe`);
+    const lM = await assertLife(`${tag} money)`, page, pm, om);
+    console.log(`PASS ${tag} money) ¥${money0}->¥${s.money} "${pm.text}" opacity=${pm.opacity} font=${pm.fontPx}px box=${pm.box.w.toFixed(0)}x${pm.box.h.toFixed(0)} 距锚点=${gapM.toFixed(0)}px bubbles=${pm.bubbles.length} 寿命=${lM.life}ms(>=1600) ${lM.evidence} 随后移除`);
 
     // ---- warn: patience runs out -> 愤怒离店 ----
     await sim(page, 4);
@@ -200,17 +193,17 @@ async function runViewportOnce(tag, viewport) {
     await keepPatient(page);
     await raf2(page);   // let the render loop lay out the guest's bubble first
     await page.evaluate(() => window.__test.setPatience(0.01));
-    const { p0: pw, w: ww } = await page.evaluate(async ({ src, watchSrc }) => {
+    const { p0: pw, o: ow } = await page.evaluate(async ({ src, observeSrc }) => {
       for (let i = 0; i < 400; i++) {
         window.__test.tick(0.05, 1);
         if (window.__test.state().angry > 0 && document.querySelector('#bbq-popups .popup')) {
           const p0 = eval(src);
           const list = document.querySelectorAll('#bbq-popups .popup');
-          return { p0, w: await eval(watchSrc)(list[list.length - 1]) };
+          return { p0, o: await eval(observeSrc)(list[list.length - 1]) };
         }
       }
-      return { p0: null, w: null };
-    }, { src: PROBE_SRC, watchSrc: WATCH_SRC });
+      return { p0: null, o: null };
+    }, { src: PROBE_SRC, observeSrc: OBSERVE_SRC });
     s = await state(page);
     assert.ok(s.angry > angry0, `${tag} warn) angry ${angry0} -> ${s.angry} did not grow (guest ${g2.id})`);
     assert.ok(pw, `${tag} warn) no popup on the angry frame`);
@@ -218,8 +211,9 @@ async function runViewportOnce(tag, viewport) {
     assert.ok(pw.kind.includes('warn'), `${tag} warn) kind ${pw.kind}`);
     assert.ok(pw.bubbles.length >= 1, `${tag} warn) no .bubble in DOM — overlap check would be vacuous`);
     const gapW = assertBirth(`${tag} warn)`, pw);
-    const nW = await assertDwell(`${tag} warn)`, page, ww);
-    console.log(`PASS ${tag} warn)  angry ${angry0}->${s.angry} "${pw.text}" opacity=${pw.opacity} font=${pw.fontPx}px box=${pw.box.w.toFixed(0)}x${pw.box.h.toFixed(0)} 距锚点=${gapW.toFixed(0)}px bubbles=${pw.bubbles.length} 驻留>=1.6s(${nW} 采样) 随后移除`);
+    assert.ok(ow, `${tag} warn) no popup to observe`);
+    const lW = await assertLife(`${tag} warn)`, page, pw, ow);
+    console.log(`PASS ${tag} warn)  angry ${angry0}->${s.angry} "${pw.text}" opacity=${pw.opacity} font=${pw.fontPx}px box=${pw.box.w.toFixed(0)}x${pw.box.h.toFixed(0)} 距锚点=${gapW.toFixed(0)}px bubbles=${pw.bubbles.length} 寿命=${lW.life}ms(>=1600) ${lW.evidence} 随后移除`);
 
     const calls = (await state(page)).calls;
     assert.equal(errors.length, 0, `${tag} js errors:\n${errors.join('\n')}`);

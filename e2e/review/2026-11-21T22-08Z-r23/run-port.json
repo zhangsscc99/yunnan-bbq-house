@@ -1,0 +1,197 @@
+{
+ "view": "port",
+ "vp": {
+  "width": 390,
+  "height": 844
+ },
+ "url": "https://openfolio.uk/bbq/",
+ "shots": [
+  "/tmp/bbq-r23/port/port-01-first-screen.png",
+  "/tmp/bbq-r23/port/port-02-move-drag.png",
+  "/tmp/bbq-r23/port/port-03-customer-waiting.png",
+  "/tmp/bbq-r23/port/port-04-patience-low.png",
+  "/tmp/bbq-r23/port/port-05-customer-left.png",
+  "/tmp/bbq-r23/port/port-06-hud-stack.png",
+  "/tmp/bbq-r23/port/port-07-results.png",
+  "/tmp/bbq-r23/port/port-08-after-next.png"
+ ],
+ "errors": [],
+ "titleMs": 11068,
+ "entryReady": true,
+ "titleText": "柳真真云南烤肉\n炭火生香，小店开张。\n取料 → 切配 → 炭烤 → 装盘 → 上菜\n第 1 关 · 目标：3 分钟营业额 ¥180\n开 店",
+ "entryButtons": [
+  "开 店"
+ ],
+ "build": "2290acb-202611210547",
+ "stickRect": {
+  "x": 22,
+  "y": 692,
+  "w": 130,
+  "h": 130,
+  "display": "block",
+  "vis": "visible",
+  "op": "0.85",
+  "text": ""
+ },
+ "moveDrag": {
+  "before": {
+   "x": -2.5,
+   "z": 0
+  },
+  "after": {
+   "x": 1.6533333587646626,
+   "z": 0
+  },
+  "dist": 4.15
+ },
+ "moveKeys": {
+  "from": {
+   "x": 1.6533333587646626,
+   "z": 0
+  },
+  "to": {
+   "x": 1.6533333587646626,
+   "z": -3.0399999999999965
+  },
+  "dist": 3.04
+ },
+ "beforeZero": {
+  "served": 0,
+  "angry": 0,
+  "customers": [
+   {
+    "id": 3,
+    "dish": "pork",
+    "phase": "seated",
+    "patience": 74.65000000000002,
+    "table": "t1",
+    "x": -4.1,
+    "z": -2.43
+   }
+  ],
+  "topbar": "第 1 关 营业额 ¥0 时间 2:57 评级"
+ },
+ "afterZero": {
+  "served": 0,
+  "angry": 1,
+  "money": 0,
+  "customers": [],
+  "phase": "playing",
+  "hint": {
+   "kind": "station",
+   "id": "crate-pork",
+   "x": -4.5,
+   "z": 2
+  }
+ },
+ "hud": {
+  "rects": {
+   "#bbq-stick": {
+    "x": 22,
+    "y": 692,
+    "w": 130,
+    "h": 130,
+    "display": "block",
+    "vis": "visible",
+    "op": "0.85",
+    "text": ""
+   },
+   "#bbq-act": {
+    "x": 288,
+    "y": 738,
+    "w": 76,
+    "h": 76,
+    "display": "flex",
+    "vis": "visible",
+    "op": "1",
+    "text": "去料箱取料"
+   },
+   ".topbar": {
+    "x": 37,
+    "y": 8,
+    "w": 315,
+    "h": 36,
+    "display": "flex",
+    "vis": "visible",
+    "op": "1",
+    "text": "第 1 关 营业额 ¥0 时间 2:10 评级"
+   },
+   "#bbq-orders": {
+    "x": 380,
+    "y": 54,
+    "w": 0,
+    "h": 0,
+    "display": "flex",
+    "vis": "visible",
+    "op": "1",
+    "text": ""
+   },
+   "#bbq-chop": {
+    "x": 0,
+    "y": 0,
+    "w": 390,
+    "h": 844,
+    "display": "block",
+    "vis": "visible",
+    "op": "1",
+    "text": ""
+   },
+   "#bbq-chop .cb": {
+    "x": 0,
+    "y": 0,
+    "w": 0,
+    "h": 0,
+    "display": "none",
+    "vis": "visible",
+    "op": "1",
+    "text": ""
+   },
+   "#bbq-popups": {
+    "x": 0,
+    "y": 0,
+    "w": 390,
+    "h": 844,
+    "display": "block",
+    "vis": "visible",
+    "op": "1",
+    "text": ""
+   },
+   "#bbq-offscreen": null,
+   "#bbq-hint": null
+  },
+  "vw": 390,
+  "vh": 844,
+  "stickVsAct": 0,
+  "stickVsOrders": 0,
+  "actVsOrders": 0,
+  "topbarVsOrders": 0,
+  "bottomGapAct": 30,
+  "rightGapAct": 26,
+  "hitTargets": []
+ },
+ "results": {
+  "phase": "results",
+  "panel": "打烊结算 | 目标达成，进入第 2 关 | 营业额 | ¥200 / ¥180 | 服务顾客 | 3 位 | 愤怒离店 | 1 位 | 废料 | 0 份 | 进入第 2 关 | 再 开 一 局",
+  "verdict": "目标达成，进入第 2 关",
+  "stars": 0,
+  "btns": [
+   "进入第 2 关",
+   "再 开 一 局"
+  ],
+  "money": 200,
+  "served": 3,
+  "level": 1
+ },
+ "afterNext": {
+  "clicked": "进入第 2 关",
+  "phase": "playing",
+  "level": 2,
+  "money": 0,
+  "served": 0,
+  "timeLeft": 179
+ },
+ "afterNextTicked": {
+  "phase": "playing",
+  "timeLeft": 157
+ }
+}

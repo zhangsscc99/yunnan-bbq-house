@@ -13,6 +13,21 @@ const BASE = process.env.E2E_BASE ?? 'http://127.0.0.1:3035/bbq/';
 const RUNS = Number(process.env.E2E_RUNS ?? 1);
 const ONLY = process.env.E2E_ONLY ?? '';
 
+const MAX_RETRIES = 2;
+const isEnvCrash = (e) => !(e instanceof assert.AssertionError)
+  && /has been closed|SharedImageManager|non-existent mailbox|PAGE CRASH|Target closed/.test(String(e?.message ?? e));
+
+/** retry only on environment crashes (renderer killed, closed target); assertion failures propagate at once */
+async function withRetry(tag, fn) {
+  for (let attempt = 0; ; attempt++) {
+    try { return await fn(); } catch (e) {
+      if (!isEnvCrash(e) || attempt >= MAX_RETRIES) throw e;
+      console.log(`RETRY ${tag} env crash: ${String(e?.message ?? e).split('\n')[0]}`);
+      await new Promise((r) => setTimeout(r, 3000));
+    }
+  }
+}
+
 async function open(url, viewport) {
   const browser = await chromium.launch({
     headless: true,
@@ -57,7 +72,8 @@ const inPage = (page, body, arg) => page.evaluate(({ src, arg }) => {
 
 const FRAME = 1 / 120; // 120Hz
 
-async function runViewport(tag, viewport) {
+const runViewport = (tag, viewport) => withRetry(tag, () => runViewportOnce(tag, viewport));
+async function runViewportOnce(tag, viewport) {
   const { page, errors, close } = await open(BASE, viewport);
   try {
     // (a) press, one 5ms frame (zero steps), then a normal frame → the pickup must still happen
@@ -121,6 +137,7 @@ async function runViewport(tag, viewport) {
 for (let run = 1; run <= RUNS; run++) {
   console.log(`--- run ${run}/${RUNS} ---`);
   await runViewport('竖屏390x844', { width: 390, height: 844 });
+  await new Promise((r) => setTimeout(r, 1500));
   await runViewport('横屏844x390', { width: 844, height: 390 });
 }
 

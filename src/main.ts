@@ -12,6 +12,7 @@ import { buildDining } from './world/dining.ts';
 import { buildProps } from './world/props.ts';
 import { mergeStatic } from './core/merge.ts';
 import { Flow } from './game/flow.ts';
+import { resolveInteraction } from './game/stations.ts';
 import type { Interaction } from './game/stations.ts';
 import type { GamePhase } from './game/types.ts';
 import type { Results } from './game/flow.ts';
@@ -68,12 +69,40 @@ const flow = new Flow(scene, kitchen.stations, dining.tables, kitchen.grillSlots
   },
   onOrders(customers, tables) { hud.setOrders(customers, tables); },
   onPopup(pos, text, kind) { hud.popup(pos, text, kind); },
-  onAction(a: Interaction) { currentAction = a; },
+  onAction(a: Interaction) {
+    currentAction = a;
+    syncAction();
+  },
   onGuide(text: string) { hud.showGuide(text); },
   onResults(r: Results) { panels.showResults(r, restart, nextLevel); },
 });
 flow.placePlayer();
 const chopBoard = kitchen.stations.find((st) => st.id === 'chop')!;
+
+function syncAction(): void {
+  const enabled = currentAction.action !== 'none';
+  controls.setAction(
+    currentAction.icon,
+    currentAction.label,
+    enabled,
+    flow.denyActive(),
+    !!currentAction.guide,
+  );
+}
+
+function refreshAction(): void {
+  if (flow.phase !== 'playing') return;
+  currentAction = resolveInteraction(
+    flow.player.obj.position,
+    flow.player.carrying,
+    kitchen.stations,
+    dining.tables,
+    flow.customers,
+    flow.grill,
+  );
+  flow.current = currentAction;
+  syncAction();
+}
 
 // B-090: short on-screen names for the「去 X」target of the off-screen edge hint
 const OFF_NAMES: Record<string, string> = { bin: '垃圾桶', crate: '料箱', chop: '切配台', grill: '烤炉', plate: '装盘台' };
@@ -101,6 +130,7 @@ function restart(): void {
   hud.setLevel(flow.level, flow.cfg.target);
   flow.startLevel();
   rig.snapTo(flow.player.obj.position);
+  refreshAction();
 }
 
 function nextLevel(): void {
@@ -108,6 +138,7 @@ function nextLevel(): void {
   if (flow.phase !== 'playing') return;
   hud.setLevel(flow.level, flow.cfg.target);
   rig.snapTo(flow.player.obj.position);
+  refreshAction();
 }
 
 hud.setLevel(flow.level, flow.cfg.target);
@@ -149,6 +180,7 @@ function step(rawDt: number, draw = true, move?: THREE.Vector2): void {
     n += 1;
   }
   if (acc > STEP) acc = STEP;
+  if (n > 0 && flow.phase === 'playing') refreshAction();
 
   if (!draw) return;
 
@@ -163,9 +195,8 @@ function step(rawDt: number, draw = true, move?: THREE.Vector2): void {
   emberPulse = 3.0 + 0.45 * Math.sin(t * 7.3) + 0.15 * Math.sin(t * 17.1);
   kitchen.emberMat.emissiveIntensity = emberPulse;
 
-  // action button semantics
-  const enabled = currentAction.action !== 'none';
-  controls.setAction(currentAction.icon, currentAction.label, enabled, flow.denyActive(), !!currentAction.guide);
+  // action button semantics (same-frame DOM sync)
+  syncAction();
 
   // world-anchored bubbles & table order rings
   if (flow.phase === 'playing') {
@@ -252,10 +283,7 @@ const hooks: TestHooks = {
   tick(dt = 0.05, n = 1, mx = 0, mz = 0) {
     const mv = mx || mz ? new THREE.Vector2(mx, mz) : ZERO_MOVE;
     for (let i = 0; i < n; i++) step(dt, false, mv);
-    controls.setAction(
-      currentAction.icon, currentAction.label,
-      currentAction.action !== 'none', flow.denyActive(), !!currentAction.guide,
-    );
+    syncAction();
     hud.updateGrill(flow.grill.slots);
     hud.updateChop(chopBoard, COOK.chopTaps);
     hud.updateOffscreen(offscreenTarget());

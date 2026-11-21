@@ -1,9 +1,11 @@
 // Touch controls: left joystick (r=56, deadzone 8) + right action button
-// (⌀72) whose icon follows the current interaction. Desktop keys handled
-// in core/input.ts — this module only feeds the same Input object.
+// (⌀84 native <button>) whose icon & caption follow the current interaction.
+// Desktop keys handled in core/input.ts — this module only feeds the same Input object.
 
 import { Input } from '../core/input.ts';
 import type { DishId } from '../config.ts';
+
+const EMPTY_ACTION_LABEL = '当前无可执行动作';
 
 const CSS = `
 #bbq-ctl { position: absolute; inset: 0; pointer-events: none; }
@@ -14,6 +16,8 @@ const CSS = `
   backdrop-filter: blur(6px); pointer-events: auto; touch-action: none;
   opacity: .85; transition: opacity .2s;
 }
+#bbq-stick:focus { outline: none; }
+#bbq-stick:focus-visible { outline: 2px solid #f0c060; outline-offset: 2px; }
 #bbq-stick .nub {
   position: absolute; width: 56px; height: 56px; border-radius: 50%;
   left: 36px; top: 36px;
@@ -21,16 +25,24 @@ const CSS = `
   box-shadow: 0 2px 8px rgba(0,0,0,.4);
 }
 #bbq-act {
-  position: absolute; width: 72px; height: 72px; border-radius: 50%;
+  position: absolute;
+  appearance: none; -webkit-appearance: none;
+  box-sizing: border-box; font: inherit; margin: 0; padding: 0 0 3px;
+  width: 84px; height: 84px; border-radius: 50%;
   right: 26px; bottom: calc(30px + env(safe-area-inset-bottom));
   background: rgba(24,16,12,.72); border: 2px solid rgba(232,180,90,.7);
   backdrop-filter: blur(8px); pointer-events: auto; touch-action: none;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 1px; color: #f5e8d8; transition: transform .08s, border-color .15s;
+  gap: 2px; color: #f5e8d8; cursor: pointer; text-align: center;
+  transition: transform .08s, border-color .15s;
 }
-#bbq-act svg { width: 26px; height: 26px; }
-#bbq-act .cap { font-size: 10px; font-weight: 600; color: rgba(245,232,216,.85);
-  max-width: 66px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#bbq-act:focus { outline: none; }
+#bbq-act:focus-visible { outline: 2px solid #f0c060; outline-offset: 2px; }
+#bbq-act svg { width: 22px; height: 22px; flex: none; }
+#bbq-act .cap {
+  display: block; font-size: 12px; font-weight: 700; color: rgba(245,232,216,.95);
+  max-width: 100%; white-space: nowrap; letter-spacing: 0; line-height: 1.15;
+}
 #bbq-act.on { border-color: #f0c060; }
 #bbq-act:active { transform: scale(.92); }
 #bbq-act.deny { border-color: #e05a3a; }
@@ -104,15 +116,13 @@ const ICONS: Record<string, string> = {
 export class Controls {
   private stick: HTMLElement;
   private nub: HTMLElement;
-  private act: HTMLElement;
+  private act: HTMLButtonElement;
   private actIcon: HTMLElement;
   private actCap: HTMLElement;
   private input: Input;
   private stickId = -1;
   private origin = { x: 0, y: 0 };
-  private lastIcon = '';
-  private lastCap = '';
-  private deny = false;
+  private lastIcon = 'none';
 
   constructor(uiRoot: HTMLElement, input: Input) {
     this.input = input;
@@ -126,17 +136,27 @@ export class Controls {
 
     this.stick = document.createElement('div');
     this.stick.id = 'bbq-stick';
+    this.stick.setAttribute('role', 'application');
+    this.stick.setAttribute('aria-label', '移动摇杆');
+    this.stick.setAttribute('aria-roledescription', '虚拟摇杆');
+    this.stick.tabIndex = 0;
     this.nub = document.createElement('div');
     this.nub.className = 'nub';
+    this.nub.setAttribute('aria-hidden', 'true');
     this.stick.appendChild(this.nub);
     wrap.appendChild(this.stick);
 
-    this.act = document.createElement('div');
+    this.act = document.createElement('button');
+    this.act.type = 'button';
     this.act.id = 'bbq-act';
-    this.actIcon = document.createElement('div');
+    this.act.setAttribute('aria-label', EMPTY_ACTION_LABEL);
+    this.act.setAttribute('aria-disabled', 'true');
+    this.actIcon = document.createElement('span');
+    this.actIcon.className = 'ico';
+    this.actIcon.setAttribute('aria-hidden', 'true');
     this.actIcon.innerHTML = ICONS.none;
     this.actIcon.style.display = 'flex';
-    this.actCap = document.createElement('div');
+    this.actCap = document.createElement('span');
     this.actCap.className = 'cap';
     this.act.appendChild(this.actIcon);
     this.act.appendChild(this.actCap);
@@ -197,17 +217,27 @@ export class Controls {
   }
 
   setAction(icon: string, caption: string, enabled: boolean, deny: boolean, guide = false): void {
-    if (icon !== this.lastIcon) {
-      this.lastIcon = icon;
-      this.actIcon.innerHTML = ICONS[icon] ?? ICONS.none;
+    const iconKey = icon in ICONS ? icon : 'none';
+    if (iconKey !== this.lastIcon) {
+      this.lastIcon = iconKey;
+      this.actIcon.innerHTML = ICONS[iconKey];
     }
-    if (caption !== this.lastCap) {
-      this.lastCap = caption;
+    if (this.actCap.textContent !== caption) {
       this.actCap.textContent = caption;
     }
-    this.act.style.opacity = enabled || guide ? '1' : '0.55';
-    if (deny !== this.deny) {
-      this.deny = deny;
+    const ariaLabel = caption.trim() ? caption : EMPTY_ACTION_LABEL;
+    if (this.act.getAttribute('aria-label') !== ariaLabel) {
+      this.act.setAttribute('aria-label', ariaLabel);
+    }
+    const ariaDisabled = enabled ? 'false' : 'true';
+    if (this.act.getAttribute('aria-disabled') !== ariaDisabled) {
+      this.act.setAttribute('aria-disabled', ariaDisabled);
+    }
+    const opacity = enabled || guide ? '1' : '0.55';
+    if (this.act.style.opacity !== opacity) {
+      this.act.style.opacity = opacity;
+    }
+    if (this.act.classList.contains('deny') !== deny) {
       this.act.classList.toggle('deny', deny);
     }
   }

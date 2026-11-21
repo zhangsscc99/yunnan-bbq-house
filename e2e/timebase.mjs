@@ -1,6 +1,7 @@
 // E2E: B-035 — game clock must follow the wall clock (fixed-step accumulator), regardless of render fps.
 // Usage: E2E_BASE=http://127.0.0.1:3035/bbq/ node e2e/timebase.mjs
 //        E2E_RUNS=2 — repeat the whole suite N times in one process (default 1)
+// 测量必须原子：live rAF 会在多次 evaluate 之间推进时钟，故每段「读基线 → tick → 读结果」都收进同一次 evaluate。
 
 const { chromium } = await import('playwright');
 const { default: assert } = await import('node:assert/strict');
@@ -47,35 +48,38 @@ async function withRetry(label, fn) {
   }
 }
 
-const state = (page) => page.evaluate(() => window.__test.state());
-const tick = (page, dt, n, mx = 0, mz = 0) => page.evaluate(([a, b, c, d]) => window.__test.tick(a, b, c, d), [dt, n, mx, mz]);
-
 const runOnce = (run) => withRetry(`run ${run}`, async () => {
   const { page, errors, close } = await open(BASE, { width: 390, height: 844 });
   try {
     await page.evaluate(() => { window.__test.start(); window.__test.pauseSpawns(true); });
 
     // a) low-fps clock: 6 frames of rawDt=1.0s → ~6s of game time
-    let t0 = (await state(page)).timeLeft;
-    await tick(page, 1.0, 6);
-    let d = t0 - (await state(page)).timeLeft;
+    let d = await page.evaluate(() => {
+      const t0 = window.__test.state().timeLeft;
+      window.__test.tick(1.0, 6, 0, 0);
+      return t0 - window.__test.state().timeLeft;
+    });
     assert.ok(d >= 5.4 && d <= 6.6, `a) 1fps clock: timeLeft Δ${d.toFixed(3)}s not in 5.4–6.6`);
     console.log(`PASS run ${run} a) 低帧时钟 tick(1.0,6) timeLeft Δ=${d.toFixed(3)}s`);
 
     // b) low-fps displacement: 2 frames of 1s at full stick → 3.2 m/s × 2s.
     // Start in the free dining-room lane (-3.2, 1.5) and walk +x: walking +z from (0,0) hits the counter wall after ~2.2m.
     const [x0, z0] = [-3.2, 1.5];
-    await page.evaluate(([x, z]) => window.__test.teleport(x, z), [x0, z0]);
-    await tick(page, 1.0, 2, 1, 0);
-    const p = (await state(page)).player;
-    const dist = Math.hypot(p.x - x0, p.z - z0);
+    const dist = await page.evaluate(([x, z]) => {
+      window.__test.teleport(x, z);
+      window.__test.tick(1.0, 2, 1, 0);
+      const p = window.__test.state().player;
+      return Math.hypot(p.x - x, p.z - z);
+    }, [x0, z0]);
     assert.ok(dist >= 5.5 && dist <= 7.5, `b) displacement ${dist.toFixed(2)}m not in 5.5–7.5`);
     console.log(`PASS run ${run} b) 低帧位移 tick(1.0,2,1,0) 位移=${dist.toFixed(2)}m`);
 
     // c) 60fps regression
-    t0 = (await state(page)).timeLeft;
-    await tick(page, 1 / 60, 60);
-    d = t0 - (await state(page)).timeLeft;
+    d = await page.evaluate(() => {
+      const t0 = window.__test.state().timeLeft;
+      window.__test.tick(1 / 60, 60, 0, 0);
+      return t0 - window.__test.state().timeLeft;
+    });
     assert.ok(d >= 0.85 && d <= 1.15, `c) 60fps clock: Δ${d.toFixed(3)}s not in 0.85–1.15`);
     console.log(`PASS run ${run} c) 60fps 回归 tick(1/60,60) timeLeft Δ=${d.toFixed(3)}s`);
 

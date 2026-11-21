@@ -957,3 +957,41 @@ vision 复核：竖屏 `e2e/shots/b090-port-grill-bin.png` 放大后独立读出
 需要人工确认的有两条：
 - **B-099 小费**：是我按实收反推出来的。竖屏 ¥60、横屏 ¥61，按 §2「耐心 ≥0.8 给满」本应都是 ¥62（小费 ¥14）。上菜那一刻的耐心比例本轮没有直接读到，请开发先看实现里有没有这一条。
 - **门边斜放的木块**（`port-07` / `port-09` / `land-06`）：我认不出是什么，只在报告里记了疑问，没有开单，请开发确认它是什么。
+
+---
+
+## 第 21 轮新增（2026-11-21 20:38Z）
+
+### B-106 局内与结算星级共用单一计算函数，修正「0 服务/多愤怒仍给 2★」
+优先级：P1
+来源：第 21 轮走查（同一局 `angry=2` 时局内 `#bbq-hud .stars` 为 **1★**（`port-07-angry-hud.png`）；随即以 `money=190/180, served=0, angry=2, waste=0` 结束关卡，结算 `.stars-big` 却是 **2★**（`port-08-results-angry.png`）；`served=0, angry=5/6` 仍给 2★ 并显示「目标达成，进入第 2 关」，见 `port-05-results.png`、`land-05-results.png`）
+需求：① 抽单一纯函数 `calcStars({money,target,served,angry,waste})`，局内顶栏与结算面板同源调用；局内若需展示「当前最高可得」，必须换文案（如「满意度」）而不是同样叫「评级」。② 修订 `GAME-DESIGN §4` 与实现：`served === 0` 或 `angry >= 3` 时星级上限锁 1★，禁止「一个人没服务、气走 5–6 人」拿 2★。③ 两处星级容器挂 `data-stars="N"` 与 `aria-label="评级 N/3"`（衔接 `B-082`）。
+验收：e2e 双端构造 4 组状态（`{money:190,served:0,angry:2}`、`{money:190,served:0,angry:5}`、`{money:190,served:4,angry:0,waste:0}`、`{money:130,served:3,angry:1,waste:0}`），断言打烊前 1 帧 `#bbq-hud .stars[data-stars]` 与结算首帧 `.stars-big[data-stars]` 严格相等；前两组 `=== 1`，第三组 `=== 3`；各连跑 3 次、0 JS error。
+参考：胡闹厨房 2 局内星级进度与结算星级共用同一阈值表；沙威玛传奇把差评直接折抵当日评级，不会出现局内扣星、结算反升。
+
+### B-107 愤怒离店补 `#bbq-popups` 扣分飘字与头顶红怒符号，双端不裁切
+优先级：P1
+来源：第 21 轮走查（3 位顾客耐心归零 `angry 0→3`、`customers 3→1` 后 `#bbq-popups` 实测为空字符串，无任何扣分飘字；`port-03-angry.png` 顾客头顶无 `GAME-DESIGN §7` 的红怒符号；横屏 `land-03-angry.png` 上方两枚「愤怒离店」胶囊被视口上沿裁掉上半截）
+需求：① 离店事件必须派发可见飘字（`愤怒离店 −1★` 或 `满意度 −1`，寿命 ≥1.2s，由 `flow.update(dt)` 驱动）。② 顾客进 `leaving-angry` 时头顶显示 ≥24px 内联 SVG 红怒符号 ≥0.6s，再沿回门路径离场（落实 §7）。③ 飘字与世界锚定离店标签统一四边钳制（水平 `[8, vw-8]`、垂直 `[topbar.bottom+4, vh-8]`），多人同帧离店自动错行。
+验收：双端令 3 位就座顾客同时耐心归零，`MutationObserver` 断言 `angry` 递增后 0.5s 内 `#bbq-popups .popup` ≥1 条且匹配 `/愤怒|满意度/`；所有 `.popup` 与离店标签满足 `top ≥ topbar.bottom+4 && bottom ≤ vh-8 && left ≥ 8 && right ≤ vw-8`，与 `.topbar` 交叠 `0`；头顶红怒节点 `≥20×20`；各连跑 3 次。
+参考：胡闹厨房 2 订单超时顶部闪红并弹出明确扣分飘字；沙威玛传奇顾客耐心耗尽头顶出怒脸并伴随离店动画。
+
+### B-108 HUD 全量字号 ≥13px 硬门禁，补齐 `.tb-badge` / `.order-num` 桌单编号
+优先级：P1
+来源：第 21 轮走查（第 5 次复发：公网实测 `#bbq-act .cap` **10px**、`.card .pr` **11px**、`.topbar .k` **12px**、`.gb-txt` **12px**，全部低于 `ART-DIRECTION §5` 的 13px；`.tb-badge` 与 `.order-num` 在公网构建里均为 `null`，订单卡与餐桌无编号对应，`port-02-joystick.png`、`land-02-joystick.png`）
+需求：① 全部 HUD 文本（`.topbar .k/.v`、`#bbq-act .cap`、`.card .nm/.pr`、`.gb-txt`、`.cb-txt`）双端一律 `font-size ≥13px`，禁止矮屏 media query 缩字；动作键说明可加宽或两行排布防省略。② 补齐并确认线上生效 `.tb-badge`（≥14px，卡内桌号徽章）与 `.order-num`（餐桌世界锚定桌号牌），与订单卡编号/色标一一映射。③ 字号下限与桌号存在性写进发布后回归脚本，防止旧包或样式回归再跌破 13px。
+验收：双端就座 2–3 位顾客并触发烤制/切配态，断言上述 6 类文本 `parseFloat(fontSize) ≥ 13` 且 `scrollWidth ≤ clientWidth`；`.tb-badge` 与 `.order-num` 数量 `=== seatedCount`、`.tb-badge` `fontSize ≥ 14`、编号集合一致；针对线上公网 URL 验证，各连跑 3 次。
+参考：胡闹厨房 2 掌机/移动端保证订单图标与数字高对比可读；沙威玛传奇用高对比大号数字建立桌位—订单瞬时对应。
+
+### B-109 首屏内联加载骨架 + 首包体积拆分与监控
+优先级：P2
+来源：第 21 轮走查（公网 TTFB `680ms`、JS bundle `614KB`，SwiftShader + 宿主 load 13.6/8 核下 `DOMContentLoaded` 实测 `8947ms` / `29358ms`、`开 店` 可见 `8969ms` / `10674ms`，全程无骨架或进度；高负载与软件渲染放大了绝对值，但「无骨架」本身是产品缺口）
+需求：① `index.html` 内联暖色骨架层 `#bbq-boot-splash`（店名 + 纯 CSS 炭火呼吸点 +「正在生火准备…」），不依赖主 bundle，开店面板首帧渲染后平滑淡出。② 构建拆出 Three.js vendor chunk 与业务 chunk，开 gzip/brotli 传输校验并对单包体积设告警阈值。③ 走查脚本把真机/低负载冷启动基线与高负载软渲数据分列记录。
+验收：公网限速（Fast 3G）或常规冷启动下，`responseEnd` 后 300ms 内 `#bbq-boot-splash` 可见且文本非空；`phase==='menu'` 且「开 店」可见后 500ms 内骨架已移除或 `display:none`；`dist/assets/` 有独立 vendor chunk 且业务入口 chunk 未压缩 ≤180KB；各连跑 3 次。
+参考：胡闹厨房 2 进关前的动态火焰加载幕布；沙威玛传奇首屏 1 秒内出品牌底图 + 进度条。
+
+本轮新单 4 条（`B-106`–`B-109`，其中 P1 三条：`B-106` 星级口径、`B-107` 离店反馈、`B-108` 字号与桌号），另有 4 条沿用既有编号（`B-081` 公网旧包、`B-078` 横屏摇杆压料箱、`B-093` 世界标签裁切、`B-060`/`B-103` 竖屏两键对齐）。
+
+需要人工确认的：
+- **`B-081` 是唯一阻断项**：公网 `index-BklOlgyL.js` / 本机 `:3035` `index-Shggdsxc.js` / `dist/assets/` `index-DBAY4hMS.js` 三者不一致，线上用户看不到 B-072/B-079/B-090 等已修项。请先确认 openfolio.uk 的源站与缓存指向，再谈任何线上验收。
+- **`B-106` 的星级语义**需要产品口径决定：`served=0` 但营业额达标到底该给几星？本轮按 `GAME-DESIGN §4` 推导为「≤1★」，若产品不同意请改 §4 条款而不是只改代码。

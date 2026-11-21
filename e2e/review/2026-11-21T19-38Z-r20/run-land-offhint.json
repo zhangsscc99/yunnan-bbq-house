@@ -1,0 +1,119 @@
+{
+ "R": {
+  "carry": {
+   "dish": "pork",
+   "stage": "waste"
+  },
+  "label": "去垃圾桶"
+ },
+ "atPlate": {
+  "display": "none",
+  "text": "",
+  "dir": null,
+  "aria": null,
+  "rect": {
+   "x": 0,
+   "y": 0,
+   "w": 0,
+   "h": 0
+  },
+  "fontSize": "15px",
+  "pointerEvents": "none",
+  "label": "去垃圾桶",
+  "overlaps": [
+   0,
+   0
+  ],
+  "gaps": {
+   "l": 0,
+   "r": 844,
+   "t": 0,
+   "b": 390
+  },
+  "guide": {
+   "label": "垃圾桶",
+   "x": 35,
+   "y": 277,
+   "inside": true
+  }
+ },
+ "atGrill": {
+  "display": "none",
+  "text": "",
+  "dir": null,
+  "aria": null,
+  "rect": {
+   "x": 0,
+   "y": 0,
+   "w": 0,
+   "h": 0
+  },
+  "fontSize": "15px",
+  "pointerEvents": "none",
+  "label": "去垃圾桶",
+  "overlaps": [
+   0,
+   0
+  ],
+  "gaps": {
+   "l": 0,
+   "r": 844,
+   "t": 0,
+   "b": 390
+  },
+  "guide": {
+   "label": "垃圾桶",
+   "x": 35,
+   "y": 277,
+   "inside": true
+  }
+ },
+ "nearBin": {
+  "display": "none",
+  "text": "",
+  "dir": null,
+  "aria": null,
+  "rect": {
+   "x": 0,
+   "y": 0,
+   "w": 0,
+   "h": 0
+  },
+  "fontSize": "15px",
+  "pointerEvents": "none",
+  "label": "手上有东西",
+  "overlaps": [
+   0,
+   0
+  ],
+  "gaps": {
+   "l": 0,
+   "r": 844,
+   "t": 0,
+   "b": 390
+  },
+  "guide": null
+ },
+ "afterBin": {
+  "waste": 0,
+  "carry": {
+   "dish": "pork",
+   "stage": "waste"
+  }
+ },
+ "hud": {
+  "stick": [
+   16,
+   262,
+   112,
+   112
+  ],
+  "act": [
+   742,
+   298,
+   76,
+   76
+  ]
+ },
+ "errors": []
+}

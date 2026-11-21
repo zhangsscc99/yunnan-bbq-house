@@ -1,0 +1,273 @@
+{
+  "shots": [
+    "/tmp/r20/port-21-served.png",
+    "/tmp/r20/port-22-after-serve.png",
+    "/tmp/r20/port-23-tap-spam.png"
+  ],
+  "errors": [],
+  "log": [
+    {
+      "l": "seated",
+      "carry": null,
+      "money": 0,
+      "served": 0,
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      },
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "act": "none",
+      "label": "去料箱取料"
+    },
+    {
+      "l": "after-12-taps-crate",
+      "carry": "raw",
+      "money": 0,
+      "served": 0,
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      },
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "act": "none",
+      "label": "手上有东西"
+    },
+    {
+      "l": "board",
+      "carry": null,
+      "money": 0,
+      "served": 0,
+      "chop": {
+        "held": "raw",
+        "chopLeft": 3
+      },
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "act": "chop",
+      "label": "切配 0/3"
+    },
+    {
+      "l": "c1",
+      "carry": null,
+      "money": 0,
+      "served": 0,
+      "chop": {
+        "held": "raw",
+        "chopLeft": 2
+      },
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "act": "chop",
+      "label": "切配 1/3"
+    },
+    {
+      "l": "picked",
+      "carry": "chopped",
+      "money": 0,
+      "served": 0,
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      },
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "act": "none",
+      "label": "去烤炉"
+    },
+    {
+      "l": "grill-put",
+      "carry": null,
+      "money": 0,
+      "served": 0,
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      },
+      "grill": [
+        "chopped@0.1",
+        null,
+        null
+      ],
+      "act": "none",
+      "label": "烤制中…"
+    },
+    {
+      "l": "grill-cooked",
+      "carry": null,
+      "money": 0,
+      "served": 0,
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      },
+      "grill": [
+        "cooked@6.8",
+        null,
+        null
+      ],
+      "act": "take-grill",
+      "label": "取烤串"
+    },
+    {
+      "l": "grill-take",
+      "carry": "cooked",
+      "money": 0,
+      "served": 0,
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      },
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "act": "none",
+      "label": "去装盘台"
+    },
+    {
+      "l": "plated",
+      "carry": "plated",
+      "money": 0,
+      "served": 0,
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      },
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "act": "none",
+      "label": "送去客桌"
+    },
+    {
+      "l": "served",
+      "carry": null,
+      "money": 60,
+      "served": 1,
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      },
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "act": "none",
+      "label": "去料箱取料"
+    }
+  ],
+  "build": "5f0e889-202611211938",
+  "tapCrate": {
+    "carrier": {
+      "dish": "pork",
+      "stage": "raw"
+    },
+    "money": 0
+  },
+  "tapChop": {
+    "chop": {
+      "held": "chopped",
+      "chopLeft": 0
+    },
+    "act": "chop",
+    "label": "取回切好的串"
+  },
+  "grillCooked": {
+    "stage": "cooked",
+    "t": 6.8
+  },
+  "atTable": {
+    "act": "serve",
+    "label": "上菜 烤五花肉拼盘",
+    "carry": "plated",
+    "player": [
+      -3.3,
+      -1.2
+    ],
+    "customers": [
+      "1:t1:pork:seated"
+    ],
+    "dists": [
+      [
+        "t1",
+        1.2
+      ],
+      [
+        "t2",
+        3.795
+      ],
+      [
+        "t3",
+        7.299
+      ],
+      [
+        "t4",
+        5.459
+      ]
+    ]
+  },
+  "served": {
+    "money": 60,
+    "served": 1,
+    "carry": null,
+    "angry": 0,
+    "customers": [
+      "1:eating"
+    ]
+  },
+  "popups": [
+    "+¥60"
+  ],
+  "hud": [
+    "第 1 关",
+    "营业额 ¥60",
+    "时间 2:48",
+    "评级"
+  ],
+  "tapGrillEmpty": {
+    "grill": [
+      null,
+      null,
+      null
+    ],
+    "carry": null,
+    "money": 60
+  },
+  "perf": {
+    "frames": 56,
+    "perf": {
+      "calls": 56,
+      "tris": 7240,
+      "programs": 16
+    }
+  },
+  "stateEnd": {
+    "phase": "playing",
+    "money": 60,
+    "served": 1,
+    "angry": 0,
+    "waste": 0,
+    "timeLeft": 124.9
+  }
+}

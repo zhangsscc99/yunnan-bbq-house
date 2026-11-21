@@ -1,0 +1,31 @@
+{
+ "burntInHand": {
+  "dish": "pork",
+  "stage": "waste"
+ },
+ "atBin": {
+  "act": "discard",
+  "label": "丢弃",
+  "carry": {
+   "dish": "pork",
+   "stage": "waste"
+  },
+  "player": {
+   "x": -5.5,
+   "z": 2
+  }
+ },
+ "after": {
+  "waste": 1,
+  "carry": null,
+  "money": 0,
+  "label": "去料箱取料"
+ },
+ "popups": [
+  "丢弃"
+ ],
+ "shots": [
+  "/tmp/r20/port-41-bin-discard.png"
+ ],
+ "errors": []
+}

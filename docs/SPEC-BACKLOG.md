@@ -659,3 +659,54 @@
 来源：第 14 轮走查。`docs/GAME-DESIGN.md §7` 写「收款：桌面飘 `+¥xx` 上浮文字 **0.8s**」，实现是 `bbq-popup-hold 2.2s`（第 13 轮改的）。两份文档各说一个数，验收时无法判定对错。
 需求：① 以可读性为准把 §7 改成「上浮 0.35s + 停留 1.4s + 淡出 0.45s，合计 2.2s」并同步 `config.ts` 里的常量注释；② 后续任何反馈时长只允许在 `config.ts` 定义、文档引用同一数字。
 验收：`grep -n "0.8s\|2.2s" docs/GAME-DESIGN.md` 只剩一处且与 `config.ts` 常量一致；e2e 断言 `.popup` 生命周期 ∈ [1.9s, 2.5s]（游戏时间）。
+
+> **B-063（P0）本轮关单**：`2290acb-202611210547` 上 `src/main.ts:116-122` 已把 `pendingAction = min(peekAction(),4)` 提到 `while` 之前、把 `consumeAction()` 移进循环体内 `n===0` 分支。`e2e/review/2026-11-21T06-15Z-r15/r15d.mjs` 4 组断言全绿：`press(); tick(0.005,1); tick(0.05,1)` → 生串到手；120Hz `tick(0.0083,*)` → 到手；砧板 3 次点按（每下两帧 8.33ms）`chopLeft 3→0`；连按 5 次只消费 1 次。保留该脚本做回归，不再复开。
+
+### B-068 订单必须绑定桌位：卡片加桌号 + 世界内桌/顾客高亮，去掉重复表达
+优先级：P1
+来源：第 15 轮走查（`port-07-order-card.jpg` / `land-03-orders.jpg`）。订单卡 `142×47 @(238,54)` 只写「烤五花肉拼盘 ¥48 · 等待」，无桌号无指向；世界空间同时飘一张同菜名气泡，vision 两次独立判「容易被误认为两单」「只能猜这单是哪桌的」。
+需求：① `#bbq-orders .card` 增加桌号徽章（`t1..t4` → 显示「1」…「4」，或「左上/中上/右上/中下」），并写入 `data-table`；② 对应桌面上出现同色地面光圈/描边（复用 `Highlighter` 的 emissive 脉冲），顾客头顶只保留小气泡（菜名 + 耐心环），**不再画整张卡**；③ 多单时卡片按桌号固定排序（不要随顾客入座顺序跳位）；④ 上菜后卡片变「用餐中」并保留到顾客离店。
+验收：e2e——`spawnNow` 到 `t2` 后断言 `card.dataset.table === 't2'`、该桌存在 `[data-order-ring]`；同时只允许 1 个 `[data-order-card]` 类节点（世界内整卡数 0）；双端截图 vision 能指出「这单是第几桌」；连跑 3 次。
+参考：胡闹厨房 2 的桌位数字徽章 + 顾客头顶小票。
+
+### B-069 低耐心要「看得见人」，离店要「看得见走」
+优先级：P1
+来源：第 15 轮走查。`setPatience(13)` 后卡片 `class="card angry"`、`stroke=#e05a3a`（环逻辑对），但顾客本人无任何变化（vision：「没有表情、汗滴、跺脚、催促气泡」）；`setPatience(0.4)` 后 `path` 采样在 0.8s 内 `seated → leaving-angry → gone`，飘字还在、人已经没了（`port-08-angry-popup.jpg`）。
+需求：① 耐心 <25%：顾客头顶常驻汗滴/感叹号徽章 + 角色 0.6s 周期轻微抖动（幅度 ≤2cm，不破坏读图）；② 订单卡显示剩余秒数（`12s`），≤10s 时秒数与环同时闪烁（1Hz，仅改 opacity/描边，不做全屏闪烁）；③ 离店动画：从座位走到门口 ≥1.5s，飘字锚点每帧跟随顾客头顶（现在锚在座位）；④ 离店后 0.3s 桌子出现「可入座」呼吸高亮，提示可接新客。
+验收：e2e——`setPatience(12)` 后 `#bbq-popups`/气泡内出现 `[data-urge]` 且 `card` 文本匹配 `/\d+s/`；`leaving-angry` 阶段持续 ≥1.2s 且 `customers[0].z` 单调递减 ≥1.0m；飘字 rect 与顾客屏幕投影距离 ≤80px；双端各 1 帧 vision 能读出「着急/正在走」；连跑 3 次。
+
+### B-070 首屏遮罩必须隐藏并禁用触控层
+优先级：P2
+来源：第 15 轮走查。`port-01-title.jpg` / `land-01-title.jpg` 里遮罩后仍能看到摇杆与动作键轮廓；vision：「会造成视觉干扰，也让人不确定背景控件是否可操作」。
+需求：`showStart()`/`showResults()` 时给 `#bbq-ctl` 加 `.hidden`（`opacity 0; pointer-events none; transition .2s`），`start()`/`nextLevel()` 时移除；面板存在期间 `#bbq-stick`、`#bbq-act` 不响应任何指针事件。
+验收：e2e——开局面板存在时 `#bbq-stick` 的 `pointerEvents === 'none'` 且 `opacity === '0'`；点击摇杆中心 200ms 后 `state.player` 位移 = 0；`start()` 后两者恢复；双端各 1 帧。
+
+### B-071 按钮文案去全角空格、结算按钮加高到 44px
+优先级：P2
+来源：第 15 轮走查。`开 店` / `再 开 一 局` / `进入第 2 关` 用全角空格撑字距，vision 判「非常不专业」；结算次按钮 `150×40`（主按钮 45px），低于 44px 触控下限；`land-01` 卡片在 844×390 里只占 33% 宽、两侧大片留白。
+需求：① 文案去掉 `\u3000`，字距改 `letter-spacing: .12em`；② 所有面板按钮 `min-height: 44px`，主次按钮间距 ≥12px；③ 横屏（`aspect > 1.6`）卡片 `max-width: 420px`、副标题与流程行并排，避免窄高。
+验收：e2e——遍历 `.bbq-panel button`：`textContent` 不含 `\u3000`、`rect.height ≥ 44`；双端截图 vision 不得再判「字距怪异/按钮偏小」；连跑 3 次。
+
+### B-072 横屏必须完整看到工作台（crate-*/grill/plate 不被 HUD 与屏幕下缘切掉）
+优先级：P1
+来源：第 15 轮走查。`land-02-started.jpg` / `land-03-orders.jpg` vision 两次判「底部烤炉、料箱、备料台被屏幕下缘截断，工作区不完整」；`#bbq-stick` 底边 368（390−22），与台面屏幕投影重叠。
+需求：① `aspect ≥ 1.5` 时把相机 `lookAt` 的 −z 偏移从 1.2m 降到 0.4m（或按 `halfH` 反算），保证 z=2 那一排站点屏幕 y ≤ `vh−96`；② 横屏摇杆底距 ≥ `max(16px, safe-area)` 且尺寸从 128 降到 112，减少对左侧料架的遮挡；③ 若仍不足，允许横屏 `halfH` 略放宽到 `worldHalfD·sinP`（当前已是上限，需改世界取景比例，见 ART §1 待定项）。
+验收：e2e——横屏下对 `crate-pork/mush/mix`、`grill`、`plate` 的 `worldToScreen` 断言 `y ≤ vh−96` 且 `x ∈ [0,vw]`；`#bbq-stick` 与 `#bbq-orders`、台面 rect 交叠 = 0；双端截图 vision 不再出现「台面被截断」；连跑 3 次。
+
+### B-073 玩家与顾客外观必须一眼可分
+优先级：P2
+来源：第 15 轮走查。`port-08` / `port-07` vision 两次把玩家小厨师判成顾客（「更像玩家/厨师角色」「白衣白帽红裙的顾客」）。
+需求：① 玩家固定白厨师帽（高 0.16m）+ 朱红围裙 + 脚下常驻浅色光圈（半径 0.45m，opacity .25）；② 顾客禁用白帽，统一低饱和便服 + 手提袋/菜单，入座后朝向桌子；③ 颜色通道上加一层轮廓光（rim light），玩家偏暖白、顾客偏环境色。
+验收：给 3 名 vision 独立单帧判定，必须都指出「戴白帽的是玩家、其余是顾客」；e2e 断言玩家 mesh 含 `userData.role='player'` 且存在 `playerRing` 节点；双端各 1 帧。
+
+### B-074 文档漂移：关卡数量与结算字段
+优先级：P2
+来源：第 15 轮走查。`GAME-DESIGN §3` 写「M1 仅 1 关」，实际 `config.ts: LEVELS` 已 2 关（180s/¥180、180s/¥260）且实测可进；`§4` 写结算展示「满意度」，实际展示「愤怒离店 N 位」。
+需求：① §3 表格补第 2 关（时长 180s / 目标 ¥260 / 上限 3 / 间隔 9–15s），删掉「M1 仅 1 关」；② §4 把「满意度」改为「愤怒离店数（满意度 -1/位）」，与面板字段一致；③ 顺带修 §7 的飘字时长（与 B-067 合并为「只在 `config.ts` 定义一次」）。
+验收：`grep -n "仅 1 关" docs/GAME-DESIGN.md` 无命中；`grep -n "满意度\|愤怒离店" docs/GAME-DESIGN.md` 与 `panels.ts` 字段一一对应；`LEVELS` 每关在文档表格里出现一次。
+
+### B-075 `setPointerCapture` 必须包 try/catch（否则一次异常打死整个摇杆）
+优先级：P2
+来源：第 15 轮走查（探针副作用暴露的健壮性缺口）。`src/ui/controls.ts:157` 的 `this.stick.setPointerCapture?.(e.pointerId)` 在「没有活动指针」时抛 `NotFoundError`（本轮 4 次 `pageerror`），而它排在 `window.addEventListener('pointermove', onMove)` **之前** —— 抛错即中断 `pointerdown` 处理器，摇杆从那一刻起完全失效（`nub` 不跟、`input.stick` 恒 0）。
+需求：把捕捉与事件绑定顺序对调（先 `addEventListener` 再 `setPointerCapture`），并 `try { this.stick.setPointerCapture(id) } catch {}`；`onUp` 里同样 `try { releasePointerCapture } catch {}`。
+验收：e2e——`page.evaluate` 派发无活动指针的 `pointerdown` 后，再派发 `pointermove` 能移动玩家；`pageerror` 计数 0；真机触摸拖动仍正常（位移 >1.5m/s）；连跑 3 次。

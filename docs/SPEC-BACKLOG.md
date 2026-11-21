@@ -482,6 +482,10 @@
 验收：e2e——`press()` 后立即断言 `getComputedStyle(popup).opacity === "1"`、宽度 ≥ 字数×字号×0.55、高度 ≥ 字号×1.2；`__test.tick` 推 3 帧后 popup 仍在 DOM；1fps 环境连拍 3 帧至少 1 帧能读到 `+¥N`。
 参考：`GAME-DESIGN §7`（飘字 0.8s）；B-031 / B-039。
 
+> **已修（2026-11-21 04:20Z，代码 `6a20961`）**：`.popup` 去淡入（出生 `opacity:1`）、`24px/800` + 深色底框与描边、`translate(-50%,-100%)` 并上抬 `POPUP_LIFT=44px`、与 `.bubble`/其它飘字做矩形避让搜索、寿命改 `2.2s` 且需 `frames>=3`（移除前写 `dataset.life`）。
+> 验收 `e2e/popup.mjs`（竖屏 390×844 + 横屏 844×390，`E2E_RUNS=3` 连跑三次）：出生 `opacity=1 / font 24px / 97×34 与 126×34 / 距锚点 74、44、56px / 不与气泡相交`，实测寿命 3.0–9.7s（帧卡时 rAF 延后，非产品问题），最终正常移除，0 JS error，draw calls 64–74 未增，末行 `POPUP OK`；`smoke.mjs` 仍 `SMOKE OK`。
+> 注意：B-047 的「看得见」已关单；`B-039`（世界侧红怒符号）仍开。
+
 ### B-048 HUD 营业额要有滚动/强调
 优先级：P2
 来源：第 10 轮走查（`Hud.setMoney` 直接 `this.moneyV.textContent = '¥'+v`，无插值、无强调；`GAME-DESIGN §7` 写「HUD 营业额滚动」，实施缺失）

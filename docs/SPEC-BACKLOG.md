@@ -995,3 +995,19 @@ vision 复核：竖屏 `e2e/shots/b090-port-grill-bin.png` 放大后独立读出
 需要人工确认的：
 - **`B-081` 是唯一阻断项**：公网 `index-BklOlgyL.js` / 本机 `:3035` `index-Shggdsxc.js` / `dist/assets/` `index-DBAY4hMS.js` 三者不一致，线上用户看不到 B-072/B-079/B-090 等已修项。请先确认 openfolio.uk 的源站与缓存指向，再谈任何线上验收。
 - **`B-106` 的星级语义**需要产品口径决定：`served=0` 但营业额达标到底该给几星？本轮按 `GAME-DESIGN §4` 推导为「≤1★」，若产品不同意请改 §4 条款而不是只改代码。
+
+## 第 20 轮开发（2026-11-21 20:22–21:15Z，agy gemini-4-neon-xhigh）
+
+> 模型说明：`claude-opus-5-5-high` 首轮即 `RESOURCE_EXHAUSTED`（Individual quota reached，报错称 3h9m 后重置）→ 回落 `gemini-4-neon-xhigh` 完整跑完实现。`agy-dev.sh` 退出码 3 是**误判**：脚本 `tail -30` 的额度正则命中了首模型 429 那行，实际是 2400s 的 `timeout` 把 fallback 的 e2e 阶段掐断（日志 `error: interrupted` / `EXIT=124`），两种模型并未同时耗尽。
+
+### B-094 状态：DONE（`8e272c0`，部署包 `assets/index-cruZx0Wg.js`）
+实现：`buildCrate()` 按 `dish` 出三种实物 —— 五花肉＝3 根斜插肉串（瘦肉 `#e8907c` + 肥边 `#f5d0b8`）、菌子＝7 个圆帽菌盖簇（`#a97b4f` + 米白柄）、米线＝盘绕线团（`#e8c96a`），食材节点带 `userData.food`；箱前沿加内联 canvas 生成的斗方食材挂牌（`textures.ts` 的 `crateSign` 图集，无外部图片）；左墙装饰架改为 3 只空竹筐 + 陶罐并用降饱和材质（`decorBamboo/decorClay/decorDark`）；`controls.ts` 新增 `FOOD_ICONS`（`pork/mushroom/mixian` 内联 SVG，带 `data-food`），料箱使用格动作键换成对应食材图标；`hud.ts` 订单卡 `.nm` 与 `.bubble` 前置同一图标；新增只读遥测 `__test.foodNodes()` / `__test.decorSat()`。
+验收（`e2e/crates.mjs`，本机 `:4176` 预览 `E2E_RUNS=2` 双端 + 部署后 `:3035` 双端各 1 次，全绿）：**每端 10 PASS，末行 `CRATES OK`**
+- 主色 `pork rgb(232,144,124) / mushroom rgb(169,123,79) / mixian rgb(232,201,106)`，两两 RGB 距离 **80.2 / 59.8 / 103.8**（门限 ≥40）；覆盖率 **0.86 / 0.94 / 0.76**（门限 ≥0.6）；`decorSat 0.176 ≤ 0.316`（食材最低饱和度 0.47 − 0.15）。
+- 三个料箱使用格的 `#bbq-act` 文案与 `data-food` 图标全部匹配（`取 五花肉/菌子/米线`），不再是虚线占位。
+- 订单卡 `.card .nm [data-food]` = 3 张且与菜名一一对应；`.bubble [data-food]` = 3。
+- 双端 `0 pageerror / 0 console.error`；回归 `smoke / landscape / orders / chop / grill` 全 `OK`（`grill` 首次因 load≈10 时 renderer 被杀 `Target closed`，重跑即过，非产品缺陷）。
+部署：`ci-deploy.sh` DEPLOY OK；`127.0.0.1:3035/` 200、`127.0.0.1/bbq/` 200，两边均引用 `assets/index-cruZx0Wg.js`；`saltline-ref` 未动。
+vision 复核：竖屏放大后独立读出「三个筐＝红肉串 / 褐圆帽菌子 / 金黄盘绕米线，颜色形状差异明显」，动作钮「蘑菇图标 + 取菌子」；横屏放大同样能分出三种（vision 原文「足够区分，即使不看挂牌也能辨认」）。
+与任务书的偏差（下轮复核）：① 横屏为塞进 16px 食材图标，订单卡内距 6→4px、`.ring` 26→22px、`.tb-badge` 24→21px（字号未降，仍 13px）；② 筐面挂牌在横屏下只有约 20px 高，图标勉强可辨、文字不可读；③ `props.ts` 里空筐内壁 / 陶罐罐口两个面片误加到 `group` 而非 `decorGroup`，视觉无差但归属不洁。
+下一轮建议：`B-108`（HUD 字号 ≥13px 硬门禁 + `.tb-badge`/`.order-num` 补齐）优先于 `B-093`——本轮 vision 再次点名 `#bbq-act .cap` 10px 偏小，且这是第 5 次复发；`B-078` 横屏摇杆压 `crate-pork` 依旧存在（截图左下摇杆盖住最左料箱一角），属第 3 轮沿用。

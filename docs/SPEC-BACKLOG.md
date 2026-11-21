@@ -348,11 +348,14 @@
 > 环境：load 10–16、软渲染 1–2fps、冷启动 55–72s → **本轮不评首屏时延**，只评版式与信息传达；JS error 1 条（favicon 404）。
 
 ### B-035 时间积分不得因 `dt` 钳制而慢于现实（低帧率时间膨胀）
+状态：**[done 345d802 + 5d0b201，2026-11-21 01:31Z 部署，bundle `index-BfQV-0D9.js`]**
 优先级：P1
 来源：第 7 轮走查（真手指拖摇杆 2.0s → 角色位移 **2.19m**；按 `GAME-DESIGN §6` 的 3.2 m/s 应为 6.4m，有效速度仅 **1.1 m/s / 34%**。根因 `src/main.ts` 的 `dt = Math.min(clock.getDelta(), 0.1)`：5fps 时每帧只推进 0.1s → 游戏时钟 0.5×，2fps 时 0.2×。结果：低端机上「180 秒关卡」真实耗时 6–15 分钟，而 HUD 仍显示 `3:00` 倒计时，玩家只会觉得"这关怎么这么长"）
 需求：把防穿模钳制与时间积分分开——① 物理/碰撞用钳制后的 `dt`（≤0.1）逐步 substep；② 游戏时钟（`timeLeft`、耐心、烤制）走**未钳制**的真实 `dt`（上限放到 0.5 并累加器补帧），或至少 `timeLeft` 用墙钟校正；③ 当 60 帧平均帧时间 >100ms 时，HUD 给一次「设备较慢，进度按真实时间」的提示（复用 `#bbq-guide`）。
 验收：e2e 在强制低帧（`--disable-gpu` 或 `__test.tick` 驱动的墙钟场景）下跑 60s 现实时间，断言 `timeLeft` 减少量 ≥54s（误差 ≤10%）；同一条件下摇杆 2s 位移 ≥5.5m；正常帧率下所有既有断言不变（无回归）。
 参考：`GAME-DESIGN §6`（3.2 m/s）、`TECH-STACK §4`（一切走 `flow.update(dt)`）；Overcooked 的关卡计时与渲染解耦。
+落地（345d802）：`src/main.ts` 循环体抽成 `step(rawDt)`，`rawDt = clock.getDelta()` 不再钳到 0.1；内部固定步长累加器 `STEP=1/60`、`acc += min(rawDt,1.5)`、每帧最多 90 子步、循环后 `acc` 截到 `STEP`（丢积压防死亡螺旋）；离散输入 `consumeAction()` 每帧只消费一次、只给第一个子步；视觉平滑另用 `visDt = min(rawDt,0.1)`。`__test.tick(dt,n)` 语义改为「n 帧 × rawDt=dt」。
+验收实测（`e2e/timebase.mjs`，5d0b201 改成单次 `evaluate` 原子测量）：低帧 `tick(1.0,6)` → `timeLeft Δ=6.000s`（误差 0%）；低帧 `tick(1.0,2,1,0)` → 位移 `6.40m`（3.2 m/s×2s 理论值）；60fps `tick(1/60,60)` → `Δ=1.000s`。本地 dist `E2E_RUNS=3` 与**公网产物** `https://openfolio.uk/bbq/` `E2E_RUNS=2` 全绿、0 JS error；回归 `chop`/`grill`/`orders` 全 PASS。
 
 ### B-036 首屏必须展示游戏本体（去掉重度虚化，给出"3 秒想玩"）
 优先级：P2
@@ -494,3 +497,10 @@
 需求：`flow` 的 `onAngry` 回调里同步移除该顾客的 bubble（或 `updateBubbles` 在检测到 `leaving-*` 时立即删），并给该 bubble 一个 150ms 的红闪退场。
 验收：e2e——`angry` 计数 +1 的那一帧，`#bbq-bubbles` 内不含该顾客的菜品名；连跑 3 次。
 参考：`GAME-DESIGN §7`（愤怒离店 0.6s 红怒符号，路径回门）。
+
+### B-051 `e2e/levels.mjs` 尾段多次 reload 会把浏览器搞崩（测试基建，非产品回归）
+优先级：P2（挡验收：会把真修复误判成 FAIL）
+来源：2026-11-21 01:05Z 开发轮跑 levels 回归，a)–d) 全 PASS，到 e) 的连续 reload（5 次换页）时报 `page.goto/waitForTimeout: Target page, context or browser has been closed`（chromium 进程消失，load 10–13、swiftshader）。用 `93be3d3` 源码单独建对照构建（`git worktree` + `vite preview:4179`）复跑，**同样在最后两次 reload 崩在 levels.mjs:139**，证明与 B-035 改动无关，是既有 flake。
+需求：`reload()` 捕获浏览器级崩溃（`browser.isConnected() === false` 或 `/has been closed/`）时，**重建 browser + context，并把 `localStorage` 里被测的 `bbq.level`/`bbq.best` 读出来注入新 context**，而不是在同 context 上继续换页；e) 段的多个非法值循环改为每轮独立 context，避免内存累积。
+验收：`E2E_BASE=http://127.0.0.1:3035/bbq/ E2E_RUNS=3 node e2e/levels.mjs` 在 load ≥10 的机器上连跑 3 次全 PASS（a–e 五段），且中途不出现未捕获的 `Target page ... closed`。
+参考：`e2e/levels.mjs:37 reload()`、1d17e01（上一版 reload 加固）。

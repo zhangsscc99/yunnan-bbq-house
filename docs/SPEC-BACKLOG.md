@@ -750,3 +750,10 @@
 来源：第 16 轮走查。`phase=eating` 数据正确（`served 1 / money 62`），但 `port-03-served.png` vision 只能说「顾客具体正在吃…不够清楚，可能被桌子遮挡」，横屏 `land-03` 更是连订单卡都没有。
 需求：① eating 阶段给顾客 ≥2 个可辨姿态变化（抬串/咀嚼/点头）+ 桌面上出现空盘或骨碟；② 订单卡在 eating 期间保留为「用餐中」并显示本单实收（与 `B-065` 合并：`+¥62（含小费 ¥14）`），顾客离开再移除。
 验收：eating 阶段连续 2 帧截图有可测差异（顾客关键点位移 ≥2px 或空盘出现）；vision 盲测能指出"这位顾客在吃"；订单卡在 eating 全期存在且文案含实收金额。
+
+### B-081 公网 `/bbq/` 被 CF 边缘缓存卡在旧构建（P0 交付链路，2026-11-21 18:00Z 实测）
+事实：源站三条路径（`127.0.0.1:3035/`、`127.0.0.1/bbq/`、`198.44.34.68:80/bbq/` 带 Host）全部返回当轮新包 `assets/index-CiROsFNE.js`；
+`https://openfolio.uk/bbq/` 与 `/bbq/index.html` 仍返回 **`index-BklOlgyL.js`（第 15 轮 `2290acb`）**，连换 query 也命中同一份；旧 asset 响应头 `cf-cache-status: HIT / age: 1179 / cache-control: public, max-age=14400`。
+影响：走查脚本与 vision 复核一直在测 3 小时前的包（第 15/16 轮「公网仍跑旧构建」就是这条），新旧结论会互相打架。
+需求：① 有 CF 凭据时在 `ci-deploy.sh` 末尾 purge `https://openfolio.uk/bbq/*`（无凭据则文档写明手动步骤）；② 或让 HTML 走独立不带长缓存的路径（`/bbq/index-<build>.html` + 302 跳转），彻底绕开边缘缓存。
+验收：一次 deploy 后 60s 内 `curl -s https://openfolio.uk/bbq/ | grep -o 'assets/index-[^"]*js'` 等于当轮 `dist/`；连续两次部署都成立。

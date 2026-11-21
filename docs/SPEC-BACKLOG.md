@@ -146,7 +146,11 @@
 验收：e2e 断言——顾客就座 0.5s 内 `#bbq-orders .card` 数量 === 就座人数；同一张卡 2s 内 dashoffset 至少变化一次；`setPatience(10)` 后卡带 `.angry`；连跑 3 次无 flake。
 参考：GAME-DESIGN §1「订单(1 道菜 + 耐心条)」、§5 ART 订单卡规格。
 
-### B-012 「下一关」假解锁：出真 Lv.2 或改文案
+### B-012 「下一关」假解锁：出真 Lv.2 或改文案 — [done ec7b59d，2026-11-20 23:16Z 部署]
+> 实现方式（①真 Lv.2）：`config.LEVELS` 两关（Lv.1 ¥180/[12,20]s；Lv.2 ¥260/[9,15]s），flow 持 `level/cfg`，所有数值读 `this.cfg`；
+> `nextLevel()` 只在 pass 且 level<2 时推进并写 `bbq.level`，`endLevel` 不再写 key；结算文案「目标达成，进入第 2 关」/ 最后一关「全部关卡通关！」且不渲染主按钮；HUD 顶部新增「第 N 关」；`__test.state()` 增 `level/levelTarget`。
+> 实测（公网 index-CPTSS25a）：开局 level=1/target=180/HUD「第 1 关」→ pass 点主按钮 → playing/level=2/target=260/timeLeft=180/`bbq.level=2`；Lv.2 通关结算「全部关卡通关！」无主按钮、`nextLevel()` no-op；预置 `bbq.level=2` 新开页面 → level=2、HUD「第 2 关」、首屏「第 2 关 · 目标：3 分钟营业额 ¥260」，0 page error。
+> 遗留：`e2e/levels.mjs` 第 4 段（同 context 新页重载）在本机软件渲染 + load≥11 时页会被浏览器进程带走（`Target page closed`），产品行为已用独立脚本证实；低负载时该段 PASS（23:57Z 第 3 次连跑通过 a–d）。
 优先级：P1
 来源：第 2 轮走查（¥183 通关 → “目标达成，解锁下一关！”+「下一关」可点 → 点击后 timeLeft=180/目标 ¥180 与第 1 关完全相同；`localStorage.bbq.level` 被写为 2 但全仓无读取方——承诺不存在的内容，port-27/28 截图）
 需求：二选一——①真出 Lv.2（读取 `bbq.level`，目标/客流/耐心中的一项提升，config 里加 LEVELS 表）；②M1 保持单关，则结算文案改「目标达成，再来一局挑战高分！」，「下一关」按钮删除，且不写 `bbq.level=2`。

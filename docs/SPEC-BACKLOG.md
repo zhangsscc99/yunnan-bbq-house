@@ -348,7 +348,7 @@
 > 环境：load 10–16、软渲染 1–2fps、冷启动 55–72s → **本轮不评首屏时延**，只评版式与信息传达；JS error 1 条（favicon 404）。
 
 ### B-035 时间积分不得因 `dt` 钳制而慢于现实（低帧率时间膨胀）
-状态：**[done 345d802 + 5d0b201，2026-11-21 01:31Z 部署，bundle `index-BfQV-0D9.js`]**
+状态：**[done(主体) 345d802 + 5d0b201，2026-11-21 01:31Z 部署，bundle `index-BfQV-0D9.js`；残留见 B-052]**
 优先级：P1
 来源：第 7 轮走查（真手指拖摇杆 2.0s → 角色位移 **2.19m**；按 `GAME-DESIGN §6` 的 3.2 m/s 应为 6.4m，有效速度仅 **1.1 m/s / 34%**。根因 `src/main.ts` 的 `dt = Math.min(clock.getDelta(), 0.1)`：5fps 时每帧只推进 0.1s → 游戏时钟 0.5×，2fps 时 0.2×。结果：低端机上「180 秒关卡」真实耗时 6–15 分钟，而 HUD 仍显示 `3:00` 倒计时，玩家只会觉得"这关怎么这么长"）
 需求：把防穿模钳制与时间积分分开——① 物理/碰撞用钳制后的 `dt`（≤0.1）逐步 substep；② 游戏时钟（`timeLeft`、耐心、烤制）走**未钳制**的真实 `dt`（上限放到 0.5 并累加器补帧），或至少 `timeLeft` 用墙钟校正；③ 当 60 帧平均帧时间 >100ms 时，HUD 给一次「设备较慢，进度按真实时间」的提示（复用 `#bbq-guide`）。
@@ -504,3 +504,10 @@
 需求：`reload()` 捕获浏览器级崩溃（`browser.isConnected() === false` 或 `/has been closed/`）时，**重建 browser + context，并把 `localStorage` 里被测的 `bbq.level`/`bbq.best` 读出来注入新 context**，而不是在同 context 上继续换页；e) 段的多个非法值循环改为每轮独立 context，避免内存累积。
 验收：`E2E_BASE=http://127.0.0.1:3035/bbq/ E2E_RUNS=3 node e2e/levels.mjs` 在 load ≥10 的机器上连跑 3 次全 PASS（a–e 五段），且中途不出现未捕获的 `Target page ... closed`。
 参考：`e2e/levels.mjs:37 reload()`、1d17e01（上一版 reload 加固）。
+
+### B-052 B-035 残留：`MAX_FRAME=1.5s` 让 <0.67fps 仍在慢放；「设备较慢」提示未做
+优先级：P1（本机常态 0.5–1fps，玩家真会撞上）
+来源：2026-11-21 01:40Z 部署后真机墙钟实测（公网 `https://openfolio.uk/bbq/`、load 12、软渲染）：页内计时 8.02s 墙钟 → `timeLeft` 只掉 **4.5s（0.56×）**，期间 4 帧（≈0.5fps）。根因：`step()` 里 `acc += Math.min(rawDt, 1.5)` 的 1.5s 上限是防死亡螺旋用的，0.5fps 时每帧真实 2s 只补 1.5s → 每帧漏 0.5s。≥0.67fps（含 1fps、5fps）已完全跟上（`tick(1.0,6)` 实测 Δ=6.000s），所以第 9 轮那个 1fps 最坏样本已修好。
+需求：① `MAX_FRAME` 提到 3s 且 `MAX_STEPS` 提到 180（每帧最多 3s 补帧，0.33fps 也能追上），并把"补帧期间不做渲染/HUD 更新"保持现状；② 补上 B-035 需求③：60 帧平均帧时间 >100ms 时用 `#bbq-guide` 提示一次「设备较慢，关卡按真实时间走」；③ 若补帧超过 3s（页面被判后台/休眠恢复），直接把 `acc` 截到 `STEP` 并在回来时重算 `timeLeft`（别把整段后台时间算进关卡）。
+验收：`E2E_BASE=https://openfolio.uk/bbq/` 的真机墙钟脚本在 0.5fps 下 `dTime/wall ≥0.9`；`e2e/timebase.mjs` 连跑 3 次仍全绿；后台 10s 回来 `timeLeft` 不跳变 >3.5s（或按 ③ 处理）。
+参考：`src/main.ts` `step()` 的 `MAX_FRAME`/`MAX_STEPS`；B-035 需求②③。

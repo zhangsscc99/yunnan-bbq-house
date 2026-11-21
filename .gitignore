@@ -1,3 +1,6 @@
 dist/
 node_modules/.vite
 server/dist.bak-*/
+e2e/review/
+e2e/shots/
+data/

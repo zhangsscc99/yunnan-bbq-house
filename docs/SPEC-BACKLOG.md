@@ -265,8 +265,10 @@
 > bot 瞬移打满 180s = **11 单 / ¥575**（横屏 11 单 / ¥487），0 愤怒 0 废料 → 主循环无卡死点，¥180 目标可达且偏宽松。
 > 回归确认：烤糊→垃圾桶 `waste 0→1`、耐心自然归零→`angry 1`→结算「愤怒离店 1 位」、未达标 `下一关 disabled=true`、真手指 tap 结算「再开一局」→ `phase=playing/timeLeft=178`。
 
-### B-025 相机必须夹紧到世界边界，横屏不得露出世界外虚空
+### [done 691fffa + 82cffeb, 2026-11-21] B-025 相机必须夹紧到世界边界，横屏不得露出世界外虚空
 优先级：P1
+修法（`691fffa`，`src/config.ts` + `src/core/cameraRig.ts`）：`CAMERA` 新增 `worldHalfW=GRID.cols/2=6`、`worldHalfD=GRID.rows/2=4.5`、`portraitHalfH=9`；`resize()` 横屏 `halfH = min(worldHalfW/aspect, worldHalfD*sin(pitch))`、竖屏 `halfH = min(9, worldHalfW/aspect)`；`updateCam()` 对 lookAt 目标夹紧 `x ∈ ±max(0, worldHalfW-halfW)`、`z ∈ ±max(0, worldHalfD - halfH/sin(pitch))`（视野比世界大时锁定居中）；`ART-DIRECTION §1` 取景公式已同步重写。
+实测（`82cffeb`，本地 4175 产物连跑 2 次全 OK）：竖屏 390×844 与横屏 844×390 各 5 帧（出生点 + `teleport(±5,±4.5)` 四角），**全部帧「左右暗区 0px / 最大连续暗列 0」**；横屏左 160 列亮度均值 **93–100**（改前 28.0）。验收脚本 `e2e/camera-clamp.mjs`，跑法：`E2E_BASE=http://127.0.0.1:4175/bbq/ xvfb-run -a node e2e/camera-clamp.mjs`。
 来源：第 5 轮走查（844×390 开局左起 157 列纯黑；`__test.teleport(-5,5)` 后扩到 258 列 ≈31% 屏宽，硬直竖切；vision 判「像分辨率没适配、世界只渲染在右上角」）
 需求：`ART-DIRECTION §1` 的 `halfH = clamp(max(4.8, 6.8/aspect), 4.8, 9)` 在 844×390 给出 ≈20.7×9.6m 视野，而世界只有 12×9m → 横屏天生多出 ~8.7m 空域。二选一：① 相机 lookAt 目标按 `worldBounds ± halfW/halfH` 夹紧（世界比视野小时锁定居中）；② 在世界外补可读背景（街道/围墙/树，非纯色）。两端口径一致，并同步修订 ART §1 的公式使其与 12×9m 自洽。
 验收：双端 + 4 个角落位置（`teleport(±5,±4.5)`）截图，逐列亮度均值**不存在连续 ≥24px 且 <26 的近黑列**；`npx tsc --noEmit` 通过；draw calls 仍 ≤120。

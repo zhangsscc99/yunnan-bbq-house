@@ -6,11 +6,23 @@
 ## 1. 镜头 (Overcooked 规则)
 
 - `OrthographicCamera`，俯角固定 **50°**(绕 x 轴 -50°)，不随玩家旋转。
-- 默认一屏容下 ≥12×9 个 1m 格：
-  `halfH = clamp(max(4.8, 6.8/aspect), 4.8, 9)`，
-  landscape 844×390 → 约 20.7×9.6m；portrait 390×844 → 8.3×18m(横移跟随)。
-- 相机跟随：目标 = 玩家位置，lerp 系数 0.12/帧(60fps 基准,dt 归一)，无震动。
-- 玩家在画面中偏下：lookAt 目标向 -z 偏移 1.2m。
+- 取景夹紧到世界（B-025 后实现，`src/core/cameraRig.ts`）：
+  正交相机 `pitchDeg` 俯视，屏幕竖直半高 `halfH` 对应的**地面进深** =
+  `2*halfH/sin(pitch)`（屏幕竖直方向以 sin(pitch) 投影到地面 z 轴）；
+  可见半宽恒为 `halfW = halfH*aspect`。
+  `worldHalfW = GRID.cols/2 = 6`、`worldHalfD = GRID.rows/2 = 4.5`。
+  - 横屏（aspect ≥ 1）：`halfH = min(worldHalfW/aspect, worldHalfD*sin(pitch))`，
+    `halfW = halfH*aspect`（宽、深两个方向都不超过世界）；
+  - 竖屏（aspect < 1）：`halfH = min(portraitHalfH=9, worldHalfW/aspect)`
+    （保持旧变焦，但绝不宽出世界）。
+- lookAt 目标夹紧：`x ∈ ±max(0, worldHalfW-halfW)`、
+  `z ∈ ±max(0, worldHalfD - halfH/sin(pitch))`。
+  **可见地面永远落在 12×9m 世界里，看不到虚空；视野比世界大时锁定居中。**
+- ~~`halfH = clamp(max(4.8, 6.8/aspect), 4.8, 9)`~~ 已废：844×390 下给出
+  ≈20.7m 视野 > 12×9m 世界，是 B-025 横屏黑边的根因。
+- 相机跟随：目标 = 玩家位置，lerp 系数 0.12/帧(60fps 基准,dt 归一)，无震动；
+  跟随目标经上面的 lookAt 夹紧后才落相机。
+- 玩家在画面中偏下：lookAt 目标向 -z 偏移 1.2m（偏移后同样参与夹紧）。
 
 ## 2. 构图与配色
 

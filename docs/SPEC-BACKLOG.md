@@ -1065,3 +1065,17 @@ vision 复核：竖屏放大后独立读出「三个筐＝红肉串 / 褐圆帽�
 - **`B-081` 仍是唯一阻断项**：公网 `index-BklOlgyL.js` / 本机 `:3035` `index-Shggdsxc.js` / 仓库 `dist/assets/` `index-Juy7ZBi9.js` 三方不一致，本轮 24 张截图全部来自公网旧包，B-072 / B-094 / 桌号徽章等已落地项无法在线上验证。
 - **`B-111` 里「烤炉 3 烤位是否有分格」两次判读矛盾**（一次读到 3 个槽位、一次读到连续横纹），开单前请开发直接看 `stall`/`grill` 几何确认，再做视觉强化；`B-110` 的「引导箭头指向左侧货架」也建议复核是否只是 hint 状态机没跟上 carrying。
 
+
+## 第 22 轮开发（2026-11-21 21:40–22:05Z，agy 回落 gemini-4-neon-xhigh）
+
+> 模型：`claude-opus-5-5-high` 首轮即 `RESOURCE_EXHAUSTED`（重置 1h50m）→ 自动回落 `gemini-4-neon-xhigh`，一次跑完，退出码 0（非误判 3）。
+
+### B-106 状态：DONE（`1de884e`，部署包 `assets/index-DDOXf5Qv.js`）
+实现：新增 `src/game/stars.ts` 纯函数 `calcStars({money,target,served,angry,waste})`（基础表沿用 §4，新增 `served===0` 与 `angry>=3` 上限锁 1★）；`Flow.starsNow()` 统一供 `endLevel()` 与 `main.ts onTimeLeft` 调用，删除旧 live 公式；`#bbq-hud .stars` 与 `.stars-big` 均挂 `data-stars="N"` + `aria-label="评级 N/3"`；`docs/GAME-DESIGN §4` 补上限条款。新增 `e2e/stars.mjs`（4 组状态 × 双端 × 连跑 3 次）。
+验收（自跑）：`npx tsc --noEmit` 0 错误、`npm run build` OK、`ci-deploy.sh` DEPLOY OK、`127.0.0.1:3035/` 与 `127.0.0.1/bbq/` 均 200。
+- `stars.mjs` 在**部署后**的 `:3035` 双端各 2 次全绿：A/B `served=0` → 1★、C → 3★、D → 2★，打烊前 1 帧与结算首帧 `data-stars` 严格相等，0 JS error，末行 `STARS OK`。
+- 截图复核（竖屏 390×844）：局内 `angry=3` 时顶栏 **1 颗实心**（`评级 1/3`）；结算面板 `¥190/¥180、服务 0 位、愤怒 2 位` → **1 颗实心**，与局内一致，旧「局内 1★ / 结算 2★」矛盾消除。
+- 回归：agy 侧 `e2e/levels.mjs`（5 PASS）、`e2e/orders.mjs`（全 PASS）在提交后复跑为 OK；调度方本地重跑 `levels.mjs` 时宿主 load 18（他人 cron 并发）导致 renderer 被杀，属环境，不计产品缺陷。
+遗留（下轮处理）：
+1. **开局首帧即 1★**：`served=0` 上限让开局顶栏就是 1 颗实心星，与结算口径一致但缺正反馈 → 建议把局内三颗星改文案为「满意度」并允许开局 "待评"（空心三星），或达标前不显示星数。
+2. **结算文案**：`0 位服务 + 2 位愤怒` 与绿字「目标达成，进入第 2 关」并列仍读着别扭，建议改「营业额达标，进入第 2 关」并让星级说明一行提示原因（如「未服务任何顾客，最高 1★」）。

@@ -198,6 +198,9 @@ interface Bubble {
 }
 
 const POPUP_LIFT = 44;
+const POPUP_EDGE = 8;
+const POPUP_PAD = 4;
+const POPUP_EPS = 1;
 const POPUP_LIFE_MS = 2200;
 const POPUP_MAX_MS = 8000;
 
@@ -210,6 +213,7 @@ function el(tag: string, cls: string, parent: HTMLElement): HTMLElement {
 
 export class Hud {
   private root: HTMLElement;
+  private topbarEl: HTMLElement;
   private levelV: HTMLElement;
   private target = 0;
   private moneyV: HTMLElement;
@@ -246,6 +250,7 @@ export class Hud {
     this.ringsEl.id = 'bbq-rings';
 
     const bar = el('div', 'topbar', this.root);
+    this.topbarEl = bar;
     this.levelV = el('span', 'v level', el('div', 'tb', bar));
     this.levelV.textContent = '第 1 关';
     const tb1 = el('div', 'tb', bar);
@@ -384,32 +389,171 @@ export class Hud {
     }
   }
 
-  /** born fully visible (opacity 1, 24px), lifted >= POPUP_LIFT px above the anchor and kept clear of bubbles/other popups */
+  /** born fully visible (opacity 1, 24px), clamped to 4-edge viewport safe area (below live .topbar) and kept clear of topbar/bubbles/other popups */
   popup(worldPos: THREE.Vector3, text: string, kind: 'money' | 'warn' | 'ok'): void {
     this.cam.updateMatrixWorld();
-    const p = this.project(worldPos);
-    if (!p) return;
+    this.tmp.copy(worldPos).project(this.cam);
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const px = Number.isFinite(this.tmp.x) ? (this.tmp.x * 0.5 + 0.5) * vw : vw / 2;
+    const py = Number.isFinite(this.tmp.y) ? (-this.tmp.y * 0.5 + 0.5) * vh : 0;
+
     const e = el('div', `popup ${kind}`, this.popupsEl);
     e.textContent = text;
-    const w = window.innerWidth;
+    e.style.left = '0px';
+    e.style.top = '0px';
     const { width: bw, height: bh } = e.getBoundingClientRect();
+
+    const topbarRect = this.topbarEl.getBoundingClientRect();
+    const topSafe = Math.max(POPUP_EDGE, (topbarRect.height > 0 ? topbarRect.bottom : 0) + POPUP_EDGE);
+
+    const minX = POPUP_EDGE + bw / 2 + POPUP_EPS;
+    const maxX = vw - POPUP_EDGE - bw / 2 - POPUP_EPS;
+    const minBottom = topSafe + bh + POPUP_EPS;
+    const maxBottom = vh - POPUP_EDGE - POPUP_EPS;
+    const clampX = (x: number): number => (minX <= maxX ? Math.min(Math.max(x, minX), maxX) : vw / 2);
+    const clampY = (b: number): number => (minBottom <= maxBottom ? Math.min(Math.max(b, minBottom), maxBottom) : minBottom);
+
     const obs: DOMRect[] = [];
-    this.bubblesEl.querySelectorAll('.bubble').forEach((b) => obs.push(b.getBoundingClientRect()));
-    this.popupsEl.querySelectorAll('.popup').forEach((o) => { if (o !== e) obs.push(o.getBoundingClientRect()); });
-    const clash = (x: number, bottom: number): boolean =>
-      obs.some((r) => x - bw / 2 < r.right + 4 && r.left - 4 < x + bw / 2 && bottom - bh < r.bottom + 4 && r.top - 4 < bottom);
-    const clampX = (x: number): number => Math.min(Math.max(x, bw / 2 + 4), Math.max(w - bw / 2 - 4, bw / 2 + 4));
-    let best = { x: clampX(p.x), bottom: p.y - POPUP_LIFT };
-    search: for (const dx of [0, 1, -1, 2, -2, 3, -3]) {
-      const x = clampX(p.x + dx * (bw * 0.6 + 8));
-      for (let bottom = p.y - POPUP_LIFT; bottom - bh >= 0; bottom -= 6) {
-        if (!clash(x, bottom)) { best = { x, bottom }; break search; }
+    if (topbarRect.width > 0 && topbarRect.height > 0) obs.push(topbarRect);
+    this.bubblesEl.querySelectorAll('.bubble').forEach((b) => {
+      const r = b.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0) obs.push(r);
+    });
+    this.popupsEl.querySelectorAll('.popup').forEach((o) => {
+      if (o !== e) {
+        const r = o.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) obs.push(r);
+      }
+    });
+
+    const clash = (x: number, bottom: number, pad = POPUP_PAD): boolean => {
+      const l = x - bw / 2;
+      const r = x + bw / 2;
+      const t = bottom - bh;
+      return obs.some((o) => l < o.right + pad && o.left - pad < r && t < o.bottom + pad && o.top - pad < bottom);
+    };
+
+    const anchorX = clampX(px);
+    const preferredBottom = py - POPUP_LIFT;
+    const startBottom = clampY(preferredBottom);
+    const maxLocalDx = Math.max(bw + 48, 160);
+    const stepX = Math.max(24, Math.round(bw * 0.4));
+
+    const findXOnRow = (bottom: number, localOnly: boolean, pad = POPUP_PAD): number | null => {
+      if (!clash(anchorX, bottom, pad)) return anchorX;
+      const cands: number[] = [];
+      const add = (raw: number): void => {
+        const x = clampX(raw);
+        if (localOnly && Math.abs(x - anchorX) > maxLocalDx) return;
+        cands.push(x);
+      };
+      const t = bottom - bh;
+      for (const o of obs) {
+        if (t < o.bottom + pad && o.top - pad < bottom) {
+          add(o.right + pad + bw / 2 + 0.5);
+          add(o.left - pad - bw / 2 - 0.5);
+        }
+      }
+      const maxK = localOnly ? Math.ceil(maxLocalDx / stepX) : Math.ceil(vw / stepX);
+      for (let k = 1; k <= maxK; k++) {
+        add(anchorX + k * stepX);
+        add(anchorX - k * stepX);
+      }
+      if (!localOnly) { add(minX); add(maxX); }
+      cands.sort((a, b) => Math.abs(a - anchorX) - Math.abs(b - anchorX));
+      for (const x of cands) {
+        if (!clash(x, bottom, pad)) return x;
+      }
+      return null;
+    };
+
+    const buildRows = (dir: 'up' | 'down', fromRaw: number, toRaw: number, pad = POPUP_PAD): number[] => {
+      if (minBottom > maxBottom) return [minBottom];
+      const from = clampY(fromRaw);
+      const to = clampY(toRaw);
+      const rows: number[] = [];
+      const step = 8;
+      if (dir === 'up') {
+        for (let b = from; b >= to; b -= step) rows.push(b);
+        rows.push(to);
+        for (const o of obs) {
+          const above = o.top - pad - 0.5;
+          if (above <= from && above >= to) rows.push(above);
+        }
+        rows.sort((a, b) => b - a);
+      } else {
+        for (let b = from; b <= to; b += step) rows.push(b);
+        rows.push(to);
+        for (const o of obs) {
+          const below = o.bottom + pad + bh + 0.5;
+          if (below >= from && below <= to) rows.push(below);
+        }
+        rows.sort((a, b) => a - b);
+      }
+      return rows;
+    };
+
+    let best: { x: number; bottom: number } | null = null;
+    const tryRows = (rows: number[], localOnly: boolean, pad = POPUP_PAD): boolean => {
+      for (const bottom of rows) {
+        const x = findXOnRow(bottom, localOnly, pad);
+        if (x !== null) { best = { x, bottom }; return true; }
+      }
+      return false;
+    };
+
+    // 1) Try horizontal shift on startBottom first ("优先左右错位").
+    // 2) If blocked: when clamped by topbar safe zone, move down below topbar/obstacles;
+    //    when headroom exists above anchor, step up (preserving lift & B-059 stack), then down;
+    //    when clamped to bottom edge, step up.
+    if (!tryRows([startBottom], true)) {
+      if (preferredBottom < minBottom) {
+        tryRows(buildRows('down', minBottom, maxBottom), true);
+      } else if (preferredBottom > maxBottom) {
+        tryRows(buildRows('up', maxBottom, minBottom), true);
+      } else if (!tryRows(buildRows('up', startBottom - 8, minBottom), true)) {
+        tryRows(buildRows('down', startBottom + 8, maxBottom), true);
       }
     }
-    e.style.left = `${best.x}px`;
-    e.style.top = `${best.bottom}px`;
-    e.dataset.ax = String(p.x);
-    e.dataset.ay = String(p.y);
+
+    // 3) Exhaustive full-safe-area fallback so popups never overlap if any free spot exists.
+    if (!best) {
+      for (const pad of [POPUP_PAD, 1, 0.5]) {
+        const allRows = preferredBottom < minBottom
+          ? buildRows('down', minBottom, maxBottom, pad)
+          : buildRows('up', startBottom, minBottom, pad).concat(buildRows('down', startBottom + 8, maxBottom, pad));
+        let bestDist = Infinity;
+        for (const bottom of allRows) {
+          const x = findXOnRow(bottom, false, pad);
+          if (x !== null) {
+            const dist = Math.abs(x - anchorX) + Math.abs(bottom - startBottom);
+            if (dist < bestDist) { bestDist = dist; best = { x, bottom }; }
+          }
+        }
+        if (best) break;
+      }
+    }
+
+    const pos = best ?? { x: anchorX, bottom: startBottom };
+    e.style.left = `${pos.x}px`;
+    e.style.top = `${pos.bottom}px`;
+
+    // Final subpixel guard: keep rendered bounding rect strictly inside the 4-edge safe zone.
+    const r = e.getBoundingClientRect();
+    let nx = pos.x;
+    let ny = pos.bottom;
+    if (r.left < POPUP_EDGE) nx += POPUP_EDGE - r.left;
+    else if (r.right > vw - POPUP_EDGE) nx -= r.right - (vw - POPUP_EDGE);
+    if (r.top < topSafe) ny += topSafe - r.top;
+    else if (r.bottom > vh - POPUP_EDGE) ny -= r.bottom - (vh - POPUP_EDGE);
+    if (nx !== pos.x || ny !== pos.bottom) {
+      e.style.left = `${nx}px`;
+      e.style.top = `${ny}px`;
+    }
+
+    e.dataset.ax = String(px);
+    e.dataset.ay = String(py);
     const t0 = performance.now();
     e.dataset.t0 = String(Math.round(t0));
     const kill = (): void => { if (!e.isConnected) return; e.dataset.life = String(Math.round(performance.now() - t0)); e.remove(); };

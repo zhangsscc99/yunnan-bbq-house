@@ -166,6 +166,7 @@ interface TestHooks {
   pauseSpawns(v: boolean): void;
   spawnNow(dish?: string): boolean;
   setPatience(sec: number): void;
+  moveCustomer(id: number, x: number, z: number): boolean;
   press(): void;
   start(): void;
   tick(dt?: number, n?: number, mx?: number, mz?: number): void;
@@ -202,6 +203,13 @@ const hooks: TestHooks = {
     for (const c of flow.customers) {
       if (c.phase === 'seated') c.patience = sec;
     }
+  },
+  moveCustomer(id, x, z) {
+    const c = flow.customers.find((cc) => cc.id === id);
+    if (!c) return false;
+    c.obj.position.x = x;
+    c.obj.position.z = z;
+    return true;
   },
   press() { input.pressAction(); },
   start() { restart(); },

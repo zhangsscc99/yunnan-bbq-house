@@ -56,7 +56,16 @@ export class Input {
     this.actionQueued = Math.min(this.actionQueued + 1, 4);
   }
 
-  /** edge-triggered: true once per queued press */
+  /** non-destructive: number of queued presses (≤ 4); safe to call on any frame */
+  peekAction(): number {
+    return this.actionQueued;
+  }
+
+  /**
+   * edge-triggered: true once per queued press. DESTRUCTIVE — call it only when a
+   * simulation step is really about to run (inside the fixed-step loop). Calling it
+   * on a frame that runs zero steps drops the press (B-063); use peekAction() there.
+   */
   consumeAction(): boolean {
     if (this.actionQueued <= 0) return false;
     this.actionQueued -= 1;

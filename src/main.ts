@@ -105,6 +105,7 @@ const STEP = 1 / 60;
 const MAX_FRAME = 1.5;
 const MAX_STEPS = 90;
 let acc = 0;
+let pendingAction = 0;
 
 /** one frame: rawDt = real wall-clock seconds. Simulation runs on a fixed-step accumulator so game time follows the wall clock at any fps. */
 function step(rawDt: number, draw = true, move?: THREE.Vector2): void {
@@ -112,9 +113,14 @@ function step(rawDt: number, draw = true, move?: THREE.Vector2): void {
   if (!mv) { input.update(); mv = input.move; }
   acc += Math.min(rawDt, MAX_FRAME);
   let n = 0;
-  const pressed = input.consumeAction();
+  pendingAction = Math.min(input.peekAction(), 4);
   while (acc >= STEP && n < MAX_STEPS) {
-    flow.update(STEP, mv, pressed && n === 0);
+    let pressed = false;
+    if (n === 0 && pendingAction > 0) {
+      pressed = input.consumeAction();
+      pendingAction = 0;
+    }
+    flow.update(STEP, mv, pressed);
     acc -= STEP;
     n += 1;
   }

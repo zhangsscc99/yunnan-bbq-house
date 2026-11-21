@@ -98,17 +98,32 @@ const clock = new THREE.Clock();
 let frames = 0;
 let emberPulse = 0;
 
-renderer.setAnimationLoop(() => {
-  const dt = Math.min(clock.getDelta(), 0.1);
+const STEP = 1 / 60;
+const MAX_FRAME = 1.5;
+const MAX_STEPS = 90;
+let acc = 0;
+
+/** one frame: rawDt = real wall-clock seconds. Simulation runs on a fixed-step accumulator so game time follows the wall clock at any fps. */
+function step(rawDt: number, draw = true, move?: THREE.Vector2): void {
+  let mv = move;
+  if (!mv) { input.update(); mv = input.move; }
+  acc += Math.min(rawDt, MAX_FRAME);
+  let n = 0;
+  const pressed = input.consumeAction();
+  while (acc >= STEP && n < MAX_STEPS) {
+    flow.update(STEP, mv, pressed && n === 0);
+    acc -= STEP;
+    n += 1;
+  }
+  if (acc > STEP) acc = STEP;
+
+  if (!draw) return;
+
   const t = clock.elapsedTime;
   frames += 1;
-
-  input.update();
-  const pressed = input.consumeAction();
-
-  flow.update(dt, input.move, pressed);
+  const visDt = Math.min(rawDt, 0.1);
   rig.follow(flow.player.obj.position);
-  rig.update(dt);
+  rig.update(visDt);
   lights.update(t);
 
   // charcoal bed breathes with the flicker
@@ -125,7 +140,9 @@ renderer.setAnimationLoop(() => {
   hud.updateChop(chopBoard, COOK.chopTaps);
 
   renderer.render(scene, rig.cam);
-});
+}
+
+renderer.setAnimationLoop(() => step(clock.getDelta()));
 
 // ---- test / perf hooks ----
 interface TestHooks {
@@ -171,14 +188,11 @@ const hooks: TestHooks = {
   },
   press() { input.pressAction(); },
   start() { restart(); },
-  // step the simulation synchronously (e2e: render rate doesn't matter).
-  // A queued action press fires on the first tick.
+  // step the simulation synchronously: n frames, each with rawDt = dt (no render).
+  // A queued action press fires on the first frame.
   tick(dt = 0.05, n = 1, mx = 0, mz = 0) {
-    const pressed = input.consumeAction();
     const mv = mx || mz ? new THREE.Vector2(mx, mz) : ZERO_MOVE;
-    for (let i = 0; i < n; i++) {
-      flow.update(dt, mv, i === 0 && pressed);
-    }
+    for (let i = 0; i < n; i++) step(dt, false, mv);
     hud.updateGrill(flow.grill.slots);
     hud.updateChop(chopBoard, COOK.chopTaps);
   },

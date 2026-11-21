@@ -1125,3 +1125,20 @@ vision 复核：竖屏放大后独立读出「三个筐＝红肉串 / 褐圆帽�
 - **`B-081` 仍是唯一阻断项**：公网 `2290acb-202611210547` / `index-BklOlgyL.js`（连 `__test.stationGeom` 都不存在），本机 `:3035` 与仓库 `dist` 已同为 `1de884e-202611212205` / `index-DDOXf5Qv.js`。本轮 18 张主截图里 15 张来自公网旧包，`B-072`/`B-076`/`B-094`/`B-106` 的线上效果无法验收。请先确认 openfolio.uk 的源站目录/缓存指向，否则每轮走查都只能验旧包。
 - **`B-116` 与第 22 轮开发自留的两条遗留完全重合**（开局首帧 1★、`0 位服务 + 2 位愤怒` 与"目标达成"并列），建议下一轮开发直接把 §4 的星级归因文案做进结算面板，避免第 4 次复发。
 - **`B-118` 建议开发先自查而非直接改样式**：`port-03-results-angry3.png` 里那枚清晰未模糊的红色「4」桌号牌是判定层级事故的直接证据，但也可能是本轮测试用 `__test` 强制打烊导致的中间态，请先确认正常倒计时归零是否同样穿透。
+
+## 第 24 轮开发（2026-11-21 22:41–23:10Z，agy 回落 gemini-4-neon-xhigh）
+
+> 模型：`claude-opus-5-5-medium` 首轮即 `RESOURCE_EXHAUSTED`（429，重置 50m）→ 自动回落 `gemini-4-neon-xhigh`，一次跑完，退出码 0。
+
+### B-110 状态：DONE（`5f7d148`，部署包 `assets/index-DXyUgwlT.js`）
+实现（`src/game/stations.ts` 三处状态机）：
+1. `nextHint()`：`plated` 且无匹配顾客 → `端菜等客下单`（原 `去垃圾桶丢掉`）；`waste` → `去垃圾桶丢掉`。
+2. `nextTarget()`：`plated` 且无匹配顾客 → 返回 `null`（隐藏世界引导箭头），不再 `at('station','bin')`。
+3. `resolveInteraction()`：`goto` 改为 `hasGuest`（无匹配顾客时不显示「去 X」离屏指引）；站错桌文案 `这桌要的是 X · 端走等单`。
+新增 `e2e/plated-hint.mjs`（取料→切→烤→装盘真链路造 plated，12.6s 造 waste），断言 #bbq-act 文本不含 `/垃圾桶|丢掉|扔/`、`flow.hint === null`、`#bbq-offhint display:none`；waste 侧要求含「丢」且 `flow.hint.id === 'bin'`。
+验收（agy 自跑）：`E2E_RUNS=3` 双端 6/6 PASS（`PLATED-HINT OK`）；`orders.mjs` 1/1 PASS；`offscreen.mjs` 双端 PASS。
+验收（调度方复核，部署后打 `127.0.0.1:3035`）：`npx tsc --noEmit` 0 错、`npm run build` OK、`ci-deploy.sh` DEPLOY OK、`:3035` 与 `/bbq/` 均 200；`E2E_RUNS=1` 双端 10 条断言全 PASS、0 JS error。
+截图复核（竖屏 390×844）：`port-plated-no-guest.png` 手持成品菜时动作键 `端菜等客下单`、无金色箭头、离屏指引 `display:none`；`port-waste-bin.png` 焦串时动作键 `去垃圾桶丢掉` + 左侧金色「垃圾桶」箭头，正反向均正确。
+遗留（新发现，下轮处理）：
+1. **动作键文案在 76px 圆内只有约 9px 字号、灰字低对比**：6 字中文（`端菜等客下单` / `去垃圾桶丢掉`）挤在一行，实机 390px 下需凑近才读得出。建议文案压到 ≤4 字（如 `端菜等客` / `去丢垃圾桶`→`丢弃`）并把动作键文案字号提到 ≥12px、对比度提到 WCAG AA；与 `B-117`（热区 84px + ARIA）合并做更划算。
+2. `B-110` 只治了文案/箭头指向；玩家手持成品菜长时间无处可放（无暂存台）时仍只能一直端着等客，缺少「放回装盘台暂存」的兜底，属玩法层缺口，待 `B-111`/`B-112` 之后再评估。

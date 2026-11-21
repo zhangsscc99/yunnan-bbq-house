@@ -20,6 +20,9 @@ import { Panels } from './ui/panels.ts';
 import { COOK } from './config.ts';
 import { spawnCustomer } from './game/customers.ts';
 
+console.info('[bbq] build', __BUILD__);
+(window as any).__build = __BUILD__;
+
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 const uiRoot = document.getElementById('ui') as HTMLElement;
 

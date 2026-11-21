@@ -105,16 +105,17 @@ const CSS = `
 
 #bbq-popups { position: absolute; inset: 0; overflow: hidden; }
 .popup {
-  position: absolute; transform: translate(-50%, -50%);
-  font-size: 17px; font-weight: 800; color: #f0c060;
-  text-shadow: 0 2px 6px rgba(0,0,0,.6); animation: bbq-rise .85s ease-out forwards;
+  position: absolute; transform: translate(-50%, -100%);
+  font-size: 24px; line-height: 1.25; font-weight: 800; color: #f0c060; white-space: nowrap;
+  padding: 1px 14px; border-radius: 14px; opacity: 1;
+  background: rgba(24,16,12,.82); border: 1.5px solid rgba(240,192,96,.7);
+  text-shadow: 0 2px 6px rgba(0,0,0,.6); animation: bbq-popup-hold 2.2s linear forwards;
 }
-.popup.warn { color: #e05a3a; }
-.popup.ok { color: #9ecb6a; }
-@keyframes bbq-rise {
-  0% { opacity: 0; transform: translate(-50%, -30%) scale(.7); }
-  15% { opacity: 1; transform: translate(-50%, -55%) scale(1.05); }
-  100% { opacity: 0; transform: translate(-50%, -160%) scale(1); }
+.popup.warn { color: #ff7a5c; border-color: rgba(224,90,58,.85); }
+.popup.ok { color: #9ecb6a; border-color: rgba(158,203,106,.7); }
+@keyframes bbq-popup-hold {
+  0%, 64% { opacity: 1; }
+  100% { opacity: 0; }
 }
 `;
 
@@ -134,6 +135,10 @@ interface Bubble {
   frac: number;
   angry: boolean;
 }
+
+const POPUP_LIFT = 44;
+const POPUP_LIFE_MS = 2200;
+const POPUP_MAX_MS = 8000;
 
 function el(tag: string, cls: string, parent: HTMLElement): HTMLElement {
   const e = document.createElement(tag);
@@ -256,14 +261,42 @@ export class Hud {
     }
   }
 
+  /** born fully visible (opacity 1, 24px), lifted >= POPUP_LIFT px above the anchor and kept clear of bubbles/other popups */
   popup(worldPos: THREE.Vector3, text: string, kind: 'money' | 'warn' | 'ok'): void {
+    this.cam.updateMatrixWorld();
     const p = this.project(worldPos);
     if (!p) return;
     const e = el('div', `popup ${kind}`, this.popupsEl);
     e.textContent = text;
-    e.style.left = `${p.x}px`;
-    e.style.top = `${p.y}px`;
-    setTimeout(() => e.remove(), 900);
+    const w = window.innerWidth;
+    const { width: bw, height: bh } = e.getBoundingClientRect();
+    const obs: DOMRect[] = [];
+    this.bubblesEl.querySelectorAll('.bubble').forEach((b) => obs.push(b.getBoundingClientRect()));
+    this.popupsEl.querySelectorAll('.popup').forEach((o) => { if (o !== e) obs.push(o.getBoundingClientRect()); });
+    const clash = (x: number, bottom: number): boolean =>
+      obs.some((r) => x - bw / 2 < r.right + 4 && r.left - 4 < x + bw / 2 && bottom - bh < r.bottom + 4 && r.top - 4 < bottom);
+    const clampX = (x: number): number => Math.min(Math.max(x, bw / 2 + 4), Math.max(w - bw / 2 - 4, bw / 2 + 4));
+    let best = { x: clampX(p.x), bottom: p.y - POPUP_LIFT };
+    search: for (const dx of [0, 1, -1, 2, -2, 3, -3]) {
+      const x = clampX(p.x + dx * (bw * 0.6 + 8));
+      for (let bottom = p.y - POPUP_LIFT; bottom - bh >= 0; bottom -= 6) {
+        if (!clash(x, bottom)) { best = { x, bottom }; break search; }
+      }
+    }
+    e.style.left = `${best.x}px`;
+    e.style.top = `${best.bottom}px`;
+    e.dataset.ax = String(p.x);
+    e.dataset.ay = String(p.y);
+    const t0 = performance.now();
+    let frames = 0;
+    const tick = (): void => {
+      frames++;
+      if (performance.now() - t0 >= POPUP_LIFE_MS && frames >= 3) e.remove();
+      else if (performance.now() - t0 < POPUP_MAX_MS) requestAnimationFrame(tick);
+      else e.remove();
+    };
+    requestAnimationFrame(tick);
+    setTimeout(() => e.remove(), POPUP_MAX_MS);
   }
 
   private project(v: THREE.Vector3): { x: number; y: number } | null {

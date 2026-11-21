@@ -710,3 +710,11 @@
 来源：第 15 轮走查（探针副作用暴露的健壮性缺口）。`src/ui/controls.ts:157` 的 `this.stick.setPointerCapture?.(e.pointerId)` 在「没有活动指针」时抛 `NotFoundError`（本轮 4 次 `pageerror`），而它排在 `window.addEventListener('pointermove', onMove)` **之前** —— 抛错即中断 `pointerdown` 处理器，摇杆从那一刻起完全失效（`nub` 不跟、`input.stick` 恒 0）。
 需求：把捕捉与事件绑定顺序对调（先 `addEventListener` 再 `setPointerCapture`），并 `try { this.stick.setPointerCapture(id) } catch {}`；`onUp` 里同样 `try { releasePointerCapture } catch {}`。
 验收：e2e——`page.evaluate` 派发无活动指针的 `pointerdown` 后，再派发 `pointermove` 能移动玩家；`pageerror` 计数 0；真机触摸拖动仍正常（位移 >1.5m/s）；连跑 3 次。
+
+### B-068 状态：DONE（2026-11-21 13:57Z 上线，`assets/index-4y2uGTtZ.js`）
+- 提交：`6fb4f79` + `fbc8d14`（功能与 e2e）、`55a5c00` + `1a670de`（视觉强化与 e2e 补充），均已 push 到 main。
+- 实现：`.card[data-table=tX]` + `.tb-badge`（24px、14px 字）；卡片按 `TABLES` 桌序升序固定、最多 3 张；`#bbq-rings` 每桌一个椭圆地面环（128×58、3px 描边、opacity .55–.9 呼吸、`color-mix` 16% 填充）+ `.order-num` 桌号圆牌（28px、16px 字），四桌固定色 t1 金 / t2 绿 / t3 蓝 / t4 橙；气泡菜名降到 10px，`#bbq-bubbles` 内不再有 `.card`。
+- 验收：`tsc --noEmit` + `npm run build` OK；`e2e/orders.mjs` **连跑 3/3 全绿**（8 组断言：桌号绑定、升序且 +2s 稳定、环数=卡数、离店即移除、气泡无整卡、徽章 14px 无交叠、双端视口内且不被 HUD 遮挡）；双端截图 vision 独立判定「1/2/3 号卡 ↔ 同色同号桌一一对应」，横屏三卡不压状态条、不被裁切。
+- 新发现（下轮候选）：
+  - **B-076（P2）横屏订单卡缩字到 12px/10px**（`@media (max-height:450px) and (min-width:600px)`），与 ART §5「HUD 字号 ≥13px」冲突，且横屏本应更清楚；建议改为加宽卡片/两行布局而不是缩字。
+  - **B-072 未动**：横屏底部工作台裁切仍在，本轮只调整了订单卡位置，未验证 `crate-*/grill/plate` 是否完整可见。

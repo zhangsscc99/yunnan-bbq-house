@@ -1,0 +1,289 @@
+{
+  "steps": {
+    "chopHudKids": [
+      {
+        "cls": "cb",
+        "txt": "切配 1/3",
+        "box": {
+          "x": 136,
+          "y": 433,
+          "w": 80,
+          "h": 35
+        },
+        "fs": "16px",
+        "bg": "rgba(24, 16, 12, 0.82)",
+        "op": "1",
+        "inView": true
+      },
+      {
+        "cls": "cb-bar",
+        "txt": "",
+        "box": {
+          "x": 144,
+          "y": 437,
+          "w": 64,
+          "h": 8
+        },
+        "fs": "16px",
+        "bg": "rgba(245, 232, 216, 0.18)",
+        "op": "1",
+        "inView": true
+      },
+      {
+        "cls": "cb-fill",
+        "txt": "",
+        "box": {
+          "x": 144,
+          "y": 437,
+          "w": 21,
+          "h": 8
+        },
+        "fs": "16px",
+        "bg": "rgb(240, 192, 96)",
+        "op": "1",
+        "inView": true
+      },
+      {
+        "cls": "cb-txt",
+        "txt": "切配 1/3",
+        "box": {
+          "x": 152,
+          "y": 448,
+          "w": 48,
+          "h": 15
+        },
+        "fs": "13px",
+        "bg": "rgba(0, 0, 0, 0)",
+        "op": "1",
+        "inView": true
+      }
+    ],
+    "chopState": {
+      "held": "raw",
+      "chopLeft": 2
+    },
+    "chopDoneKids": [
+      {
+        "cls": "cb done",
+        "txt": "已切好 ✓",
+        "box": {
+          "x": 136,
+          "y": 433,
+          "w": 80,
+          "h": 35
+        },
+        "fs": "16px",
+        "bg": "rgba(24, 16, 12, 0.82)",
+        "op": "1",
+        "inView": true
+      },
+      {
+        "cls": "cb-bar",
+        "txt": "",
+        "box": {
+          "x": 144,
+          "y": 437,
+          "w": 64,
+          "h": 8
+        },
+        "fs": "16px",
+        "bg": "rgba(245, 232, 216, 0.18)",
+        "op": "1",
+        "inView": true
+      },
+      {
+        "cls": "cb-fill",
+        "txt": "",
+        "box": {
+          "x": 144,
+          "y": 437,
+          "w": 64,
+          "h": 8
+        },
+        "fs": "16px",
+        "bg": "rgb(158, 203, 106)",
+        "op": "1",
+        "inView": true
+      },
+      {
+        "cls": "cb-txt",
+        "txt": "已切好 ✓",
+        "box": {
+          "x": 148,
+          "y": 448,
+          "w": 56,
+          "h": 15
+        },
+        "fs": "13px",
+        "bg": "rgba(0, 0, 0, 0)",
+        "op": "1",
+        "inView": true
+      }
+    ],
+    "carry2": {
+      "dish": "pork",
+      "stage": "chopped"
+    },
+    "grillHudKids": [
+      {
+        "cls": "gb",
+        "txt": "烤制中 3s",
+        "box": {
+          "x": 110,
+          "y": 428,
+          "w": 76,
+          "h": 34
+        },
+        "fs": "16px",
+        "bg": "rgba(24, 16, 12, 0.82)",
+        "op": "1",
+        "inView": true
+      },
+      {
+        "cls": "gb-bar",
+        "txt": "",
+        "box": {
+          "x": 116,
+          "y": 432,
+          "w": 64,
+          "h": 8
+        },
+        "fs": "16px",
+        "bg": "rgba(245, 232, 216, 0.18)",
+        "op": "1",
+        "inView": true
+      },
+      {
+        "cls": "gb-fill",
+        "txt": "",
+        "box": {
+          "x": 116,
+          "y": 432,
+          "w": 38,
+          "h": 8
+        },
+        "fs": "16px",
+        "bg": "rgb(240, 192, 96)",
+        "op": "1",
+        "inView": true
+      },
+      {
+        "cls": "gb-mark",
+        "txt": "",
+        "box": {
+          "x": 178,
+          "y": 432,
+          "w": 2,
+          "h": 8
+        },
+        "fs": "16px",
+        "bg": "rgba(24, 16, 12, 0.85)",
+        "op": "1",
+        "inView": true
+      },
+      {
+        "cls": "gb-txt",
+        "txt": "烤制中 3s",
+        "box": {
+          "x": 122,
+          "y": 443,
+          "w": 53,
+          "h": 14
+        },
+        "fs": "12px",
+        "bg": "rgba(0, 0, 0, 0)",
+        "op": "1",
+        "inView": true
+      }
+    ],
+    "grill": [
+      {
+        "stage": "chopped",
+        "t": 3.5384000000357596
+      },
+      null,
+      null
+    ],
+    "grillHudKidsCooked": [
+      {
+        "cls": "gb done",
+        "txt": "已熟 ✓",
+        "box": {
+          "x": 110,
+          "y": 428,
+          "w": 76,
+          "h": 34
+        },
+        "fs": "16px",
+        "bg": "rgba(24, 16, 12, 0.82)",
+        "op": "1",
+        "inView": true
+      },
+      {
+        "cls": "gb-bar",
+        "txt": "",
+        "box": {
+          "x": 116,
+          "y": 432,
+          "w": 64,
+          "h": 8
+        },
+        "fs": "16px",
+        "bg": "rgba(245, 232, 216, 0.18)",
+        "op": "1",
+        "inView": true
+      },
+      {
+        "cls": "gb-fill",
+        "txt": "",
+        "box": {
+          "x": 116,
+          "y": 432,
+          "w": 64,
+          "h": 8
+        },
+        "fs": "16px",
+        "bg": "rgb(240, 192, 96)",
+        "op": "1",
+        "inView": true
+      },
+      {
+        "cls": "gb-mark",
+        "txt": "",
+        "box": {
+          "x": 178,
+          "y": 432,
+          "w": 2,
+          "h": 8
+        },
+        "fs": "16px",
+        "bg": "rgba(24, 16, 12, 0.85)",
+        "op": "1",
+        "inView": true
+      },
+      {
+        "cls": "gb-txt",
+        "txt": "已熟 ✓",
+        "box": {
+          "x": 128,
+          "y": 443,
+          "w": 39,
+          "h": 14
+        },
+        "fs": "12px",
+        "bg": "rgba(0, 0, 0, 0)",
+        "op": "1",
+        "inView": true
+      }
+    ],
+    "saveBeforeReload": {},
+    "reloadTitle": {
+      "card": "柳真真云南烤肉 | 炭火生香，小店开张。 | 取料 → 切配 → 炭烤 → 装盘 → 上菜 | 目标：3 分钟营业额 ¥180 | 开 店",
+      "buttons": [
+        "开 店"
+      ],
+      "save": {}
+    }
+  },
+  "errors": []
+}

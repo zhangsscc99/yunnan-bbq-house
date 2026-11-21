@@ -1,0 +1,120 @@
+{
+  "views": {
+    "port390": {
+      "W": 390,
+      "H": 844,
+      "statusText": "第 1 关 营业额 ¥0 时间 2:58 评级",
+      "statusRect": {
+        "x": 37,
+        "y": 8,
+        "w": 315,
+        "h": 36,
+        "right": 37,
+        "bottom": 800
+      },
+      "cardRect": {
+        "x": 238,
+        "y": 54,
+        "w": 142,
+        "h": 47,
+        "right": 10,
+        "bottom": 743
+      },
+      "overlap": {
+        "ox": 114,
+        "oy": -10,
+        "gapX": -114,
+        "gapY": 10
+      },
+      "cardText": "烤五花肉拼盘 ¥48 · 等待",
+      "fontSize": "16px"
+    },
+    "land844": {
+      "W": 844,
+      "H": 390,
+      "statusText": "第 1 关 营业额 ¥0 时间 2:57 评级",
+      "statusRect": {
+        "x": 264,
+        "y": 8,
+        "w": 315,
+        "h": 36,
+        "right": 264,
+        "bottom": 346
+      },
+      "cardRect": {
+        "x": 692,
+        "y": 8,
+        "w": 142,
+        "h": 47,
+        "right": 10,
+        "bottom": 335
+      },
+      "overlap": {
+        "ox": -113,
+        "oy": 36,
+        "gapX": 113,
+        "gapY": -36
+      },
+      "cardText": "烤五花肉拼盘 ¥48 · 等待",
+      "fontSize": "16px"
+    },
+    "small360": {
+      "W": 360,
+      "H": 640,
+      "statusText": "第 1 关 营业额 ¥0 时间 2:57 评级",
+      "statusRect": {
+        "x": 22,
+        "y": 8,
+        "w": 315,
+        "h": 36,
+        "right": 22,
+        "bottom": 596
+      },
+      "cardRect": {
+        "x": 208,
+        "y": 54,
+        "w": 142,
+        "h": 47,
+        "right": 10,
+        "bottom": 539
+      },
+      "overlap": {
+        "ox": 129,
+        "oy": -10,
+        "gapX": -129,
+        "gapY": 10
+      },
+      "cardText": "烤五花肉拼盘 ¥48 · 等待",
+      "fontSize": "16px"
+    },
+    "tiny320": {
+      "W": 320,
+      "H": 568,
+      "statusText": "第 1 关 营业额 ¥0 时间 2:57 评级",
+      "statusRect": {
+        "x": 2,
+        "y": 8,
+        "w": 315,
+        "h": 36,
+        "right": 2,
+        "bottom": 524
+      },
+      "cardRect": {
+        "x": 168,
+        "y": 54,
+        "w": 142,
+        "h": 47,
+        "right": 10,
+        "bottom": 467
+      },
+      "overlap": {
+        "ox": 142,
+        "oy": -10,
+        "gapX": -149,
+        "gapY": 10
+      },
+      "cardText": "烤五花肉拼盘 ¥48 · 等待",
+      "fontSize": "16px"
+    }
+  }
+}

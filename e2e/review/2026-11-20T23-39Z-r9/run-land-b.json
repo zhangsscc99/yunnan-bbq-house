@@ -1,0 +1,648 @@
+{
+  "tag": "land",
+  "vp": {
+    "width": 844,
+    "height": 390
+  },
+  "shots": [
+    "land-01-title.png",
+    "land-02-playing.png",
+    "land-03-move.png",
+    "land-04-chop-before.png",
+    "land-05-chop-mid.png",
+    "land-06-chop-done.png",
+    "land-07-hud.png",
+    "land-08-small360.png"
+  ],
+  "errors": [],
+  "warns": [
+    "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+  ],
+  "steps": {
+    "title": {
+      "cardText": "柳真真云南烤肉 | 炭火生香，小店开张。 | 取料 → 切配 → 炭烤 → 装盘 → 上菜 | 目标：3 分钟营业额 ¥180 | 开 店",
+      "buttons": [
+        "开 店"
+      ],
+      "backdrop": "blur(3px)",
+      "bg": "rgba(12, 8, 5, 0.45)",
+      "save": null
+    },
+    "startToPlayMs": 20,
+    "clock": {
+      "wallMs": 6081,
+      "timeLeftDelta": 0.4,
+      "frames": 4,
+      "fpsReal": 0.66
+    },
+    "stick": {
+      "x": 22,
+      "y": 238,
+      "w": 130,
+      "h": 130
+    },
+    "move": {
+      "wallMs": 29295,
+      "dist": 4.15,
+      "mps": 0.14,
+      "expectM": 93.74,
+      "frames": 20
+    },
+    "chop": [
+      {
+        "ev": "pickup",
+        "carrying": {
+          "dish": "pork",
+          "stage": "raw"
+        }
+      },
+      {
+        "ev": "arrive",
+        "chopHud": {
+          "text": "",
+          "display": "block",
+          "opacity": "1",
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 844,
+            "h": 390
+          }
+        },
+        "chop": {
+          "held": null,
+          "chopLeft": 0
+        }
+      },
+      {
+        "ev": "p1",
+        "chopHud": {
+          "text": "切配 0/3",
+          "display": "block",
+          "opacity": "1",
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 844,
+            "h": 390
+          }
+        },
+        "chop": {
+          "held": "raw",
+          "chopLeft": 3
+        },
+        "carrying": null
+      },
+      {
+        "ev": "p2",
+        "chopHud": {
+          "text": "切配 1/3",
+          "display": "block",
+          "opacity": "1",
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 844,
+            "h": 390
+          }
+        },
+        "chop": {
+          "held": "raw",
+          "chopLeft": 2
+        },
+        "carrying": null
+      },
+      {
+        "ev": "p3",
+        "chopHud": {
+          "text": "切配 2/3",
+          "display": "block",
+          "opacity": "1",
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 844,
+            "h": 390
+          }
+        },
+        "chop": {
+          "held": "raw",
+          "chopLeft": 1
+        },
+        "carrying": null
+      },
+      {
+        "ev": "p4",
+        "chopHud": {
+          "text": "已切好 ✓",
+          "display": "block",
+          "opacity": "1",
+          "box": {
+            "x": 0,
+            "y": 0,
+            "w": 844,
+            "h": 390
+          }
+        },
+        "chop": {
+          "held": "chopped",
+          "chopLeft": 0
+        },
+        "carrying": null
+      }
+    ],
+    "hud": {
+      "W": 844,
+      "H": 390,
+      "boxes": {
+        "bbq-stick": {
+          "x": 22,
+          "y": 238,
+          "w": 130,
+          "h": 130,
+          "vis": true,
+          "right": 692,
+          "bottom": 22
+        },
+        "bbq-act": {
+          "x": 742,
+          "y": 284,
+          "w": 76,
+          "h": 76,
+          "vis": true,
+          "right": 26,
+          "bottom": 30
+        },
+        "bbq-chop": {
+          "x": 0,
+          "y": 0,
+          "w": 844,
+          "h": 390,
+          "vis": true,
+          "right": 0,
+          "bottom": 0
+        },
+        "bbq-status": null,
+        "bbq-orders": {
+          "x": 692,
+          "y": 8,
+          "w": 142,
+          "h": 47,
+          "vis": true,
+          "right": 10,
+          "bottom": 335
+        },
+        "bbq-bubbles": {
+          "x": 0,
+          "y": 0,
+          "w": 844,
+          "h": 390,
+          "vis": true,
+          "right": 0,
+          "bottom": 0
+        },
+        "bbq-popups": {
+          "x": 0,
+          "y": 0,
+          "w": 844,
+          "h": 390,
+          "vis": true,
+          "right": 0,
+          "bottom": 0
+        },
+        "bbq-grillbars": {
+          "x": 0,
+          "y": 0,
+          "w": 844,
+          "h": 390,
+          "vis": true,
+          "right": 0,
+          "bottom": 0
+        },
+        "bbq-guide": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "vis": false,
+          "right": 844,
+          "bottom": 390
+        },
+        "bbq-hud": {
+          "x": 0,
+          "y": 0,
+          "w": 844,
+          "h": 390,
+          "vis": true,
+          "right": 0,
+          "bottom": 0
+        }
+      },
+      "overlaps": [
+        {
+          "a": "bbq-stick",
+          "b": "bbq-chop",
+          "ox": 130,
+          "oy": 130
+        },
+        {
+          "a": "bbq-stick",
+          "b": "bbq-bubbles",
+          "ox": 130,
+          "oy": 130
+        },
+        {
+          "a": "bbq-stick",
+          "b": "bbq-popups",
+          "ox": 130,
+          "oy": 130
+        },
+        {
+          "a": "bbq-stick",
+          "b": "bbq-grillbars",
+          "ox": 130,
+          "oy": 130
+        },
+        {
+          "a": "bbq-act",
+          "b": "bbq-chop",
+          "ox": 76,
+          "oy": 76
+        },
+        {
+          "a": "bbq-act",
+          "b": "bbq-bubbles",
+          "ox": 76,
+          "oy": 76
+        },
+        {
+          "a": "bbq-act",
+          "b": "bbq-popups",
+          "ox": 76,
+          "oy": 76
+        },
+        {
+          "a": "bbq-act",
+          "b": "bbq-grillbars",
+          "ox": 76,
+          "oy": 76
+        },
+        {
+          "a": "bbq-chop",
+          "b": "bbq-orders",
+          "ox": 142,
+          "oy": 47
+        },
+        {
+          "a": "bbq-chop",
+          "b": "bbq-bubbles",
+          "ox": 844,
+          "oy": 390
+        },
+        {
+          "a": "bbq-chop",
+          "b": "bbq-popups",
+          "ox": 844,
+          "oy": 390
+        },
+        {
+          "a": "bbq-chop",
+          "b": "bbq-grillbars",
+          "ox": 844,
+          "oy": 390
+        },
+        {
+          "a": "bbq-orders",
+          "b": "bbq-bubbles",
+          "ox": 142,
+          "oy": 47
+        },
+        {
+          "a": "bbq-orders",
+          "b": "bbq-popups",
+          "ox": 142,
+          "oy": 47
+        },
+        {
+          "a": "bbq-orders",
+          "b": "bbq-grillbars",
+          "ox": 142,
+          "oy": 47
+        },
+        {
+          "a": "bbq-bubbles",
+          "b": "bbq-popups",
+          "ox": 844,
+          "oy": 390
+        },
+        {
+          "a": "bbq-bubbles",
+          "b": "bbq-grillbars",
+          "ox": 844,
+          "oy": 390
+        },
+        {
+          "a": "bbq-popups",
+          "b": "bbq-grillbars",
+          "ox": 844,
+          "oy": 390
+        }
+      ]
+    },
+    "hud360": {
+      "W": 360,
+      "H": 640,
+      "boxes": {
+        "bbq-stick": {
+          "x": 22,
+          "y": 488,
+          "w": 130,
+          "h": 130,
+          "vis": true,
+          "right": 208,
+          "bottom": 22
+        },
+        "bbq-act": {
+          "x": 258,
+          "y": 534,
+          "w": 76,
+          "h": 76,
+          "vis": true,
+          "right": 26,
+          "bottom": 30
+        },
+        "bbq-chop": {
+          "x": 0,
+          "y": 0,
+          "w": 360,
+          "h": 640,
+          "vis": true,
+          "right": 0,
+          "bottom": 0
+        },
+        "bbq-status": null,
+        "bbq-orders": {
+          "x": 208,
+          "y": 54,
+          "w": 142,
+          "h": 47,
+          "vis": true,
+          "right": 10,
+          "bottom": 539
+        },
+        "bbq-bubbles": {
+          "x": 0,
+          "y": 0,
+          "w": 360,
+          "h": 640,
+          "vis": true,
+          "right": 0,
+          "bottom": 0
+        },
+        "bbq-popups": {
+          "x": 0,
+          "y": 0,
+          "w": 360,
+          "h": 640,
+          "vis": true,
+          "right": 0,
+          "bottom": 0
+        },
+        "bbq-grillbars": {
+          "x": 0,
+          "y": 0,
+          "w": 360,
+          "h": 640,
+          "vis": true,
+          "right": 0,
+          "bottom": 0
+        },
+        "bbq-guide": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "vis": false,
+          "right": 360,
+          "bottom": 640
+        },
+        "bbq-hud": {
+          "x": 0,
+          "y": 0,
+          "w": 360,
+          "h": 640,
+          "vis": true,
+          "right": 0,
+          "bottom": 0
+        }
+      },
+      "overlaps": [
+        {
+          "a": "bbq-stick",
+          "b": "bbq-chop",
+          "ox": 130,
+          "oy": 130
+        },
+        {
+          "a": "bbq-stick",
+          "b": "bbq-bubbles",
+          "ox": 130,
+          "oy": 130
+        },
+        {
+          "a": "bbq-stick",
+          "b": "bbq-popups",
+          "ox": 130,
+          "oy": 130
+        },
+        {
+          "a": "bbq-stick",
+          "b": "bbq-grillbars",
+          "ox": 130,
+          "oy": 130
+        },
+        {
+          "a": "bbq-act",
+          "b": "bbq-chop",
+          "ox": 76,
+          "oy": 76
+        },
+        {
+          "a": "bbq-act",
+          "b": "bbq-bubbles",
+          "ox": 76,
+          "oy": 76
+        },
+        {
+          "a": "bbq-act",
+          "b": "bbq-popups",
+          "ox": 76,
+          "oy": 76
+        },
+        {
+          "a": "bbq-act",
+          "b": "bbq-grillbars",
+          "ox": 76,
+          "oy": 76
+        },
+        {
+          "a": "bbq-chop",
+          "b": "bbq-orders",
+          "ox": 142,
+          "oy": 47
+        },
+        {
+          "a": "bbq-chop",
+          "b": "bbq-bubbles",
+          "ox": 360,
+          "oy": 640
+        },
+        {
+          "a": "bbq-chop",
+          "b": "bbq-popups",
+          "ox": 360,
+          "oy": 640
+        },
+        {
+          "a": "bbq-chop",
+          "b": "bbq-grillbars",
+          "ox": 360,
+          "oy": 640
+        },
+        {
+          "a": "bbq-orders",
+          "b": "bbq-bubbles",
+          "ox": 142,
+          "oy": 47
+        },
+        {
+          "a": "bbq-orders",
+          "b": "bbq-popups",
+          "ox": 142,
+          "oy": 47
+        },
+        {
+          "a": "bbq-orders",
+          "b": "bbq-grillbars",
+          "ox": 142,
+          "oy": 47
+        },
+        {
+          "a": "bbq-bubbles",
+          "b": "bbq-popups",
+          "ox": 360,
+          "oy": 640
+        },
+        {
+          "a": "bbq-bubbles",
+          "b": "bbq-grillbars",
+          "ox": 360,
+          "oy": 640
+        },
+        {
+          "a": "bbq-popups",
+          "b": "bbq-grillbars",
+          "ox": 360,
+          "oy": 640
+        }
+      ]
+    },
+    "final": {
+      "phase": "playing",
+      "money": 0,
+      "timeLeft": 166.96869999986953,
+      "served": 0,
+      "angry": 0,
+      "waste": 0,
+      "hint": {
+        "kind": "station",
+        "id": "crate-pork",
+        "x": -4.5,
+        "z": 2
+      },
+      "carrying": null,
+      "action": "chop",
+      "actionLabel": "取回切好的串",
+      "player": {
+        "x": -1,
+        "z": 2
+      },
+      "stations": {
+        "bin": {
+          "x": -5.5,
+          "z": 2
+        },
+        "crate-pork": {
+          "x": -4.5,
+          "z": 2
+        },
+        "crate-mush": {
+          "x": -3.5,
+          "z": 2
+        },
+        "crate-mix": {
+          "x": -2.5,
+          "z": 2
+        },
+        "chop": {
+          "x": -1,
+          "z": 2
+        },
+        "grill": {
+          "x": 1.5,
+          "z": 2
+        },
+        "plate": {
+          "x": 4,
+          "z": 2
+        }
+      },
+      "tables": {
+        "t1": {
+          "x": -3.3,
+          "z": -1.2000000000000002
+        },
+        "t2": {
+          "x": 0.2999999999999998,
+          "z": -1.2000000000000002
+        },
+        "t3": {
+          "x": 3.9000000000000004,
+          "z": -1.2000000000000002
+        },
+        "t4": {
+          "x": 2.0999999999999996,
+          "z": 0.7999999999999998
+        }
+      },
+      "customers": [
+        {
+          "id": 1,
+          "dish": "mixian",
+          "phase": "seated",
+          "patience": 93.042099999905,
+          "table": "t2",
+          "x": -0.5,
+          "z": -2.4
+        }
+      ],
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "chop": {
+        "held": "chopped",
+        "chopLeft": 0
+      },
+      "calls": 93,
+      "tris": 10810
+    },
+    "perf": {
+      "calls": 93,
+      "tris": 10810,
+      "programs": 16
+    }
+  }
+}

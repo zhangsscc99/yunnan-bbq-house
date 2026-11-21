@@ -1,0 +1,18 @@
+{
+  "lv1": {
+    "level": 1,
+    "target": 180,
+    "timeLeft": 180
+  },
+  "lv2": {
+    "level": 2,
+    "target": 260,
+    "timeLeft": 179.2,
+    "money": 0,
+    "hud": "第 2 关 营业额 ¥0 时间 3:00 评级",
+    "save": {
+      "bbq.best": "300",
+      "bbq.level": "2"
+    }
+  }
+}

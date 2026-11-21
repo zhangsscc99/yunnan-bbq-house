@@ -11,8 +11,10 @@ const { default: assert } = await import('node:assert/strict');
 
 const BASE = process.env.E2E_BASE ?? 'http://127.0.0.1:4175/bbq/';
 const RUNS = Number(process.env.E2E_RUNS ?? 1);
+const ONLY = process.env.E2E_ONLY;
 const MAX_RETRIES = 2;
-const isEnvCrash = (e) => !(e instanceof assert.AssertionError) && /has been closed|Target page|Target closed|crash/i.test(String(e?.message ?? e));
+class SamplingStarved extends Error {}
+const isEnvCrash = (e) => e instanceof SamplingStarved || !(e instanceof assert.AssertionError) && /has been closed|Target page|Target closed|crash/i.test(String(e?.message ?? e));
 
 async function open(url, viewport) {
   const browser = await chromium.launch({
@@ -111,37 +113,50 @@ function assertBirth(tag, p) {
   return gap;
 }
 
-/** sample the newest popup for 1.7s wall time right after insert (call immediately: at ~1fps a rAF wait would eat the lifetime), then wait for removal */
-async function dwell(tag, page) {
-  const samples = await page.evaluate(async () => {
-    const e = document.querySelector('#bbq-popups .popup:last-child');
-    const out = [];
-    const t0 = performance.now();
-    while (performance.now() - t0 < 1700) {
-      const alive = !!e && e.isConnected;
-      const rect = (n) => { const r = n.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; };
-      out.push({
-        t: performance.now() - t0, alive, opacity: alive ? getComputedStyle(e).opacity : null,
-        box: alive ? rect(e) : null, ay: alive ? Number(e.dataset.ay) : 0,
-        bubbles: [...document.querySelectorAll('#bbq-bubbles .bubble')].map(rect),
-      });
-      await new Promise((r) => setTimeout(r, 80));
-    }
-    return out;
-  });
+/** page-side: starting at the birth frame, sample popup `e` every ~80ms (1.7s mandatory window, then until removed or 3s cap); runs in the SAME evaluate as the trigger so no CDP round trip eats the 2.2s lifetime */
+const WATCH_SRC = `(async (e) => {
+  const rect = (n) => { const r = n.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; };
+  const samples = [];
+  let removedAt = null;
+  const t0 = performance.now();
+  for (;;) {
+    const t = performance.now() - t0;
+    const alive = e.isConnected;
+    if (!alive) { removedAt = t; break; }
+    samples.push({
+      t, alive, opacity: getComputedStyle(e).opacity, box: rect(e), ay: Number(e.dataset.ay),
+      bubbles: [...document.querySelectorAll('#bbq-bubbles .bubble')].map(rect),
+    });
+    if (t >= 3000) break;
+    await new Promise((r) => setTimeout(r, 80));
+  }
+  return { samples, removedAt };
+})`;
+
+/** assertions on a watch result (all outside the page) */
+async function assertDwell(tag, page, { samples, removedAt }) {
+  console.log(`INFO ${tag} sample t(ms): ${samples.map((x) => x.t.toFixed(0)).join(',')} removedAt=${removedAt === null ? 'n/a' : removedAt.toFixed(0)}`);
+  const mandatory = samples.filter((s) => s.t < 1700);
+  // measurement validity (not a product verdict): a main-thread stall (swiftshader frame) can leave a hole in the [0,1.2s] window we must observe at opacity 1; retry such runs instead of passing/failing on thin data
+  for (let i = 0; i < samples.length - 1 && samples[i].t < 1200; i++) {
+    if (samples[i + 1].t - samples[i].t > 600) throw new SamplingStarved(`${tag} sampling starved: ${samples[i].t.toFixed(0)}ms -> ${samples[i + 1].t.toFixed(0)}ms gap inside the 1.2s opacity window (main thread stalled)`);
+  }
+  if (!samples.length || samples[samples.length - 1].t < 1200) throw new SamplingStarved(`${tag} stall after last sample ${samples.length ? samples[samples.length - 1].t.toFixed(0) : 'none'}ms, popup observed removed only at ${removedAt === null ? 'n/a' : removedAt.toFixed(0)}ms`);
+  if (removedAt !== null) assert.ok(removedAt >= 1600, `${tag} popup removed at ${removedAt.toFixed(0)}ms (< 1.6s)`);
+  const last = samples[samples.length - 1];
+  assert.ok(removedAt !== null || last.t >= 1600, `${tag} watch ended at ${last.t.toFixed(0)}ms`);
   for (const s of samples) {
-    assert.ok(s.alive, `${tag} popup removed at ${s.t.toFixed(0)}ms (< 1.6s)`);
     if (s.t < 1200) assert.equal(s.opacity, '1', `${tag} opacity ${s.opacity} at ${s.t.toFixed(0)}ms (< 1.2s)`);
     assert.ok(s.ay - (s.box.y + s.box.h) >= 40, `${tag} gap to anchor < 40px at ${s.t.toFixed(0)}ms`);
     for (const b of s.bubbles) assert.ok(!overlap(s.box, b), `${tag} popup intersects a bubble at ${s.t.toFixed(0)}ms`);
   }
-  let gone = false;
+  let gone = removedAt !== null;
   for (let i = 0; i < 40 && !gone; i++) {
     await page.waitForTimeout(250);
     gone = await page.evaluate(() => document.querySelectorAll('#bbq-popups .popup').length === 0);
   }
   assert.ok(gone, `${tag} popup never removed`);
-  return samples.length;
+  return mandatory.length;
 }
 
 const runViewport = (tag, viewport) => withRetry(tag, () => runViewportOnce(tag, viewport));
@@ -159,10 +174,13 @@ async function runViewportOnce(tag, viewport) {
     const money0 = s.money;
     await clearPopups(page);
     await raf2(page);   // let the render loop lay out the guest's bubble first
-    const pm = await page.evaluate((src) => {
+    const { p0: pm, w: wm } = await page.evaluate(async ({ src, watchSrc }) => {
       window.__test.press(); window.__test.tick(0.05, 2);
-      return eval(src);
-    }, PROBE_SRC);
+      const p0 = eval(src);
+      const list = document.querySelectorAll('#bbq-popups .popup');
+      const w = list.length ? await eval(watchSrc)(list[list.length - 1]) : null;
+      return { p0, w };
+    }, { src: PROBE_SRC, watchSrc: WATCH_SRC });
     s = await state(page);
     assert.ok(s.money > money0, `${tag} money) ${money0} -> ${s.money} did not grow`);
     assert.ok(pm && pm.layerText.includes('+¥'), `${tag} money) #bbq-popups text lacks "+¥": ${pm?.layerText}`);
@@ -170,7 +188,8 @@ async function runViewportOnce(tag, viewport) {
     assert.ok(pm.kind.includes('money'), `${tag} money) kind ${pm.kind}`);
     assert.ok(pm.bubbles.length >= 1, `${tag} money) no .bubble in DOM — overlap check would be vacuous`);
     const gapM = assertBirth(`${tag} money)`, pm);
-    const nM = await dwell(`${tag} money)`, page);
+    assert.ok(wm, `${tag} money) no popup to watch`);
+    const nM = await assertDwell(`${tag} money)`, page, wm);
     console.log(`PASS ${tag} money) ¥${money0}->¥${s.money} "${pm.text}" opacity=${pm.opacity} font=${pm.fontPx}px box=${pm.box.w.toFixed(0)}x${pm.box.h.toFixed(0)} 距锚点=${gapM.toFixed(0)}px bubbles=${pm.bubbles.length} 驻留>=1.6s(${nM} 采样) 随后移除`);
 
     // ---- warn: patience runs out -> 愤怒离店 ----
@@ -181,13 +200,17 @@ async function runViewportOnce(tag, viewport) {
     await keepPatient(page);
     await raf2(page);   // let the render loop lay out the guest's bubble first
     await page.evaluate(() => window.__test.setPatience(0.01));
-    const pw = await page.evaluate((src) => {
+    const { p0: pw, w: ww } = await page.evaluate(async ({ src, watchSrc }) => {
       for (let i = 0; i < 400; i++) {
         window.__test.tick(0.05, 1);
-        if (window.__test.state().angry > 0 && document.querySelector('#bbq-popups .popup')) return eval(src);
+        if (window.__test.state().angry > 0 && document.querySelector('#bbq-popups .popup')) {
+          const p0 = eval(src);
+          const list = document.querySelectorAll('#bbq-popups .popup');
+          return { p0, w: await eval(watchSrc)(list[list.length - 1]) };
+        }
       }
-      return null;
-    }, PROBE_SRC);
+      return { p0: null, w: null };
+    }, { src: PROBE_SRC, watchSrc: WATCH_SRC });
     s = await state(page);
     assert.ok(s.angry > angry0, `${tag} warn) angry ${angry0} -> ${s.angry} did not grow (guest ${g2.id})`);
     assert.ok(pw, `${tag} warn) no popup on the angry frame`);
@@ -195,7 +218,7 @@ async function runViewportOnce(tag, viewport) {
     assert.ok(pw.kind.includes('warn'), `${tag} warn) kind ${pw.kind}`);
     assert.ok(pw.bubbles.length >= 1, `${tag} warn) no .bubble in DOM — overlap check would be vacuous`);
     const gapW = assertBirth(`${tag} warn)`, pw);
-    const nW = await dwell(`${tag} warn)`, page);
+    const nW = await assertDwell(`${tag} warn)`, page, ww);
     console.log(`PASS ${tag} warn)  angry ${angry0}->${s.angry} "${pw.text}" opacity=${pw.opacity} font=${pw.fontPx}px box=${pw.box.w.toFixed(0)}x${pw.box.h.toFixed(0)} 距锚点=${gapW.toFixed(0)}px bubbles=${pw.bubbles.length} 驻留>=1.6s(${nW} 采样) 随后移除`);
 
     const calls = (await state(page)).calls;
@@ -208,7 +231,7 @@ async function runViewportOnce(tag, viewport) {
 
 for (let run = 1; run <= RUNS; run++) {
   console.log(`--- run ${run}/${RUNS} ---`);
-  await runViewport('竖屏 390x844', { width: 390, height: 844 });
-  await runViewport('横屏 844x390', { width: 844, height: 390 });
+  if (!ONLY || ONLY === 'portrait') await runViewport('竖屏 390x844', { width: 390, height: 844 });
+  if (!ONLY || ONLY === 'landscape') await runViewport('横屏 844x390', { width: 844, height: 390 });
 }
 console.log('POPUP OK');

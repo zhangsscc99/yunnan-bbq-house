@@ -1,0 +1,231 @@
+{
+  "tag": "land",
+  "vp": {
+    "width": 844,
+    "height": 390
+  },
+  "shots": [
+    "/tmp/r16/land/shots/land-01-served.png",
+    "/tmp/r16/land/shots/land-02-grill-cooked.png",
+    "/tmp/r16/land/shots/land-03-hud.png"
+  ],
+  "steps": {},
+  "errors": [],
+  "warns": [
+    "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+  ],
+  "build": "2290acb-202611210547",
+  "greeting": "柳真真云南烤肉 | 炭火生香，小店开张。 | 取料 → 切配 → 炭烤 → 装盘 → 上菜 | 第 1 关 · 目标：3 分钟营业额 ¥180 | 开 店",
+  "chain": {
+    "atCrate": {
+      "a": "take-raw",
+      "l": "取 烤五花肉拼盘"
+    },
+    "raw": {
+      "dish": "pork",
+      "stage": "raw"
+    },
+    "chopSeq": [
+      "0/null/carry:raw",
+      "3/raw/carry:-",
+      "2/raw/carry:-",
+      "1/raw/carry:-",
+      "0/chopped/carry:-",
+      "0/null/carry:chopped"
+    ],
+    "chopTaps": 5,
+    "chopBarAfter": {
+      "txt": "已切好 ✓",
+      "fill": "100%"
+    },
+    "chopped": {
+      "dish": "pork",
+      "stage": "chopped"
+    },
+    "atGrill": {
+      "a": "put-grill",
+      "l": "上烤炉"
+    },
+    "grillAtDone": {
+      "t": 6.3,
+      "stage": "cooked",
+      "label": "取烤串",
+      "badge": "已熟 ✓"
+    },
+    "grillSamples": [
+      {
+        "t": 1.1,
+        "txt": "烤制中 5s"
+      },
+      {
+        "t": 2.1,
+        "txt": "烤制中 4s"
+      },
+      {
+        "t": 3.1,
+        "txt": "烤制中 3s"
+      },
+      {
+        "t": 4.1,
+        "txt": "烤制中 2s"
+      },
+      {
+        "t": 5.1,
+        "txt": "烤制中 1s"
+      },
+      {
+        "t": 6.1,
+        "txt": "已熟 ✓"
+      }
+    ],
+    "afterTake": {
+      "carry": {
+        "dish": "pork",
+        "stage": "cooked"
+      },
+      "label": "去装盘台"
+    },
+    "atPlate": {
+      "a": "plate",
+      "l": "装盘"
+    },
+    "plated": {
+      "dish": "pork",
+      "stage": "plated"
+    },
+    "customer": {
+      "id": 1,
+      "dish": "pork",
+      "table": "t1",
+      "patience": 74.65
+    },
+    "orders": [
+      {
+        "txt": "烤五花肉拼盘 | ¥48 · 等待",
+        "h": 47,
+        "fs": "16px"
+      }
+    ],
+    "atTable": {
+      "a": "serve",
+      "l": "上菜 烤五花肉拼盘",
+      "money": 0
+    },
+    "serve": {
+      "before": 0,
+      "after": 62,
+      "served": 1,
+      "carry": null,
+      "pops": [
+        {
+          "txt": "+¥62",
+          "op": "1",
+          "fs": "24px",
+          "w": 84,
+          "h": 34,
+          "x": 148,
+          "y": 6
+        }
+      ],
+      "topbar": "第 1 关 | 营业额 | ¥62 | 时间 | 2:50 | 评级",
+      "bubbles": [],
+      "cust": [
+        "1/eating/p74.55"
+      ],
+      "orders": 1
+    },
+    "after1s": {
+      "money": 62,
+      "cust": [
+        "1/eating"
+      ],
+      "topbar": "第 1 关 | 营业额 | ¥62 | 时间 | 2:49 | 评级"
+    }
+  },
+  "grillStill": {
+    "carry": null,
+    "g": {
+      "stage": "cooked",
+      "t": 6.249999999999983
+    },
+    "badge": "已熟 ✓"
+  },
+  "hud": {
+    "topbar": {
+      "x": 260,
+      "y": 8,
+      "w": 324,
+      "h": 36,
+      "disp": "flex",
+      "op": "1"
+    },
+    "orders": {
+      "x": 834,
+      "y": 8,
+      "w": 0,
+      "h": 0,
+      "disp": "flex",
+      "op": "1"
+    },
+    "stick": {
+      "x": 22,
+      "y": 238,
+      "w": 130,
+      "h": 130,
+      "disp": "block",
+      "op": "0.85"
+    },
+    "act": {
+      "x": 742,
+      "y": 284,
+      "w": 76,
+      "h": 76,
+      "disp": "flex",
+      "op": "1"
+    },
+    "gb": {
+      "x": 419,
+      "y": 220,
+      "w": 76,
+      "h": 34,
+      "disp": "flex",
+      "op": "1"
+    },
+    "vp": {
+      "w": 844,
+      "h": 390
+    },
+    "fonts": [
+      [
+        "#bbq-hud .topbar .k",
+        "12px"
+      ],
+      [
+        "#bbq-hud .topbar .v",
+        "15px"
+      ],
+      [
+        "#bbq-act .cap",
+        "10px"
+      ],
+      [
+        "#bbq-orders .card .dish",
+        null
+      ],
+      [
+        "#bbq-orders .card .pr",
+        null
+      ],
+      [
+        "#bbq-chop .cb-txt",
+        "13px"
+      ],
+      [
+        "#bbq-grillbars .gb-txt",
+        "12px"
+      ]
+    ],
+    "gapTopbarOrders": -36
+  }
+}

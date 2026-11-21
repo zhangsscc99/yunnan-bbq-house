@@ -1,0 +1,71 @@
+{
+  "tag": "land",
+  "vp": {
+    "width": 844,
+    "height": 390
+  },
+  "url": "https://openfolio.uk/bbq/",
+  "shots": [
+    "/tmp/r16/rapid/shots/land-rapid.png"
+  ],
+  "errors": [],
+  "warns": [
+    "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+  ],
+  "build": "2290acb-202611210547",
+  "crate8": {
+    "before": "empty",
+    "after": {
+      "carry": {
+        "dish": "pork",
+        "stage": "raw"
+      },
+      "money": 0,
+      "label": "手上有东西",
+      "cap": "手上有东西"
+    }
+  },
+  "crate8b": {
+    "carry": {
+      "dish": "pork",
+      "stage": "raw"
+    },
+    "money": 0,
+    "label": "手上有东西"
+  },
+  "chop8": {
+    "chop": {
+      "held": null,
+      "chopLeft": 0
+    },
+    "carry": {
+      "dish": "pork",
+      "stage": "chopped"
+    },
+    "label": "去烤炉",
+    "cap": "去烤炉"
+  },
+  "serveRapid": {
+    "at": "上菜 烤五花肉拼盘",
+    "money": 0,
+    "table": "t1",
+    "card": [
+      "烤五花肉拼盘 | ¥48 · 等待"
+    ],
+    "cardHTML": "<div class=\"card\"><div class=\"ring\">\n        <svg width=\"30\" height=\"30\" viewBox=\"0 0 30 30\">\n          <circle cx=\"15\" cy=\"15\" r=\"13\" fill=\"none\" stroke=\"rgba(240,192,96,.2)\" stroke-width=\"3\"></circle>\n          <circle cx=\"15\" cy=\"15\" r=\"13\" fill=\"none\" stroke=\"#f0c060\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-dasharray=\"81.68140899333463\" stroke-dashoffset=\"0.29042278753183653\"></circle>\n        </svg></div><div class=\"\"><div class=\"nm\">烤五花肉拼盘</div><div class=\"pr\">¥48 · 等待</div></div></div>"
+  },
+  "serve8": {
+    "money": 62,
+    "served": 1,
+    "angry": 0,
+    "carry": null,
+    "pops": 0,
+    "label": "去料箱取料"
+  },
+  "badge": {
+    "cardText": null,
+    "badgeNodes": [],
+    "ringCount": 0
+  }
+}

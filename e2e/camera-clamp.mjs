@@ -5,19 +5,18 @@
 // Usage: E2E_BASE=http://127.0.0.1:4175/bbq/ xvfb-run -a node e2e/camera-clamp.mjs
 
 const { chromium } = await import('playwright');
-const { mkdirSync, writeFileSync } = await import('node:fs');
+const { mkdirSync, writeFileSync, appendFileSync } = await import('node:fs');
 const { default: assert } = await import('node:assert/strict');
 
 const BASE = process.env.E2E_BASE ?? 'https://openfolio.uk/bbq/';
 const DARK = 26;
 const RUN = 24;
 const SIDE_DIFF = 8;
+const ENV_CRASH = /has been closed|Target page|SharedImageManager|crash/i;
+const MAX_RETRY = 2;
+const RUN_LOG = 'e2e/shots/camera-clamp-run.json';
 mkdirSync('e2e/shots', { recursive: true });
-
-const browser = await chromium.launch({
-  headless: true,
-  args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--no-sandbox'],
-});
+writeFileSync(RUN_LOG, '');
 const errors = [];
 const results = [];
 
@@ -49,11 +48,16 @@ function analyse(cols) {
   return { left, right, maxRun, meanL: mean(0, 160), meanR: mean(cols.length - 160, cols.length) };
 }
 
-async function runViewport(tag, width, height) {
+async function runViewport(tag, width, height, attempt, out, errs) {
+  const browser = await chromium.launch({
+    headless: true,
+    args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--no-sandbox'],
+  });
+  try {
   const page = await browser.newPage({ viewport: { width, height }, hasTouch: true });
   page.on('crash', () => console.error('PAGE CRASH'));
-  page.on('pageerror', (e) => errors.push(`${tag}: ${e}`));
-  page.on('console', (m) => { if (m.type() === 'error') errors.push(`${tag}: ${m.text()}`); });
+  page.on('pageerror', (e) => errs.push(`${tag}: ${e}`));
+  page.on('console', (m) => { if (m.type() === 'error') errs.push(`${tag}: ${m.text()}`); });
   const cdp = await page.context().newCDPSession(page);
   const raf2 = () => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
   const frames = () => page.evaluate(() => window.__frames ?? 0);
@@ -84,21 +88,38 @@ async function runViewport(tag, width, height) {
     writeFileSync(`e2e/shots/camera-clamp-${tag}-${name}.png`, Buffer.from(data, 'base64'));
     const cols = await page.evaluate(COLS_FN, data);
     const a = analyse(cols);
-    results.push({ tag, name, ...a });
+    const rec = { tag, name, attempt, ...a };
+    out.push(rec);
+    appendFileSync(RUN_LOG, JSON.stringify(rec) + '\n');
     console.log(
       `${tag} ${name.padEnd(5)} 左暗=${a.left}px 右暗=${a.right}px 差=${Math.abs(a.left - a.right)} ` +
       `最大连续暗列=${a.maxRun} 左160列均值=${a.meanL.toFixed(1)} 右160列均值=${a.meanR.toFixed(1)}`,
     );
   }
-  await page.close();
+  } finally {
+    await browser.close().catch(() => {});
+  }
 }
 
-try {
-  await runViewport('portrait', 390, 844);
-  await runViewport('landscape', 844, 390);
-} finally {
-  await browser.close().catch(() => {});
+// one fresh browser per viewport; retry only environment crashes (assertion failures propagate immediately)
+async function runWithRetry(tag, width, height) {
+  for (let attempt = 0; ; attempt++) {
+    const out = [], errs = [];
+    try {
+      await runViewport(tag, width, height, attempt, out, errs);
+      results.push(...out);
+      errors.push(...errs);
+      return;
+    } catch (e) {
+      const msg = String(e?.message ?? e);
+      if (e?.name === 'AssertionError' || !ENV_CRASH.test(msg) || attempt >= MAX_RETRY) throw e;
+      console.error(`${tag}: environment crash (${msg.split('\n')[0]}), relaunching browser, retry ${attempt + 1}/${MAX_RETRY}`);
+    }
+  }
 }
+
+await runWithRetry('portrait', 390, 844);
+await runWithRetry('landscape', 844, 390);
 
 assert.ok(results.length >= 10, `need >=10 frames, got ${results.length}`);
 for (const r of results) {

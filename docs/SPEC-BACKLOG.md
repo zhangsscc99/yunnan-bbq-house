@@ -562,3 +562,60 @@
 > **B-025 补充（第 12 轮，第 8 次，新机位新形态）**：横屏站 `grill` 时右缘约 **15%** 屏宽为无几何纯背景色（`land-09` vision 独立指出"右侧纯黑竖条，只有取烤串按钮"）；竖屏新增一处——`port-500` 左上**出餐窗口/柜台内侧为整块纯黑**（vision：「疑似未渲染」）。同一份 12×9m 世界，横靠右缺、竖靠上缺。
 
 > **本轮通过项（供回归用）**：② 摇杆真指针拖动 1.5s 位移 **4.164m**、WASD `d` 5s **4.16m**（21 帧）、`tick(0.05,400,mx=1)` 撞墙停在 `x=5.633` 无 NaN；③ 切配徽标 `#bbq-chop .cb` **80×35 @(136,433)**，`fill 0% → 33.3% → 66.7%`，文案 `切配 n/3`，vision 判"不压食材、HUD 无重叠"；④ 烤炉徽标 `#bbq-grillbars` 文案序列 `烤制中 Ns → 已熟 ✓ → 快焦了 Ns → 焦了 ✗` 与 `config.ts` 的 6s/12s 一致（**第 9–11 轮"没有可见进度"的结论作废**）；⑤ 完整闭环 `money 0→61 / served 1 / eating`；⑨ 60ms × 8 连点只扣完 `chopLeft`，无复制；⑩ 0 JS error。
+
+## 2026-11-21 04:05Z 第 13 轮走查：新增需求 + 证据
+
+> 基线：线上 **`index-ChCgL6cA.js`**（`server/dist/index.html` 02:59 构建）；仓库 `dist/` 已是 `index-CzoVCdZb.js`（04:09）但**未部署**。HEAD `4832afd`。4 个会话、JS error 0、warning 2。证据目录 `e2e/review/2026-11-21T03-39Z-r13/`。
+
+### B-055 部署必须可验证：构建指纹 + 「线上 hash == HEAD 构建」断言
+优先级：P1（若下一轮线上仍是旧 hash → 升 P0）
+来源：第 13 轮走查。`4832afd`（03:30）已把飘字改成 24px / `bbq-popup-hold` 2.2s / 深色底框，但线上 `index-ChCgL6cA.js` 里 `grep -c bbq-popup-hold` = **0**，实测 `.popup` 仍是 `17px / bbq-rise 0.85s`。也就是说第 11/12 轮记录的「飘字看不见」源码已修、线上未生效；`server/dist/index.html` 停在 02:59，仓库 `dist/index.html` 已是 04:09 的 `index-CzoVCdZb.js`。
+需求：① 构建时注入 `__BUILD__ = { hash, time, commit }`，页面 `console.info('[bbq] build', …)` 并挂 `window.__build`；② 部署脚本（`ci-deploy.sh` 或等价物）在拷贝后断言 `server/dist/index.html` 引用的 js hash 与刚 build 的 hash 一致，不一致则报错退出并回滚到 `dist.bak-*`；③ 服务器新增 `/bbq/api/build` 返回同一对象，走查脚本开跑前先核对。
+验收：`curl -s https://openfolio.uk/bbq/ | grep -o 'assets/index-[^"]*js'` 与 `curl -s https://openfolio.uk/bbq/api/build` 的 hash 一致，且等于 `git rev-parse --short HEAD` 的构建产物；`grep -c 'bbq-popup-hold'` 线上 bundle ≥1；连续 2 次部署都成立。
+参考：`server/index.js`、`dist.bak-*` 回滚机制；B-047 的四轮误判全部源于此。
+
+### B-056 菜单态不得露出对局控件与 HUD 残影
+优先级：P1
+来源：第 13 轮走查（`phase==='menu'` 时探针读到 `#bbq-stick` `display:block / opacity .85 / rect 22,692,130,130`、`#bbq-act` `display:flex / opacity .55 / 76×76 @(288,738)`、`#bbq-hud .topbar` `315×36 @(37,8)` 全部可见）。
+需求：`phase !== 'playing'` 时隐藏 `#bbq-stick`/`#bbq-act`（`display:none`），状态条降到 `opacity ≤ .15` 或直接隐藏；菜单层加 `backdrop-filter: blur + 压暗`，让弹窗是唯一的视觉焦点。参考 `port-01`/`land-01` vision：「底部露出两个摇杆区域」「顶部和底部残留模糊 HUD/按钮轮廓形成视觉噪声」。
+验收：e2e——加载后（未点开店）断言三者的 `display`/`opacity` 不满足可见；点开店后 1 帧内恢复；双端各截 1 帧，vision 不得再读出摇杆或动作键。
+
+### B-057 关卡进度存档 + 首屏「继续」入口
+优先级：P1
+来源：第 13 轮走查（首屏 `localStorage` 键为 `[]`；结算写 `bbq.level='2'` 后刷新回到 `第 1 关 / ¥0`；首屏只有「开 店」，剧本① 要求的「开始/继续」入口缺一半）。
+需求：① 关卡结束时持久化 `bbq.level`（当前可玩关）与 `bbq.best`（历史最佳营业额/星级）；② 存在存档时首屏主按钮变「继续 · 第 N 关」+ 次按钮「重新开始」，并显示「最佳 ¥X ★Y」；③ 无存档时保持现状；④ `mode:'continue'` 与 `mode:'new'` 走同一条 `restart(level)` 通路，`__test.state().level` 可断言。
+验收：e2e——(a) 空存档首屏只有「开 店」；(b) 打完一关刷新后首屏出现「继续 · 第 2 关」，点击后 `level===2 && money===0 && target===Level2.target`；(c) 点「重新开始」后 `level===1` 且 `bbq.level` 被重置；连跑 3 次。
+
+### B-058 顾客点单气泡必须夹紧在视口内
+优先级：P1
+来源：第 13 轮走查。3 位顾客就座后 `#bbq-bubbles .bubble` 的 rect：`[367,250,120,34]`（right **487** > vw 390，**裁掉 97px**）、`[404,250,72,17]`（`x ≥ 390`，**整条在屏外**）。`port-03-orders3.png` vision 独立判「最右侧有一个被边缘裁掉一部分的圆形气泡」。最右两张桌的顾客点了什么，玩家看不到。
+需求：`project()` 得到屏幕坐标后，按气泡宽度做 `x = clamp(x, 4 + w/2, vw - 4 - w/2)`；被夹紧时把指针小三角水平偏移，仍指向顾客头顶；气泡与 `#bbq-orders` 区域重叠时优先下移 8px。
+验收：e2e——4 张桌子全坐满时，遍历 `.bubble` 断言 `left ≥ 4 && right ≤ innerWidth-4`，且气泡中心与顾客投影点的水平偏差 ≤ 气泡宽度的 60%；390×844 与 844×390 各 1 次；连跑 3 次。
+
+### B-059 多人同帧离店时飘字必须错行，不得叠在同一像素
+优先级：P2
+来源：第 13 轮走查（`setPatience(0.05)` 使 4 人同帧归零，3 条 popup 的 `getBoundingClientRect()` **完全相同** `48×16 @(65,295)`）。
+需求：同一帧内的 popup 按创建顺序做垂直错位（每条 +22px，最多 4 条），或合并为一条汇总（「4 位顾客愤怒离店 · 满意度 -4」）；同一锚点已有 popup 时新 popup 上移一行。
+验收：e2e——一次触发 ≥3 条 popup，两两 rect 不相交（`dy ≥ 18px`）；`popup.dataset.stack` 记录行号；连跑 3 次。
+
+### B-060 底部安全区：去掉 22px 纯色带 + 支持 `safe-area-inset-bottom`
+优先级：P2
+来源：第 13 轮走查。竖屏逐行亮度 `y=822..843` 恒为 **21.94**、`y=0..7` 同色（与场景无关的纯色带）；摇杆下沿距屏底 22px、动作键 30px，而 `env(safe-area-inset-bottom)` 计算值 0（CSS 里只有 `#bbq-orders` 的 `top` 用了 `max(8px, env(safe-area-inset-top))`）；`/tmp/r13-bottom` 裁剪 vision：「底部近黑横条约 30px，按钮组与场景割裂」。
+需求：① HUD 底部内边距改为 `max(12px, env(safe-area-inset-bottom))`，摇杆/动作键随之上移；② 干掉底部固定纯色带（若是 canvas letterbox，让相机按 `vh - HUD` 取景，避免场景与 UI 分层）；③ 视口加 `viewport-fit=cover` 以便真机取到 inset。
+验收：iPhone（或 CDP 模拟 `safe-area-inset-bottom=34`）下摇杆/动作键距屏底 ≥34px 且不与 home indicator 重叠；逐行亮度检查 y ∈ [vh-24, vh) 不再是单一常量；双端各 1 帧。
+
+### B-061 HUD 最小字号 ≥13px（B-008 / B-015 未闭环，附本轮实测）
+优先级：P2
+来源：第 13 轮走查。`minFont` 探针：HUD 内最小字号 **11px**（订单卡 `¥48 · 等待`），`#bbq-act .cap` **10px**；状态条标签 `.k` **12px**；`land` 侧订单卡 2× 放大后 vision 仍判「字号偏小」。
+需求：订单卡价格/状态 ≥13px、状态条标签 ≥13px、动作键 caption ≥13px（可拆两行）；字号提升后若卡片超高，改为「菜名 1 行 + 价格/状态 1 行」的紧凑两行式，卡片宽度上限 160px。
+验收：e2e 遍历 `#bbq-hud` 内所有含文本的叶子节点，断言 `parseFloat(fontSize) ≥ 13`；双端截图订单卡不被裁切、不与 topbar 重叠。
+
+### B-062 `__test.spawnNow()` 非法 dish 抛未捕获 TypeError（测试基建）
+优先级：P2
+来源：第 13 轮走查。`__test.spawnNow('beef')` → `TypeError: Cannot read properties of undefined (reading 'patience')`（`DISHES['beef']` 为 `undefined`，`spawnCustomer` 里 `DISHES[d].patience` 无守卫）；异常冒泡到 `page.evaluate`，整个探针会话被杀，本轮第一份 land 数据因此丢失。
+需求：`spawnNow(dish)` 在入口校验 `dish in DISHES`，非法入参返回 `false` 并 `console.warn`；`spawnCustomer` 内部也加兜底（缺失则 `pickDish()`）。
+验收：`__test.spawnNow('beef') === false` 且不抛异常、不产生顾客；`__test.spawnNow('pork')` 仍 `true`。
+
+> **B-025（P1）本轮可关单**：横屏 844 列逐列亮度 **0 列 <26**、无连续暗段（左缘 72 / 右缘 94）；竖屏 0 暗列；`land-02-started.png` vision 独立确认「左右黑区约 0%，由地板铺满」。相较第 12 轮「右侧 15% 纯黑」是真修复。残留改编为规格对齐（`ART-DIRECTION §1` 公式 vs `GAME-DESIGN §5` 12×9m 仍不一致，见走查报告 SPEC 差距段）。
+
+> **B-039 / B-047（P1）第 2 / 5 次复现，且定位到交付链路**：`.popup` 计算样式 `17px / bbq-rise 0.85s / 无底框`，`0 / 150 / 400ms` 三次采样 `opacity` 恒为 **0**，`900ms` 节点消失；源码 `4832afd` 已是 `24px / bbq-popup-hold 2.2s / 带底框`，但**线上 bundle 没有这段**（`grep -c bbq-popup-hold` = 0）。**在这条部署链路修好（B-055）之前，不要再因为「飘字看不见」重复开单**；复测时请先核对 `window.__build`。

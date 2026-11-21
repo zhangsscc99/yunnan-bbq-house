@@ -867,3 +867,18 @@ vision 复核：竖屏 `popup-port-clamp.png`、横屏 `popup-land-clamp.png` �
 需求：① 按钮文案写明对象：「重打第 N 关」「进入第 N+1 关」，去掉全角空格（`B-071`）；② 所有结算面板增加次级文字按钮「回到首页」，回首屏后首屏按 `B-057` 提供「继续 · 第 N 关 / 重新开始」；`level ≥ 2` 时额外提供「回到第 1 关」；③ 未达标时唯一的主行动按钮用金色实心样式；④ 达标副标题改为「目标达成！可进入第 2 关」，点击后才切关；⑤ 按钮 `min-height: 44px`，表格末行到首个按钮间距 ≥ 12px。
 验收：e2e 构造 `level=2, money=0` 打烊，面板按钮 `textContent` 集合匹配 `/重打第 2 关/` 和 `/回到第 1 关/` 和 `/回到首页/`；点「回到第 1 关」后 `__test.state()` 满足 `level === 1 && levelTarget === 180 && money === 0 && phase === 'playing'`；点「回到首页」后首屏面板可见且 `phase === 'menu'`；未达标面板第一个按钮的 computed `background-color` 不是 `transparent` / `rgba(0,0,0,0)`；达标面板副标题不含「进入第」三个字连写的已完成语气（匹配 `/可进入第 \d 关/`）；所有 `.bbq-panel button` 满足 `rect.height ≥ 44` 且不含 `\u3000`；面板最后一行分隔线到首个按钮 `top` 的距离 ≥ 12px；844×390 下所有按钮 `rect.bottom ≤ 390`；双端连跑 3 次。
 参考：胡闹厨房 2 关卡结算的「重试 / 继续 / 返回地图」三按钮；`B-040`、`B-057`、`B-071`、`B-083`。
+
+## 第 19 轮开发（2026-11-21 19:02–19:34Z，agy claude-opus-5-5-high）
+
+### B-090 状态：DONE（`5f0e889`，部署包 `assets/index-Shggdsxc.js`）
+实现：新增 HUD 层 `[data-offscreen-hint]`（深底 + 金描边 + 15px 金黄粗体，44px 高视觉块，`pointer-events:none`）；`stations.ts` 的「去 X」分支补 `goto:true`（此前烤炉前手持焦串时按钮写 `去垃圾桶` 但不带 `guide` 标记，所以漏判）；`main.ts` 每帧把 `flow.hint` 投影后喂给 `hud.updateOffscreen()`，并新增只读 `__test.guideTarget()`；`NextMarker`、`PLAYER_SPAWN`、摇杆/动作键几何、音频全部未动。
+验收（真跑 `e2e/offscreen.mjs`，`E2E_RUNS=3` 双端）：**42 PASS / 0 FAIL，末行 `OFFScreen OK`**
+- 竖屏 390×844 烤炉前手持焦串：bin 投影 (−133,508) → 指引 `dir=left`、文本 `垃圾桶`、盒 `[8,451..104,495]` 96×44、15px，与 `#bbq-stick`/`#bbq-act` 交叠 0/0；
+- 竖屏 持盘在 x=4：`1号桌` 投影 (−46,316) → `dir=left` `[8,314..97,358]`；走到 x=0.5 入画后 `display:none`（0ms/345ms 两点采样），退回恢复；
+- 横屏 844×390：烤炉前 bin 恒在画内（(35,277)）→ 正确地不显示指引；持盘在 x=4 时 `1号桌` 投影 y=−11 → `dir=up` `[158,52..247,96]`，与摇杆/按钮交叠 0/0；
+- 首屏面板在场时节点 `display:none`；双端 `0 pageerror / 0 console.error`。
+部署：`ci-deploy.sh` DEPLOY OK；`127.0.0.1:3035/` 200、`127.0.0.1/bbq/` 200，两边 index 均为 `assets/index-Shggdsxc.js`。
+vision 复核：竖屏 `e2e/shots/b090-port-grill-bin.png` 放大后独立读出「← 垃圾桶，金底黑底高对比、一眼可读」；横屏 `e2e/shots/b090-land-table-up.png` 读出「↑ 1号桌，未压顶栏（第1关/营业额/时间/评级完整）」。
+与任务书的偏差（下轮复核）：① `dir=up` 时指引放在顶栏下 8px（视口顶 52px），与「距边 ≤12px」冲突时选择「夹在 topbar 之下」；② 横屏相机能看到整条 12m 台面，垃圾桶在横屏永不出画，故横屏改用手持盘/桌上客的场景验证 `dir=up`；③ 300ms 消失判定用 `tick` 推进（软渲 1–3fps 下按墙钟测没有意义）。
+下一轮建议：`B-093`（横屏顶栏压中桌顾客 / 订单卡压装盘台）优先级高于 `B-064` 串体变色——后者已被 18/19 两轮走查反复点名，属核心反馈缺失。
+也可能需要顺手做：横屏 x=4 时 `↑ 1号桌` 与左上订单气泡、世界内金色向下箭头在视觉上拥挤（vision 点名「两个相反箭头」），建议给离屏指引固定到屏幕水平中心或与气泡错开 ≥16px（新记 **B-097**）。

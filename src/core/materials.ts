@@ -2,10 +2,10 @@
 // collapse them into single draws (TECH-STACK §3 draw-call budget).
 
 import * as THREE from 'three';
-import { COLORS } from '../config.ts';
+import { COLORS, DISHES } from '../config.ts';
 import {
   woodFloorTex, wallTex, counterTopTex, bambooTex, charcoalTex,
-  tiedyeTex, chiliTex, menuBoardTex,
+  tiedyeTex, chiliTex, menuBoardTex, crateSignTex,
 } from './textures.ts';
 
 let cache: Record<string, THREE.Material> | null = null;
@@ -53,6 +53,15 @@ export function MATS(): Record<string, THREE.MeshStandardMaterial | THREE.MeshBa
     shade: new THREE.MeshStandardMaterial({ color: 0x8a5a30, roughness: 0.5, metalness: 0.35, side: THREE.DoubleSide }),
     bulb: new THREE.MeshStandardMaterial({ color: 0xffe0b0, emissive: 0xffc070, emissiveIntensity: 3.6 }),
     shroom: new THREE.MeshStandardMaterial({ color: 0x7d5a34, roughness: 0.95 }),
+    cratePorkLean: new THREE.MeshStandardMaterial({ color: DISHES.pork.hue, roughness: 0.52 }),
+    cratePorkFat: new THREE.MeshStandardMaterial({ color: 0xf5d0b8, roughness: 0.48 }),
+    crateMushCap: new THREE.MeshStandardMaterial({ color: DISHES.mushroom.hue, roughness: 0.62 }),
+    crateMushStem: new THREE.MeshStandardMaterial({ color: 0xf2ead6, roughness: 0.72 }),
+    crateMixian: new THREE.MeshStandardMaterial({ color: DISHES.mixian.hue, roughness: 0.46 }),
+    crateSign: new THREE.MeshStandardMaterial({ map: crateSignTex(), roughness: 0.55 }),
+    decorBamboo: new THREE.MeshStandardMaterial({ color: 0x766e64, roughness: 0.92 }),
+    decorClay: new THREE.MeshStandardMaterial({ color: 0x6e6058, roughness: 0.88 }),
+    decorDark: new THREE.MeshStandardMaterial({ color: 0x262422, roughness: 1 }),
   };
   return cache as never;
 }

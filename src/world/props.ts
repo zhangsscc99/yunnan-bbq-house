@@ -4,10 +4,12 @@
 import * as THREE from 'three';
 import { cellToWorld } from './layout.ts';
 import { MATS } from '../core/materials.ts';
+import { mergeStatic } from '../core/merge.ts';
 
 export interface PropsBuild {
   group: THREE.Group;
   pendantPos: THREE.Vector3[];   // bulb positions for point lights + cones
+  decorGroup: THREE.Group;       // left-wall shelf items (empty baskets / clay pots)
 }
 
 export function buildProps(): PropsBuild {
@@ -54,10 +56,51 @@ export function buildProps(): PropsBuild {
     pendantPos.push(new THREE.Vector3(lxWorld, 2.4, -2.9));
   }
 
-  // ---- left-wall L decor: baskets / clay pots / steamers (x=0, z=4..6) ----
+  // ---- left-wall L decor: muted empty bamboo baskets & earthenware clay pots (x=0, z=4..6) ----
   const bamboo = M.bamboo as THREE.Material;
+  const decorBamboo = M.decorBamboo as THREE.Material;
+  const decorClay = M.decorClay as THREE.Material;
+  const decorDark = M.decorDark as THREE.Material;
   const bodyMat = M.counterBody as THREE.Material;
   const topMat = M.counterTop as THREE.Material;
+  const decorGroup = new THREE.Group();
+
+  const addEmptyBasket = (cx: number, cy: number, cz: number, topR: number, botR: number, h: number): void => {
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(topR, botR, h, 12), decorBamboo);
+    body.position.set(cx, cy + h / 2, cz);
+    body.castShadow = true;
+    body.receiveShadow = true;
+    decorGroup.add(body);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(topR - 0.01, 0.02, 6, 14), decorBamboo);
+    rim.rotation.x = Math.PI / 2;
+    rim.position.set(cx, cy + h, cz);
+    decorGroup.add(rim);
+    const hollow = new THREE.Mesh(new THREE.CircleGeometry(topR - 0.024, 12), decorDark);
+    hollow.rotation.x = -Math.PI / 2;
+    hollow.position.set(cx, cy + h + 0.004, cz);
+    group.add(hollow);
+  };
+
+  const addClayPot = (cx: number, cy: number, cz: number, r: number, h: number): void => {
+    const belly = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 8), decorClay);
+    belly.position.set(cx, cy + h * 0.46, cz);
+    belly.scale.y = h / (2 * r);
+    belly.castShadow = true;
+    belly.receiveShadow = true;
+    decorGroup.add(belly);
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.48, r * 0.56, r * 0.45, 10), decorClay);
+    neck.position.set(cx, cy + h * 0.88, cz);
+    decorGroup.add(neck);
+    const lip = new THREE.Mesh(new THREE.TorusGeometry(r * 0.5, r * 0.09, 6, 12), decorClay);
+    lip.rotation.x = Math.PI / 2;
+    lip.position.set(cx, cy + h * 1.05, cz);
+    decorGroup.add(lip);
+    const mouth = new THREE.Mesh(new THREE.CircleGeometry(r * 0.44, 10), decorDark);
+    mouth.rotation.x = -Math.PI / 2;
+    mouth.position.set(cx, cy + h * 1.07, cz);
+    group.add(mouth);
+  };
+
   for (let i = 0; i < 3; i++) {
     const { x, z } = cellToWorld(0, 4 + i);
     const counter = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.66, 0.8), bodyMat);
@@ -68,40 +111,27 @@ export function buildProps(): PropsBuild {
     const top = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.05, 0.88), topMat);
     top.position.set(x, 0.68, z);
     group.add(top);
+    const shelfY = 0.705;
     if (i === 0) {
-      const basket = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.18, 0.2, 10), bamboo);
-      basket.position.set(x, 0.8, z);
-      group.add(basket);
-      for (let m = 0; m < 6; m++) {
-        const sh = new THREE.Mesh(
-          new THREE.SphereGeometry(0.05, 6, 5), M.shroom as THREE.Material,
-        );
-        sh.position.set(
-          x + ((m * 41) % 5 - 2) * 0.05,
-          0.9 + (m % 2) * 0.03,
-          z + ((m * 29) % 5 - 2) * 0.05,
-        );
-        sh.scale.y = 0.55;
-        group.add(sh);
-      }
+      addEmptyBasket(x - 0.05, shelfY, z - 0.08, 0.21, 0.16, 0.17);
+      addEmptyBasket(x + 0.14, shelfY, z + 0.2, 0.13, 0.1, 0.12);
     } else if (i === 1) {
-      const clay = M.clay as THREE.Material;
-      for (const [px, pz, s] of [[-0.12, -0.1, 1], [0.15, 0.12, 0.8], [0.14, -0.18, 0.65]] as const) {
-        const pot = new THREE.Mesh(new THREE.SphereGeometry(0.14 * s, 10, 8), clay);
-        pot.position.set(x + px, 0.8, z + pz);
-        pot.scale.y = 1.15;
-        pot.castShadow = true;
-        group.add(pot);
-      }
+      addClayPot(x - 0.12, shelfY, z - 0.1, 0.13, 0.25);
+      addClayPot(x + 0.15, shelfY, z + 0.14, 0.105, 0.21);
+      addClayPot(x + 0.13, shelfY, z - 0.18, 0.085, 0.17);
     } else {
-      for (let s = 0; s < 3; s++) {
-        const steamer = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.09, 12), bamboo);
-        steamer.position.set(x, 0.75 + s * 0.09, z);
-        steamer.castShadow = true;
-        group.add(steamer);
-      }
+      addEmptyBasket(x - 0.04, shelfY, z + 0.06, 0.22, 0.17, 0.12);
+      addClayPot(x + 0.16, shelfY, z - 0.22, 0.09, 0.18);
     }
   }
+
+  mergeStatic(decorGroup);
+  decorGroup.userData.noMerge = true;
+  decorGroup.traverse((o) => {
+    const m = o as THREE.Mesh;
+    if (m.isMesh) m.userData.decorItem = true;
+  });
+  group.add(decorGroup);
 
   // ---- a stray crate by the door (market feel) ----
   const crate = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.3, 0.45), bamboo);
@@ -111,5 +141,5 @@ export function buildProps(): PropsBuild {
   crate.castShadow = true;
   group.add(crate);
 
-  return { group, pendantPos };
+  return { group, pendantPos, decorGroup };
 }

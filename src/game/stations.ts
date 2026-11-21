@@ -4,6 +4,7 @@
 
 import * as THREE from 'three';
 import { PLAYER, COOK, DISHES } from '../config.ts';
+import type { DishId } from '../config.ts';
 import type { StationRuntime, ActionKind, Item, Customer } from './types.ts';
 import type { TableRuntime } from '../world/dining.ts';
 import type { Grill } from './grill.ts';
@@ -18,6 +19,12 @@ export interface Interaction {
   guide?: boolean;            // nothing in reach: button shows a "where to go" hint instead of a dead key
   goto?: boolean;             // label is a「去 X」direction (target = nextTarget); drives the HUD off-screen edge hint
 }
+
+const CRATE_NAME: Record<DishId, string> = {
+  pork: '五花肉',
+  mushroom: '菌子',
+  mixian: '米线',
+};
 
 const META: Record<ActionKind, { icon: string; glyph: string }> = {
   'take-raw': { icon: 'grab', glyph: '取' },
@@ -151,7 +158,10 @@ export function resolveInteraction(
 
   switch (nearStation.kind) {
     case 'crate':
-      if (!carrying) return mk('take-raw', `取 ${DISHES[nearStation.dish!].name}`, nearStation);
+      if (!carrying) {
+        const d = nearStation.dish!;
+        return { ...mk('take-raw', `取 ${CRATE_NAME[d]}`, nearStation), icon: `food-${d}` };
+      }
       return mk('none', '手上有东西', nearStation);
     case 'chop':
       if (!carrying && nearStation.held) {

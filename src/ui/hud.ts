@@ -9,6 +9,7 @@ import type { GrillSlot } from '../game/grill.ts';
 import type { StationRuntime } from '../game/types.ts';
 import type { TableRuntime } from '../world/dining.ts';
 import { TABLES } from '../world/layout.ts';
+import { FOOD_ICONS } from './controls.ts';
 
 const TABLE_COLORS: Record<string, string> = {
   t1: '#f0c060',
@@ -88,7 +89,11 @@ const CSS = `
 #bbq-orders .card .ring { position: relative; width: 30px; height: 30px; flex: none; }
 #bbq-orders .card .ring svg { transform: rotate(-90deg); }
 #bbq-orders .card .txt { min-width: 0; }
-#bbq-orders .card .nm { font-size: 13px; color: #f5e8d8; font-weight: 600; line-height: 1.25; white-space: nowrap; }
+#bbq-orders .card .nm {
+  display: flex; align-items: center; gap: 3px;
+  font-size: 13px; color: #f5e8d8; font-weight: 600; line-height: 1.25; white-space: nowrap;
+}
+#bbq-orders .card .nm svg.food-ico { width: 16px; height: 16px; flex: none; }
 #bbq-orders .card .pr { font-size: 13px; color: #f0c060; font-weight: 600; line-height: 1.2; white-space: nowrap; }
 #bbq-orders .card.angry { border-color: rgba(224,90,58,.8); }
 @media (max-width: 430px) {
@@ -98,9 +103,11 @@ const CSS = `
    stacked between the table rings (top) and the action button (bottom) */
 @media (max-height: 450px) and (min-width: 600px) {
   #bbq-orders { top: 150px; right: max(10px, env(safe-area-inset-right)); gap: 4px; max-width: 168px; }
-  #bbq-orders .card { box-sizing: border-box; max-width: 168px; min-width: 0; padding: 4px 8px; gap: 6px; }
-  #bbq-orders .card .ring { width: 26px; height: 26px; }
+  #bbq-orders .card { box-sizing: border-box; max-width: 168px; min-width: 0; padding: 4px 5px; gap: 4px; }
+  #bbq-orders .card .tb-badge { width: 21px; height: 21px; }
+  #bbq-orders .card .ring { width: 22px; height: 22px; }
   #bbq-orders .card .ring svg { width: 100%; height: 100%; }
+  #bbq-orders .card .nm { gap: 2px; }
 }
 
 #bbq-bubbles { position: absolute; inset: 0; overflow: hidden; }
@@ -111,8 +118,9 @@ const CSS = `
   border-radius: 16px; padding: 2px 8px 2px 3px; font-size: 10px; font-weight: 600;
   color: rgba(245,232,216,.88); white-space: nowrap; transition: opacity .2s;
 }
-.bubble .nm { font-size: 10px; line-height: 1.2; }
+.bubble .nm { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; line-height: 1.2; }
 .bubble svg { flex: none; }
+.bubble svg.food-ico { width: 16px; height: 16px; flex: none; }
 .bubble.angry { border-color: #e05a3a; color: #ff9a80; }
 
 #bbq-grillbars { position: absolute; inset: 0; overflow: hidden; }
@@ -469,7 +477,11 @@ export class Hud {
             stroke-width="3" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${circ * (1 - frac)}"/>
         </svg>`;
       const txt = el('div', 'txt', card);
-      el('div', 'nm', txt).textContent = DISHES[c.dish].name;
+      const nm = el('div', 'nm', txt);
+      nm.innerHTML = FOOD_ICONS[c.dish];
+      const nmTxt = document.createElement('span');
+      nmTxt.textContent = DISHES[c.dish].name;
+      nm.appendChild(nmTxt);
       el('div', 'pr', txt).textContent = `¥${DISHES[c.dish].price} · ${c.phase === 'eating' ? '用餐中' : '等待'}`;
     }
     if (tables) this.updateRings(customers, tables);
@@ -811,7 +823,15 @@ export class Hud {
       const frac = c.phase === 'eating' ? 1 : Math.min(1, Math.max(0, c.patience / c.patienceMax));
       const angry = c.phase === 'seated' && frac < 0.25;
       const label = c.phase === 'walking-in' ? '…' : c.phase === 'eating' ? '用餐中' : DISHES[c.dish].name;
-      if (label !== b.label) { b.label = label; b.nm.textContent = label; }
+      const showIcon = c.phase !== 'walking-in';
+      const labelKey = showIcon ? `${c.dish}|${label}` : label;
+      if (labelKey !== b.label) {
+        b.label = labelKey;
+        b.nm.innerHTML = showIcon ? FOOD_ICONS[c.dish] : '';
+        const span = document.createElement('span');
+        span.textContent = label;
+        b.nm.appendChild(span);
+      }
       if (Math.abs(frac - b.frac) > 0.005) {
         b.frac = frac;
         b.arc.setAttribute('stroke-dashoffset', String(RING_C * (1 - frac)));

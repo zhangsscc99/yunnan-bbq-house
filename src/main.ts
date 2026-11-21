@@ -20,6 +20,7 @@ import type { OffscreenTarget } from './ui/hud.ts';
 import { Controls } from './ui/controls.ts';
 import { Panels } from './ui/panels.ts';
 import { COOK } from './config.ts';
+import type { DishId } from './config.ts';
 import { spawnCustomer } from './game/customers.ts';
 
 console.info('[bbq] build', __BUILD__);
@@ -199,6 +200,16 @@ interface TestHooks {
   stationGeom(): { id: string; kind: string; x: number; z: number; topY: number; w: number; d: number }[];
   camera(): ReturnType<CameraRig['info']>;
   guideTarget(): { label: string; x: number; y: number; z: number } | null;
+  foodNodes(): { id: string; food: DishId; color: [number, number, number]; cover: number; sat: number }[];
+  decorSat(): number;
+}
+function hexToRgb(hex: number): [number, number, number] {
+  return [(hex >> 16) & 255, (hex >> 8) & 255, hex & 255];
+}
+function rgbSat(r: number, g: number, b: number): number {
+  const mx = Math.max(r, g, b);
+  const mn = Math.min(r, g, b);
+  return mx === 0 ? 0 : (mx - mn) / mx;
 }
 const ZERO_MOVE = new THREE.Vector2(0, 0);
 const hooks: TestHooks = {
@@ -243,6 +254,10 @@ const hooks: TestHooks = {
   tick(dt = 0.05, n = 1, mx = 0, mz = 0) {
     const mv = mx || mz ? new THREE.Vector2(mx, mz) : ZERO_MOVE;
     for (let i = 0; i < n; i++) step(dt, false, mv);
+    controls.setAction(
+      currentAction.icon, currentAction.label,
+      currentAction.action !== 'none', flow.denyActive(), !!currentAction.guide,
+    );
     hud.updateGrill(flow.grill.slots);
     hud.updateChop(chopBoard, COOK.chopTaps);
     hud.updateOffscreen(offscreenTarget());
@@ -266,6 +281,45 @@ const hooks: TestHooks = {
   guideTarget() {
     const t = offscreenTarget();
     return t ? { label: t.label, x: t.pos.x, y: t.pos.y, z: t.pos.z } : null;
+  },
+  // read-only (B-094): per-crate 3D food telemetry (id, food, primary sRGB [r,g,b], horizontal cover, HSV saturation)
+  foodNodes() {
+    const box = new THREE.Box3();
+    const size = new THREE.Vector3();
+    return kitchen.foodRoots.map((entry) => {
+      entry.node.updateMatrixWorld(true);
+      box.setFromObject(entry.node);
+      box.getSize(size);
+      let hex = 0;
+      entry.node.traverse((o) => {
+        const m = o as THREE.Mesh;
+        if (!m.isMesh || !m.userData.foodPrimary) return;
+        const mat = m.material as THREE.MeshStandardMaterial;
+        if (mat?.color) hex = mat.color.getHex();
+      });
+      const color = hexToRgb(hex);
+      return {
+        id: entry.id,
+        food: entry.node.userData.food as DishId,
+        color,
+        cover: Number(Math.min(1, size.x / entry.crateW).toFixed(4)),
+        sat: Number(rgbSat(color[0], color[1], color[2]).toFixed(4)),
+      };
+    });
+  },
+  // read-only (B-094): mean HSV saturation of the left-wall decor shelf items
+  decorSat() {
+    const sats: number[] = [];
+    props.decorGroup.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (!m.isMesh || !m.userData.decorItem) return;
+      const mat = m.material as THREE.MeshStandardMaterial;
+      if (!mat?.color) return;
+      const [r, g, b] = hexToRgb(mat.color.getHex());
+      sats.push(rgbSat(r, g, b));
+    });
+    if (!sats.length) return 0;
+    return Number((sats.reduce((a, v) => a + v, 0) / sats.length).toFixed(4));
   },
   state() {
     const g = (s: string): unknown => {

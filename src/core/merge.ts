@@ -37,9 +37,16 @@ export function mergeStatic(group: THREE.Group): void {
   const buckets = new Map<string, { mat: THREE.Material; cast: boolean; recv: boolean; list: Entry[] }>();
   const matIds = new Map<THREE.Material, number>();
 
+  const skip = (o: THREE.Object3D): boolean => {
+    for (let cur: THREE.Object3D | null = o; cur && cur !== group; cur = cur.parent) {
+      if (cur.userData.noMerge) return true;
+    }
+    return false;
+  };
+
   group.traverse((o) => {
     const mesh = o as THREE.Mesh;
-    if (!mesh.isMesh) return;
+    if (!mesh.isMesh || skip(mesh)) return;
     const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
     if (mats.length !== 1) return;           // leave multi-material meshes alone
     const mat = mats[0];

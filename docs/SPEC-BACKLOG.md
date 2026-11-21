@@ -572,8 +572,8 @@
 > 基线：线上 **`index-ChCgL6cA.js`**（`server/dist/index.html` 02:59 构建）；仓库 `dist/` 已是 `index-CzoVCdZb.js`（04:09）但**未部署**。HEAD `4832afd`。4 个会话、JS error 0、warning 2。证据目录 `e2e/review/2026-11-21T03-39Z-r13/`。
 
 ### B-055 部署必须可验证：构建指纹 + 「线上 hash == HEAD 构建」断言
-优先级：P1（若下一轮线上仍是旧 hash → 升 P0）
-来源：第 13 轮走查。`4832afd`（03:30）已把飘字改成 24px / `bbq-popup-hold` 2.2s / 深色底框，但线上 `index-ChCgL6cA.js` 里 `grep -c bbq-popup-hold` = **0**，实测 `.popup` 仍是 `17px / bbq-rise 0.85s`。也就是说第 11/12 轮记录的「飘字看不见」源码已修、线上未生效；`server/dist/index.html` 停在 02:59，仓库 `dist/index.html` 已是 04:09 的 `index-CzoVCdZb.js`。
+优先级：**P0 → 已降级（第 14 轮 05:15 起线上换包，主症状闭环；遗留 ③ `/bbq/api/build`）**
+来源：第 13 轮走查。第 14 轮复核：**04:38–05:10 线上仍是 `index-ChCgL6cA.js`（第 3 轮陈旧），05:15 部署 `d8f77fd-202611210514 / index--1CscvBg.js` 后 `window.__build` 可读、`server/dist/index.html` 与 build 一致**，`+¥60`/`愤怒离店` 飘字实测 `opacity:1 / 24px`。`4832afd`（03:30）已把飘字改成 24px / `bbq-popup-hold` 2.2s / 深色底框，但线上 `index-ChCgL6cA.js` 里 `grep -c bbq-popup-hold` = **0**，实测 `.popup` 仍是 `17px / bbq-rise 0.85s`。也就是说第 11/12 轮记录的「飘字看不见」源码已修、线上未生效；`server/dist/index.html` 停在 02:59，仓库 `dist/index.html` 已是 04:09 的 `index-CzoVCdZb.js`。
 **[部分 done d8f77fd，2026-11-21 05:16Z 部署 `index--1CscvBg.js`]** ①②已落地：`vite.config.ts` 注入 `__BUILD__`（短 sha + UTC 分钟）、`src/main.ts` 打印 `[bbq] build` 并挂 `window.__build`；`ci-deploy.sh` 在 build 后取 `ASSET`（缺失即失败）、拷贝后比对 `server/dist/index.html`、健康检查时再校验 3035 实际返回的 index.html 含同一 asset，不一致回滚 `server/dist.bak-*`（回滚选备份改为按目录名 epoch 排序）。新增 `e2e/build.mjs`（A1–A4）对公网连跑 3 次 `BUILD OK d8f77fd-202611210514 assets/index--1CscvBg.js`。
 **遗留 → 需单开一轮**：③ `server/index.js` 的 `/bbq/api/build` 端点（返回同一 build 对象），以及走查脚本开跑前先 curl 该端点核对；本项待 ③ 完成后才可 `[done]`。
 需求：① 构建时注入 `__BUILD__ = { hash, time, commit }`，页面 `console.info('[bbq] build', …)` 并挂 `window.__build`；② 部署脚本（`ci-deploy.sh` 或等价物）在拷贝后断言 `server/dist/index.html` 引用的 js hash 与刚 build 的 hash 一致，不一致则报错退出并回滚到 `dist.bak-*`；③ 服务器新增 `/bbq/api/build` 返回同一对象，走查脚本开跑前先核对。
@@ -625,3 +625,37 @@
 > **B-025（P1）本轮可关单**：横屏 844 列逐列亮度 **0 列 <26**、无连续暗段（左缘 72 / 右缘 94）；竖屏 0 暗列；`land-02-started.png` vision 独立确认「左右黑区约 0%，由地板铺满」。相较第 12 轮「右侧 15% 纯黑」是真修复。残留改编为规格对齐（`ART-DIRECTION §1` 公式 vs `GAME-DESIGN §5` 12×9m 仍不一致，见走查报告 SPEC 差距段）。
 
 > **B-039 / B-047（P1）第 2 / 5 次复现，且定位到交付链路**：`.popup` 计算样式 `17px / bbq-rise 0.85s / 无底框`，`0 / 150 / 400ms` 三次采样 `opacity` 恒为 **0**，`900ms` 节点消失；源码 `4832afd` 已是 `24px / bbq-popup-hold 2.2s / 带底框`，但**线上 bundle 没有这段**（`grep -c bbq-popup-hold` = 0）。**在这条部署链路修好（B-055）之前，不要再因为「飘字看不见」重复开单**；复测时请先核对 `window.__build`。
+
+### B-063 点按不得在「零仿真步」的帧里被丢弃（P0 级输入丢失）
+优先级：P0
+来源：第 14 轮走查（线上实测）。`press(); tick(0.005,1)` → 动作**不生效**；随后正常一帧 `tick(0.05,1)` 也**不再补发**。根因在 `src/main.ts:110-118`：`const pressed = input.consumeAction();` 在 `while (acc >= STEP)` **之前**执行，而 `acc += min(rawDt, MAX_FRAME)` 后若 `acc < STEP` 这一帧一步都不跑，press 就被取出并销毁。手机上 120Hz（dt 8.3ms、STEP 16.7ms）⇒ 每 3 帧只有 1 帧跑仿真，**约 2/3 点按丢失**；90Hz ⇒ 1/3；60Hz 抖动时偶发。切配要连点 3 下，实际要点 6–9 下，这是历轮「点了没反应」的确定性解释。
+需求：① 把「有没有按」与「这一帧跑不跑步」解耦——press 存为 `pendingAction`（可累加、上限 4），**只在真正进入 `flow.update` 时消费一次**；② `step()` 里消费点移到 `while` 循环体内（`n === 0` 那一步之前），零步帧不得消费；③ 顺手把 `MAX_FRAME 1.5` 的语义在注释里写清（掉帧时的追帧上限）。
+验收：e2e（新增 `e2e/input-drop.mjs`）——(a) `press(); tick(0.005,1); tick(0.05,1)` 后 `carrying` 必须已有生串；(b) 用 CDP `Emulation.setVirtualTimePolicy` 或 `--force-frame-interval=8.33` 把 rAF 固定到 8.33ms，站料箱连点 5 次、每次之间只推进 1 帧，`state.carrying` 必须非空且只消耗 1 次；(c) 砧板上连点 3 下（每下 1 帧 8.33ms），`chopLeft` 必须 3→0；(d) 双端 + 60/120Hz 各跑 1 次，连跑 3 次稳定。
+参考：`src/main.ts` 固定步长累加器；用户反复反馈的「点了没反应」。
+
+### B-064 烤炉进度条 6s 后改为「焦糊倒计时」，串体变色要能看出来
+优先级：P1
+来源：第 14 轮走查。`updateGrill` 里 `b.fill.style.width = min(1, t/COOK.grillTime)*100%` ⇒ `t=6..12` 进度条恒 **100%**，整个「快焦了」阶段只有文字在变；`port-07-grill-done.png` vision 判「没有倒计时/进度条，串体生→熟→焦变色不明显」。
+需求：① `t < 6`：金色进度 = `t/6`；② `t ≥ 6`：切换为**红色燃烧倒计时**，宽度 = `(t-6)/6`（0→100%），颜色 `#e05a3a`，`t ≥ 10` 叠加 `.warn` 脉冲；③ 串体材质在 `cooked` 后明显加深/出油光，`waste` 后明显发黑（同时给 `tintItem` 加一档过渡，避免一帧跳变）；④ `已熟 ✓` 在场时给一个 300ms 的缩放脉冲（与飘字无关，不依赖 B-047）。
+验收：e2e 断言 `t=3` 时 `.gb-fill` 宽度 ∈ (40%,60%) 且背景金色；`t=9` 时宽度 ∈ (40%,60%) 且背景红色系、`.gb` 含 `warn`；`__game.grill.slots[0].hex` 在 `t=1 / 7 / 11` 三次采样**两两差值 ≥ 12**（亮度或色相）；双端截图 vision 必须读出「快焦了」。
+参考：胡闹厨房 2 煎锅的「变红 + 抖动」双通道提示。
+
+### B-065 订单卡价 ≠ 实收金额：小费必须写出来
+优先级：P1
+来源：第 14 轮走查。订单卡 `烤五花肉拼盘 ¥48 · 用餐中`，上菜后 `money 0→60`（48 + 小费 12，`COOK.tipRate=0.3 × 耐心比例`）。小费只存在于（不可见的）`+¥60` popup 里，`port-10-served.png` vision 主动判「订单 ¥48 与营业额 ¥60 不一致，可能算错」。
+需求：① 订单卡价格行改为 `¥48 + 小费`（等待期）→ 上菜瞬间显示 `+¥60（含小费 ¥12）`；② 若耐心已低于 40%，等待期就把小费标成 `¥0` 并变灰，让玩家看见「拖久了没钱」；③ HUD 营业额旁加一个「最近收款 +¥N」槽（可与 B-054 合并）。
+验收：e2e——上菜瞬间订单卡文本匹配 `/含小费 ¥\d+/`；`money` 增量 === 卡片解析出的总额；耐心 20% 时上菜，卡片小费显示 `¥0`；双端各 1 帧 vision 不得再判「数值不一致」。
+参考：胡闹厨房 2 的订单小票（价格 + 小费分离显示）。
+
+### B-066 声音通道整条缺失：烤熟「叮」/ 焦糊「嗤」/ 收款「叮当」
+优先级：P1
+来源：第 14 轮走查。`grep -rn "AudioContext\|new Audio" src/` → **0 命中**；`package.json` 运行时依赖只有 `three`；仓库内无 `.mp3/.ogg/.wav`。而 `docs/GAME-DESIGN.md §7 手感与反馈` 明确要求「烤熟：串变金黄 + **"叮"** + 站点上方飘烟变金；烤焦：变黑 + 灰烟」。轮内实测：盯着 `烤制中 3s→2s→1s` 全程无声，第一根串因此烧焦。
+需求：① WebAudio 程序化合成，不引入资源包：熟成 = 短促正弦「叮」(≈1.6kHz，80ms，指数衰减)；焦糊 = 低通噪声「嗤」；收款 = 双音「叮当」；切配每一下 = 短木质 click；愤怒离店 = 下行三音。② 首次用户手势（开 店 / 首次触摸）解锁 AudioContext，失败静默降级，**不得抛错也不得阻塞主循环**。③ 主音量默认 ≤0.6，`localStorage bbq.mute` 持久化，HUD 提供静音按钮。④ 同帧多次触发需合并（4 人同帧离店只响 1 次，与 B-059 错行一致）。
+验收：e2e（`e2e/audio.mjs`）——(a) `take-grill` 成功后 `__perf.audio.plays === prev+1` 且 `lastSound === 'ding'`；(b) 焦糊后 `lastSound === 'hiss'`；(c) 上菜后 `lastSound === 'coin'`；(d) `bbq.mute=1` 后 `plays` 不增；(e) 无手势时不得出现未捕获 `NotAllowedError`（pageerror 计数 0）；连跑 3 次。
+参考：胡闹厨房 2 的「叮」是唯一让玩家不必盯锅的通道；GAME-DESIGN §7 已把它写成规格。
+
+### B-067 文档与实现的反馈时长口径不一致（0.8s vs 2.2s）
+优先级：P2
+来源：第 14 轮走查。`docs/GAME-DESIGN.md §7` 写「收款：桌面飘 `+¥xx` 上浮文字 **0.8s**」，实现是 `bbq-popup-hold 2.2s`（第 13 轮改的）。两份文档各说一个数，验收时无法判定对错。
+需求：① 以可读性为准把 §7 改成「上浮 0.35s + 停留 1.4s + 淡出 0.45s，合计 2.2s」并同步 `config.ts` 里的常量注释；② 后续任何反馈时长只允许在 `config.ts` 定义、文档引用同一数字。
+验收：`grep -n "0.8s\|2.2s" docs/GAME-DESIGN.md` 只剩一处且与 `config.ts` 常量一致；e2e 断言 `.popup` 生命周期 ∈ [1.9s, 2.5s]（游戏时间）。

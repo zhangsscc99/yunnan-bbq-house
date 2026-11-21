@@ -757,3 +757,35 @@
 影响：走查脚本与 vision 复核一直在测 3 小时前的包（第 15/16 轮「公网仍跑旧构建」就是这条），新旧结论会互相打架。
 需求：① 有 CF 凭据时在 `ci-deploy.sh` 末尾 purge `https://openfolio.uk/bbq/*`（无凭据则文档写明手动步骤）；② 或让 HTML 走独立不带长缓存的路径（`/bbq/index-<build>.html` + 302 跳转），彻底绕开边缘缓存。
 验收：一次 deploy 后 60s 内 `curl -s https://openfolio.uk/bbq/ | grep -o 'assets/index-[^"]*js'` 等于当轮 `dist/`；连续两次部署都成立。
+
+## 第 17 轮走查追加（2026-11-21 17:38Z）
+
+## 第 17 轮走查追加（2026-11-21 17:38Z）
+
+### B-082 评级控件必须可被机器读取（aria-label + 可断言星数）
+优先级：P2
+来源：第 17 轮走查（HUD 星级是纯 CSS/SVG 图形，DOM 只有 `评级` 二字；两次 vision 对同一控件分别读成 ★★★ / ★☆☆，无法定论，e2e 也无法断言）
+需求：为顶栏评级容器（`#bbq-hud .stars`）添加 `role="img"` 与 `aria-label="评级 N/3"`（可同步维护 `data-stars="N"`），星级变化时同帧同步更新 `aria-label`；结算面板大星级容器（`.bbq-panel .stars-big`）采用同样处理，使星数可被 e2e 与无障碍读屏稳定读取。
+验收：e2e 分别在开局、触发愤怒离店后、进入结算面板三态断言顶栏评级容器 `role === 'img'` 且 `aria-label` 为准确的 `评级 N/3`，且结算态 `.bbq-panel .stars-big` 的 `aria-label` 与结算星数一致；双端各连跑 3 次稳定通过。
+参考：ART-DIRECTION §5（HUD 文本规格）
+
+### B-083 结算未达标增加失分归因提示，并对齐「下一关」入口口径
+优先级：P2
+来源：第 17 轮走查（`port-05-results.png`、`land-05-results.png`：未达标面板仅红字写 `离目标还差 ¥119`，未说明 3 位离店/2 份废料与差额的因果，且未按 `GAME-DESIGN §3` 体现「下一关」预留入口）
+需求：① 结算未达标（`money < target`）时，在 `离目标还差 ¥X` 下方增加 1 条数据驱动的简短归因提示（节点带 `data-result-tip`，如 `angry >= 2` 提示「N 位顾客等不及离店，优先盯紧快见底的耐心环」；`waste >= 2` 提示「烤焦/丢弃 N 份，留意 6s 熟 12s 焦」；其余提示「再多出约 M 道菜即可达标」）；② 对齐 `GAME-DESIGN §3` 与结算面板按钮口径，明确二选一——方案 A：未达标时隐藏「下一关」按钮，并同步修订 `GAME-DESIGN §3`；方案 B：未达标时保留置灰态「下一关」按钮并附解锁条件说明（如「营业额达 ¥180 解锁下一关」），禁止文档与实现口径并存冲突。
+验收：e2e 构造 `money=61, served=1, angry=3, waste=2` 结算态，断言 `[data-result-tip]` 可见且文本非空（匹配 `/离店|耐心/`）；构造 `angry=0, waste=2` 时匹配 `/焦|废料/`；按所选方案断言未达标面板中「下一关」按钮不存在（方案 A）或 `disabled === true` 且含解锁说明（方案 B）；在 844×390 下结算面板 `replay` 按钮完整落于视口内（`rect.bottom <= 390`）；双端各连跑 3 次通过。
+参考：`GAME-DESIGN §3/§4`；`B-040`、`B-074`。
+
+### B-084 e2e 测试钩子 spawnNow 必须遵守 maxDiners
+优先级：P2
+来源：第 17 轮走查踩坑（脚本用 `__test.spawnNow()` 造出"3 seated + 1 walking-in = 4 人"的规格外状态，一度被误判为玩法缺陷；`flow.ts` 正常刷客其实有 `seatedCount() < maxDiners` 守卫）
+需求：`__test.spawnNow()` 内部同样校验 `seatedCount() < cfg.maxDiners`，达到上限时直接返回 `false` 且不新增顾客；同时约定走查与回归脚本不得依赖超出 `maxDiners` 的规格外局面，避免污染测试结论。
+验收：e2e 在 Lv.1 已有 3 名在店顾客（`walking-in`/`seated`/`eating` 合计 3 人）时调用 `__test.spawnNow('pork')`，断言返回 `false` 且 `state().customers.length` 保持不变；正常刷客模式下推进 120s 游戏时间，每 1s 采样在店人数恒 ≤3；连跑 3 次稳定通过。
+参考：`src/game/flow.ts:202-221`、`src/config.ts:86`、`GAME-DESIGN §3`（Lv.1 `maxDiners: 3`）
+
+### B-085 离店飘字双轴视口安全钳制，防止横屏出屏与竖屏贴边
+优先级：P1
+来源：第 17 轮走查（`land-03-patience-low.png` 3 名顾客 `leaving-angry` 向后门移动时上半身被顶边裁切且视口内看不到任何 `愤怒离店` 飘字；`port-03-patience-low.png` 3 条 `愤怒离店` 挤在左上，中条紧贴左缘、右条紧挨 `…` 气泡）
+需求：`hud.popup()` 投影计算时强制执行视口四边安全区钳制——水平方向 `left >= 8 && right <= innerWidth - 8`，垂直方向 `top >= 48`（顶栏之下）且 `bottom <= innerHeight - 8`；当锚点顾客已走近或移出视口上沿时，将离店飘字钳至对应 X 坐标的顶栏下方并与其他飘字/气泡做避让，确保横屏也能清晰读到离店事件。
+验收：Playwright 在竖屏 390×844 与横屏 844×390 下令 3 名就座顾客同时耐心归零，在 `angry` 递增后的 0.5s 内断言 `#bbq-popups .popup` 数量 ≥1，且所有可见 `.popup` 满足 `rect.left >= 8 && rect.right <= innerWidth - 8 && rect.top >= 48 && rect.bottom <= innerHeight - 8`，与顶栏及 `#bbq-bubbles .bubble` 交叠面积为 0；双端截图均可见完整 `愤怒离店` 文本；连跑 3 次稳定。
+参考：`B-059`（多人同帧错行）、`B-079`（横屏顶栏安全距）。

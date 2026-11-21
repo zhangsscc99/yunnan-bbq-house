@@ -1,0 +1,868 @@
+{
+  "tag": "land",
+  "url": "https://openfolio.uk/bbq/",
+  "viewport": {
+    "width": 844,
+    "height": 390
+  },
+  "shots": [
+    "/tmp/bbq-r17/land-01-title.png",
+    "/tmp/bbq-r17/land-02-joystick.png",
+    "/tmp/bbq-r17/land-03-patience-low.png",
+    "/tmp/bbq-r17/land-04-angry-after.png",
+    "/tmp/bbq-r17/land-05-results.png",
+    "/tmp/bbq-r17/land-06-after-replay.png"
+  ],
+  "errors": [],
+  "warns": [
+    "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+  ],
+  "t": {
+    "title": 39892,
+    "movement": 105302,
+    "results": 185270
+  },
+  "readyMs": 10312,
+  "build": "2290acb-202611210547",
+  "title": {
+    "text": "柳真真云南烤肉\n炭火生香，小店开张。\n取料 → 切配 → 炭烤 → 装盘 → 上菜\n第 1 关 · 目标：3 分钟营业额 ¥180\n开 店",
+    "rect": {
+      "x": 0,
+      "y": 0,
+      "w": 844,
+      "h": 390
+    },
+    "buttons": [
+      {
+        "label": "开 店",
+        "w": 150,
+        "h": 45,
+        "cx": 421.984375,
+        "cy": 266
+      }
+    ],
+    "overlayVisible": true
+  },
+  "afterStart": {
+    "overlay": "gone",
+    "phase": "playing",
+    "player": {
+      "x": -2.5,
+      "z": 0
+    },
+    "label": "去料箱取料"
+  },
+  "move": {
+    "stickRect": {
+      "x": 22,
+      "y": 238,
+      "w": 130,
+      "h": 130
+    },
+    "before": {
+      "x": -2.5,
+      "z": 0
+    },
+    "afterDrag": {
+      "x": 1.6792361111110972,
+      "z": 0
+    },
+    "dx": 4.18,
+    "dz": 0,
+    "moved": true
+  },
+  "keys": {
+    "from": {
+      "x": 1.6792361111110972,
+      "z": 0
+    },
+    "to": {
+      "x": 1.6792361111110972,
+      "z": 0
+    },
+    "dz": 0,
+    "moved": false
+  },
+  "six": {
+    "before": {
+      "phase": "playing",
+      "level": 1,
+      "levelTarget": 180,
+      "money": 0,
+      "timeLeft": 128.74999999995921,
+      "served": 0,
+      "angry": 0,
+      "waste": 0,
+      "hint": {
+        "kind": "station",
+        "id": "crate-pork",
+        "x": -4.5,
+        "z": 2
+      },
+      "carrying": null,
+      "action": "none",
+      "actionLabel": "去料箱取料",
+      "player": {
+        "x": 1.6792361111110972,
+        "z": 0
+      },
+      "stations": {
+        "bin": {
+          "x": -5.5,
+          "z": 2
+        },
+        "crate-pork": {
+          "x": -4.5,
+          "z": 2
+        },
+        "crate-mush": {
+          "x": -3.5,
+          "z": 2
+        },
+        "crate-mix": {
+          "x": -2.5,
+          "z": 2
+        },
+        "chop": {
+          "x": -1,
+          "z": 2
+        },
+        "grill": {
+          "x": 1.5,
+          "z": 2
+        },
+        "plate": {
+          "x": 4,
+          "z": 2
+        }
+      },
+      "tables": {
+        "t1": {
+          "x": -3.3,
+          "z": -1.2000000000000002
+        },
+        "t2": {
+          "x": 0.2999999999999998,
+          "z": -1.2000000000000002
+        },
+        "t3": {
+          "x": 3.9000000000000004,
+          "z": -1.2000000000000002
+        },
+        "t4": {
+          "x": 2.0999999999999996,
+          "z": 0.7999999999999998
+        }
+      },
+      "customers": [
+        {
+          "id": 1,
+          "dish": "mushroom",
+          "phase": "seated",
+          "patience": 47.033333333335776,
+          "table": "t4",
+          "x": 1.3,
+          "z": -0.43
+        },
+        {
+          "id": 2,
+          "dish": "mixian",
+          "phase": "seated",
+          "patience": 66.03333333333526,
+          "table": "t1",
+          "x": -4.1,
+          "z": -2.43
+        },
+        {
+          "id": 3,
+          "dish": "mixian",
+          "phase": "seated",
+          "patience": 81.63333333333438,
+          "table": "t2",
+          "x": -0.5,
+          "z": -2.43
+        },
+        {
+          "id": 4,
+          "dish": "pork",
+          "phase": "walking-in",
+          "patience": 75,
+          "table": "t3",
+          "x": -1.6,
+          "z": -4.4
+        }
+      ],
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      },
+      "calls": 88,
+      "tris": 14500
+    },
+    "beforeMoney": 0,
+    "beforeAngry": 0,
+    "customer0": [
+      {
+        "phase": "seated",
+        "patience": 47
+      },
+      {
+        "phase": "seated",
+        "patience": 66
+      },
+      {
+        "phase": "seated",
+        "patience": 81.6
+      },
+      {
+        "phase": "walking-in",
+        "patience": 75
+      }
+    ],
+    "trail": [
+      {
+        "t": 0,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "seated",
+            "pat": 0.1,
+            "x": 1.3,
+            "z": -0.43
+          },
+          {
+            "ph": "seated",
+            "pat": 0.1,
+            "x": -4.1,
+            "z": -2.43
+          },
+          {
+            "ph": "seated",
+            "pat": 0.1,
+            "x": -0.5,
+            "z": -2.43
+          },
+          {
+            "ph": "walking-in",
+            "pat": 75,
+            "x": -0.8,
+            "z": -4.4
+          }
+        ],
+        "angry": 0,
+        "money": 0,
+        "served": 0,
+        "bubble": 3
+      },
+      {
+        "t": 0.5,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "leaving-angry",
+            "pat": 0,
+            "x": 1.3,
+            "z": -1.07
+          },
+          {
+            "ph": "leaving-angry",
+            "pat": 0,
+            "x": -4.1,
+            "z": -3.07
+          },
+          {
+            "ph": "leaving-angry",
+            "pat": 0,
+            "x": -0.5,
+            "z": -3.07
+          },
+          {
+            "ph": "walking-in",
+            "pat": 75,
+            "x": 0,
+            "z": -4.4
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 3
+      },
+      {
+        "t": 1,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "leaving-angry",
+            "pat": 0,
+            "x": 1.3,
+            "z": -1.87
+          },
+          {
+            "ph": "leaving-angry",
+            "pat": 0,
+            "x": -4.23,
+            "z": -3.75
+          },
+          {
+            "ph": "leaving-angry",
+            "pat": 0,
+            "x": -0.63,
+            "z": -3.74
+          },
+          {
+            "ph": "walking-in",
+            "pat": 75,
+            "x": 0.8,
+            "z": -4.4
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 3
+      },
+      {
+        "t": 1.5,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "leaving-angry",
+            "pat": 0,
+            "x": 1.3,
+            "z": -2.67
+          },
+          {
+            "ph": "leaving-angry",
+            "pat": 0,
+            "x": -4.77,
+            "z": -4.09
+          },
+          {
+            "ph": "leaving-angry",
+            "pat": 0,
+            "x": -1.43,
+            "z": -3.75
+          },
+          {
+            "ph": "walking-in",
+            "pat": 75,
+            "x": 1.6,
+            "z": -4.4
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 1
+      },
+      {
+        "t": 2,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "seated",
+            "pat": 56.9,
+            "x": 3.1,
+            "z": -2.43
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 1
+      },
+      {
+        "t": 2.5,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "seated",
+            "pat": 56.4,
+            "x": 3.1,
+            "z": -2.43
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 1
+      },
+      {
+        "t": 3,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "seated",
+            "pat": 55.9,
+            "x": 3.1,
+            "z": -2.43
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 1
+      },
+      {
+        "t": 3.5,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "seated",
+            "pat": 55.4,
+            "x": 3.1,
+            "z": -2.43
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 1
+      },
+      {
+        "t": 4,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "seated",
+            "pat": 54.9,
+            "x": 3.1,
+            "z": -2.43
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 1
+      },
+      {
+        "t": 4.5,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "seated",
+            "pat": 54.4,
+            "x": 3.1,
+            "z": -2.43
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 1
+      },
+      {
+        "t": 5,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "seated",
+            "pat": 53.9,
+            "x": 3.1,
+            "z": -2.43
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 1
+      },
+      {
+        "t": 5.5,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "seated",
+            "pat": 53.4,
+            "x": 3.1,
+            "z": -2.43
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 1
+      },
+      {
+        "t": 6,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "seated",
+            "pat": 52.9,
+            "x": 3.1,
+            "z": -2.43
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 1
+      },
+      {
+        "t": 6.5,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "seated",
+            "pat": 52.4,
+            "x": 3.1,
+            "z": -2.43
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 1
+      },
+      {
+        "t": 7,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "seated",
+            "pat": 51.9,
+            "x": 3.1,
+            "z": -2.43
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 1
+      },
+      {
+        "t": 7.5,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "seated",
+            "pat": 51.4,
+            "x": 3.1,
+            "z": -2.43
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 1
+      },
+      {
+        "t": 8,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "seated",
+            "pat": 50.9,
+            "x": 3.1,
+            "z": -2.43
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 1
+      },
+      {
+        "t": 8.5,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "seated",
+            "pat": 50.4,
+            "x": 3.1,
+            "z": -2.43
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 1
+      },
+      {
+        "t": 9,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "seated",
+            "pat": 49.9,
+            "x": 3.1,
+            "z": -2.43
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 1
+      },
+      {
+        "t": 9.5,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "seated",
+            "pat": 49.4,
+            "x": 3.1,
+            "z": -2.43
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 1
+      },
+      {
+        "t": 10,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "seated",
+            "pat": 48.9,
+            "x": 3.1,
+            "z": -2.43
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 1
+      },
+      {
+        "t": 10.5,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "seated",
+            "pat": 48.4,
+            "x": 3.1,
+            "z": -2.43
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 1
+      },
+      {
+        "t": 11,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "seated",
+            "pat": 47.9,
+            "x": 3.1,
+            "z": -2.43
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 1
+      },
+      {
+        "t": 11.5,
+        "phase": "playing",
+        "customers": [
+          {
+            "ph": "seated",
+            "pat": 47.4,
+            "x": 3.1,
+            "z": -2.43
+          }
+        ],
+        "angry": 3,
+        "money": 0,
+        "served": 0,
+        "bubble": 1
+      }
+    ],
+    "after": {
+      "phase": "playing",
+      "level": 1,
+      "levelTarget": 180,
+      "money": 0,
+      "timeLeft": 78.64999999996144,
+      "served": 0,
+      "angry": 3,
+      "waste": 0,
+      "hint": {
+        "kind": "station",
+        "id": "crate-pork",
+        "x": -4.5,
+        "z": 2
+      },
+      "carrying": null,
+      "action": "none",
+      "actionLabel": "去料箱取料",
+      "player": {
+        "x": 1.6792361111110972,
+        "z": 0
+      },
+      "stations": {
+        "bin": {
+          "x": -5.5,
+          "z": 2
+        },
+        "crate-pork": {
+          "x": -4.5,
+          "z": 2
+        },
+        "crate-mush": {
+          "x": -3.5,
+          "z": 2
+        },
+        "crate-mix": {
+          "x": -2.5,
+          "z": 2
+        },
+        "chop": {
+          "x": -1,
+          "z": 2
+        },
+        "grill": {
+          "x": 1.5,
+          "z": 2
+        },
+        "plate": {
+          "x": 4,
+          "z": 2
+        }
+      },
+      "tables": {
+        "t1": {
+          "x": -3.3,
+          "z": -1.2000000000000002
+        },
+        "t2": {
+          "x": 0.2999999999999998,
+          "z": -1.2000000000000002
+        },
+        "t3": {
+          "x": 3.9000000000000004,
+          "z": -1.2000000000000002
+        },
+        "t4": {
+          "x": 2.0999999999999996,
+          "z": 0.7999999999999998
+        }
+      },
+      "customers": [
+        {
+          "id": 4,
+          "dish": "pork",
+          "phase": "seated",
+          "patience": 29.050000000002612,
+          "table": "t3",
+          "x": 3.1,
+          "z": -2.43
+        }
+      ],
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      },
+      "calls": 74,
+      "tris": 10616
+    },
+    "deltaAngry": 3
+  },
+  "seven": {
+    "panel": "打烊结算\n离目标还差 ¥119\n营业额\n¥61 / ¥180\n服务顾客\n1 位\n愤怒离店\n3 位\n废料\n2 份\n再 开 一 局",
+    "phase": "results",
+    "money": 61,
+    "served": 1,
+    "waste": 2,
+    "angry": 3,
+    "buttons": [
+      {
+        "label": "再 开 一 局",
+        "w": 150,
+        "h": 40
+      }
+    ],
+    "overlay": {
+      "display": "flex",
+      "opacity": "1",
+      "pe": "auto"
+    },
+    "stars": [],
+    "clicked": "再 开 一 局",
+    "afterClick": {
+      "phase": "playing",
+      "money": 0,
+      "timeLeft": 180,
+      "served": 0,
+      "level": 1,
+      "overlay": "gone",
+      "label": "去料箱取料"
+    }
+  },
+  "hud": {
+    "vw": 844,
+    "vh": 390,
+    "boxes": [
+      {
+        "id": "#bbq-topbar",
+        "missing": true
+      },
+      {
+        "id": "#bbq-orders",
+        "x": 834,
+        "y": 8,
+        "w": 0,
+        "h": 0,
+        "disp": "flex",
+        "out": false
+      },
+      {
+        "id": "#bbq-stick",
+        "x": 22,
+        "y": 238,
+        "w": 130,
+        "h": 130,
+        "disp": "block",
+        "out": false
+      },
+      {
+        "id": "#bbq-act",
+        "x": 742,
+        "y": 284,
+        "w": 76,
+        "h": 76,
+        "disp": "flex",
+        "out": false
+      },
+      {
+        "id": "#bbq-guide",
+        "x": 0,
+        "y": 0,
+        "w": 0,
+        "h": 0,
+        "disp": "none",
+        "out": false
+      }
+    ],
+    "overlaps": [],
+    "fonts": {
+      ".k": "12px"
+    }
+  },
+  "errorsFinal": [],
+  "warnCount": 2,
+  "warnSample": [
+    "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+  ]
+}

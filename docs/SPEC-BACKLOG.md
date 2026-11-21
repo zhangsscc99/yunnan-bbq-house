@@ -574,6 +574,8 @@
 ### B-055 部署必须可验证：构建指纹 + 「线上 hash == HEAD 构建」断言
 优先级：P1（若下一轮线上仍是旧 hash → 升 P0）
 来源：第 13 轮走查。`4832afd`（03:30）已把飘字改成 24px / `bbq-popup-hold` 2.2s / 深色底框，但线上 `index-ChCgL6cA.js` 里 `grep -c bbq-popup-hold` = **0**，实测 `.popup` 仍是 `17px / bbq-rise 0.85s`。也就是说第 11/12 轮记录的「飘字看不见」源码已修、线上未生效；`server/dist/index.html` 停在 02:59，仓库 `dist/index.html` 已是 04:09 的 `index-CzoVCdZb.js`。
+**[部分 done d8f77fd，2026-11-21 05:16Z 部署 `index--1CscvBg.js`]** ①②已落地：`vite.config.ts` 注入 `__BUILD__`（短 sha + UTC 分钟）、`src/main.ts` 打印 `[bbq] build` 并挂 `window.__build`；`ci-deploy.sh` 在 build 后取 `ASSET`（缺失即失败）、拷贝后比对 `server/dist/index.html`、健康检查时再校验 3035 实际返回的 index.html 含同一 asset，不一致回滚 `server/dist.bak-*`（回滚选备份改为按目录名 epoch 排序）。新增 `e2e/build.mjs`（A1–A4）对公网连跑 3 次 `BUILD OK d8f77fd-202611210514 assets/index--1CscvBg.js`。
+**遗留 → 需单开一轮**：③ `server/index.js` 的 `/bbq/api/build` 端点（返回同一 build 对象），以及走查脚本开跑前先 curl 该端点核对；本项待 ③ 完成后才可 `[done]`。
 需求：① 构建时注入 `__BUILD__ = { hash, time, commit }`，页面 `console.info('[bbq] build', …)` 并挂 `window.__build`；② 部署脚本（`ci-deploy.sh` 或等价物）在拷贝后断言 `server/dist/index.html` 引用的 js hash 与刚 build 的 hash 一致，不一致则报错退出并回滚到 `dist.bak-*`；③ 服务器新增 `/bbq/api/build` 返回同一对象，走查脚本开跑前先核对。
 验收：`curl -s https://openfolio.uk/bbq/ | grep -o 'assets/index-[^"]*js'` 与 `curl -s https://openfolio.uk/bbq/api/build` 的 hash 一致，且等于 `git rev-parse --short HEAD` 的构建产物；`grep -c 'bbq-popup-hold'` 线上 bundle ≥1；连续 2 次部署都成立。
 参考：`server/index.js`、`dist.bak-*` 回滚机制；B-047 的四轮误判全部源于此。

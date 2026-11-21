@@ -16,6 +16,7 @@ export interface Interaction {
   icon: string;               // svg icon key for ui/controls
   glyph: string;              // world-space single-char marker
   guide?: boolean;            // nothing in reach: button shows a "where to go" hint instead of a dead key
+  goto?: boolean;             // label is a「去 X」direction (target = nextTarget); drives the HUD off-screen edge hint
 }
 
 const META: Record<ActionKind, { icon: string; glyph: string }> = {
@@ -133,6 +134,7 @@ export function resolveInteraction(
 
   const hasGuest = carrying?.stage !== 'plated' || !!matchingGuest(carrying, tables, customers);
   const hintText = nextHint(carrying, grill, hasGuest);
+  const go = (station?: StationRuntime): Interaction => ({ ...mk('none', hintText, station), goto: true });
 
   // serving wins when holding a plated dish near a waiting guest
   if (carrying?.stage === 'plated' && nearTable) {
@@ -141,11 +143,11 @@ export function resolveInteraction(
       if (guest.dish === carrying.dish) {
         return mk('serve', `上菜 ${DISHES[carrying.dish].name}`, undefined, nearTable);
       }
-      return mk('none', `这桌要的是 ${DISHES[guest.dish].name} · ${hasGuest ? '送去别桌' : '去垃圾桶丢掉'}`, undefined, nearTable);
+      return { ...mk('none', `这桌要的是 ${DISHES[guest.dish].name} · ${hasGuest ? '送去别桌' : '去垃圾桶丢掉'}`, undefined, nearTable), goto: true };
     }
   }
 
-  if (!nearStation) return { ...mk('none', hintText), guide: true };
+  if (!nearStation) return { ...go(), guide: true };
 
   switch (nearStation.kind) {
     case 'crate':
@@ -158,23 +160,23 @@ export function resolveInteraction(
           : mk('chop', '取回切好的串', nearStation);
       }
       if (carrying?.stage === 'raw') return mk('chop', '放上砧板', nearStation);
-      return mk('none', hintText, nearStation);
+      return go(nearStation);
     case 'grill': {
       if (carrying?.stage === 'chopped' && grill.freeSlot())
         return mk('put-grill', '上烤炉', nearStation);
       if (!carrying && grill.readySlot())
         return mk('take-grill', '取烤串', nearStation);
       if (!carrying && grill.slots.some((s) => s.item)) return mk('none', '烤制中…', nearStation);
-      return mk('none', hintText, nearStation);
+      return go(nearStation);
     }
     case 'plate':
       if (carrying?.stage === 'cooked') return mk('plate', '装盘', nearStation);
-      return mk('none', hintText, nearStation);
+      return go(nearStation);
     case 'bin':
       if (carrying) return mk('discard', '丢弃', nearStation);
-      return mk('none', hintText, nearStation);
+      return go(nearStation);
     default:
-      return mk('none', hintText, nearStation);
+      return go(nearStation);
   }
 }
 

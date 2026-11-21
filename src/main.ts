@@ -7,7 +7,7 @@ import { CameraRig } from './core/cameraRig.ts';
 import { buildLighting } from './core/lighting.ts';
 import { Input } from './core/input.ts';
 import { buildKitchen, COUNTER_D } from './world/kitchen.ts';
-import { STATIONS } from './world/layout.ts';
+import { STATIONS, TABLES } from './world/layout.ts';
 import { buildDining } from './world/dining.ts';
 import { buildProps } from './world/props.ts';
 import { mergeStatic } from './core/merge.ts';
@@ -16,6 +16,7 @@ import type { Interaction } from './game/stations.ts';
 import type { GamePhase } from './game/types.ts';
 import type { Results } from './game/flow.ts';
 import { Hud } from './ui/hud.ts';
+import type { OffscreenTarget } from './ui/hud.ts';
 import { Controls } from './ui/controls.ts';
 import { Panels } from './ui/panels.ts';
 import { COOK } from './config.ts';
@@ -74,6 +75,28 @@ const flow = new Flow(scene, kitchen.stations, dining.tables, kitchen.grillSlots
 });
 flow.placePlayer();
 const chopBoard = kitchen.stations.find((st) => st.id === 'chop')!;
+
+// B-090: short on-screen names for the「去 X」target of the off-screen edge hint
+const OFF_NAMES: Record<string, string> = { bin: '垃圾桶', crate: '料箱', chop: '切配台', grill: '烤炉', plate: '装盘台' };
+const offTarget: OffscreenTarget = { label: '', pos: new THREE.Vector3() };
+/** the current「去 X」target while the action key is in its direction state, else null */
+function offscreenTarget(): OffscreenTarget | null {
+  if (flow.phase !== 'playing' || currentAction.action !== 'none' || !currentAction.goto) return null;
+  const h = flow.hint;
+  if (!h) return null;
+  if (h.kind === 'station') {
+    const st = kitchen.stations.find((s) => s.id === h.id);
+    if (!st) return null;
+    offTarget.label = OFF_NAMES[st.kind] ?? st.label;
+    offTarget.pos.set(st.pos.x, st.topY, st.pos.z);
+  } else {
+    const tb = dining.tables.find((t) => t.id === h.id);
+    if (!tb) return null;
+    offTarget.label = `${TABLES.findIndex((t) => t.id === h.id) + 1}号桌`;
+    offTarget.pos.set(tb.pos.x, tb.pos.y, tb.pos.z);
+  }
+  return offTarget;
+}
 
 function restart(): void {
   hud.setLevel(flow.level, flow.cfg.target);
@@ -152,6 +175,7 @@ function step(rawDt: number, draw = true, move?: THREE.Vector2): void {
   }
   hud.updateGrill(flow.grill.slots);
   hud.updateChop(chopBoard, COOK.chopTaps);
+  hud.updateOffscreen(offscreenTarget());
 
   renderer.render(scene, rig.cam);
 }
@@ -174,6 +198,7 @@ interface TestHooks {
   worldToScreen(x: number, y: number, z: number): { x: number; y: number; z: number };
   stationGeom(): { id: string; kind: string; x: number; z: number; topY: number; w: number; d: number }[];
   camera(): ReturnType<CameraRig['info']>;
+  guideTarget(): { label: string; x: number; y: number; z: number } | null;
 }
 const ZERO_MOVE = new THREE.Vector2(0, 0);
 const hooks: TestHooks = {
@@ -220,6 +245,7 @@ const hooks: TestHooks = {
     for (let i = 0; i < n; i++) step(dt, false, mv);
     hud.updateGrill(flow.grill.slots);
     hud.updateChop(chopBoard, COOK.chopTaps);
+    hud.updateOffscreen(offscreenTarget());
     if (flow.phase === 'playing') hud.updateRings(flow.customers, dining.tables);
   },
   // read-only: world point -> CSS px in the current viewport (same math as the HUD anchors)
@@ -236,6 +262,11 @@ const hooks: TestHooks = {
     }));
   },
   camera() { return rig.info(); },
+  // read-only (B-090): the「去 X」target the off-screen edge hint points at, or null when not in that state
+  guideTarget() {
+    const t = offscreenTarget();
+    return t ? { label: t.label, x: t.pos.x, y: t.pos.y, z: t.pos.z } : null;
+  },
   state() {
     const g = (s: string): unknown => {
       const st = kitchen.stations.find((x) => x.id === s);

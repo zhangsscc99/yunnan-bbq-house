@@ -178,7 +178,41 @@ const CSS = `
   0%, 64% { opacity: 1; }
   100% { opacity: 0; }
 }
+
+/* B-090: edge-pinned off-screen pointer toward the current「去 X」target (arrow shape + text, not colour-only) */
+#bbq-offhint {
+  position: absolute; left: 0; top: 0; z-index: 2; display: none;
+  align-items: center; justify-content: center; gap: 5px;
+  box-sizing: border-box; min-width: 44px; min-height: 44px; padding: 6px 11px;
+  background: rgba(16,10,7,.9); border: 2px solid #f0c060; border-radius: 12px;
+  color: #f0c060; font-size: 15px; font-weight: 800; line-height: 1; white-space: nowrap;
+  pointer-events: none; box-shadow: 0 2px 10px rgba(0,0,0,.55);
+  animation: bbq-off-glow 1.2s ease-in-out infinite;
+}
+#bbq-offhint[data-dir="right"] { flex-direction: row-reverse; }
+#bbq-offhint svg { width: 20px; height: 20px; flex: none; }
+#bbq-offhint[data-dir="left"] svg { transform: rotate(180deg); }
+#bbq-offhint[data-dir="up"] svg { transform: rotate(-90deg); }
+#bbq-offhint[data-dir="down"] svg { transform: rotate(90deg); }
+@keyframes bbq-off-glow {
+  0%, 100% { box-shadow: 0 2px 10px rgba(0,0,0,.55), 0 0 0 rgba(240,192,96,0); }
+  50% { box-shadow: 0 2px 10px rgba(0,0,0,.55), 0 0 14px rgba(240,192,96,.75); }
+}
+@media (prefers-reduced-motion: reduce) { #bbq-offhint { animation: none; } }
 `;
+
+const OFF_ARROW = '<svg viewBox="0 0 24 24" fill="#f0c060" stroke="#f0c060" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">'
+  + '<path d="M3 9.5h10V4.5l8 7.5-8 7.5v-5H3z"/></svg>';
+const OFF_EDGE = 8;      // gap to the screen edge (spec: <= 12px)
+const OFF_GAP = 8;       // gap to topbar / controls
+
+type OffDir = 'left' | 'right' | 'up' | 'down';
+interface Box { left: number; top: number; right: number; bottom: number }
+
+export interface OffscreenTarget {
+  label: string;
+  pos: THREE.Vector3;
+}
 
 const STAR = (filled: boolean): string => `
 <svg viewBox="0 0 24 24" fill="${filled ? '#f0c060' : 'none'}" stroke="${filled ? '#f0c060' : 'rgba(240,192,96,.4)'}" stroke-width="1.8">
@@ -226,6 +260,10 @@ export class Hud {
   private guideEl: HTMLElement;
   private grillEl: HTMLElement;
   private chopEl: HTMLElement;
+  private offEl: HTMLElement;
+  private offTxt: HTMLElement;
+  private offDir = '';
+  private offLabel = '';
   private cb: { root: HTMLElement; fill: HTMLElement; txt: HTMLElement; label: string; done: boolean } | null = null;
   private gbs: { root: HTMLElement; fill: HTMLElement; txt: HTMLElement; state: string; label: string }[] = [];
   private guideTimer = 0;
@@ -278,6 +316,101 @@ export class Hud {
     this.chopEl.id = 'bbq-chop';
     this.guideEl = el('div', '', this.root);
     this.guideEl.id = 'bbq-guide';
+    this.offEl = el('div', '', this.root);
+    this.offEl.id = 'bbq-offhint';
+    this.offEl.dataset.offscreenHint = '';
+    this.offEl.setAttribute('role', 'status');
+    this.offEl.innerHTML = OFF_ARROW;
+    this.offTxt = el('span', 'off-txt', this.offEl);
+    this.offEl.style.display = 'none';
+  }
+
+  /**
+   * B-090: while the action key shows a「去 X」direction and X projects outside the viewport, pin one
+   * arrow + label to the matching screen edge (<= 12px from it), below the live topbar and clear of
+   * the joystick / action button. Hidden (display:none) otherwise; pass null outside play.
+   */
+  updateOffscreen(t: OffscreenTarget | null): void {
+    const e = this.offEl;
+    if (!t || this.root.style.display === 'none') { this.hideOffscreen(); return; }
+    this.cam.updateMatrixWorld();
+    this.tmp.copy(t.pos).project(this.cam);
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    if (!Number.isFinite(this.tmp.x) || !Number.isFinite(this.tmp.y)) { this.hideOffscreen(); return; }
+    let x = (this.tmp.x * 0.5 + 0.5) * vw;
+    let y = (-this.tmp.y * 0.5 + 0.5) * vh;
+    const behind = this.tmp.z > 1;
+    if (behind) { x = vw - x; y = vh - y; }
+    if (!behind && x >= 0 && x <= vw && y >= 0 && y <= vh) { this.hideOffscreen(); return; }
+
+    // edge where the ray from the viewport centre toward the target leaves the screen
+    const cx = vw / 2;
+    const cy = vh / 2;
+    const dx = x - cx;
+    const dy = y - cy;
+    const kx = dx !== 0 ? cx / Math.abs(dx) : Infinity;
+    const ky = dy !== 0 ? cy / Math.abs(dy) : Infinity;
+    const dir: OffDir = kx <= ky ? (dx < 0 ? 'left' : 'right') : (dy < 0 ? 'up' : 'down');
+    const k = Math.min(kx, ky, 1);
+    const ix = cx + dx * k;
+    const iy = cy + dy * k;
+
+    if (t.label !== this.offLabel) { this.offLabel = t.label; this.offTxt.textContent = t.label; }
+    if (dir !== this.offDir) { this.offDir = dir; e.dataset.dir = dir; }
+    const aria = `${t.label}在${dir === 'left' ? '左' : dir === 'right' ? '右' : dir === 'up' ? '上' : '下'}方`;
+    if (e.getAttribute('aria-label') !== aria) e.setAttribute('aria-label', aria);
+    if (e.style.display !== 'flex') e.style.display = 'flex';
+    const w = e.offsetWidth;
+    const h = e.offsetHeight;
+
+    const tb = this.topbarEl.getBoundingClientRect();
+    const topSafe = tb.height > 0 ? tb.bottom + OFF_GAP : OFF_EDGE;
+    const minT = topSafe;
+    const maxT = Math.max(minT, vh - OFF_EDGE - h);
+    const minL = OFF_EDGE;
+    const maxL = Math.max(minL, vw - OFF_EDGE - w);
+    const clamp = (v: number, a: number, b: number): number => Math.min(Math.max(v, a), b);
+
+    const rects = (sel: string): Box[] => [...document.querySelectorAll<HTMLElement>(sel)]
+      .map((n) => n.getBoundingClientRect())
+      .filter((r) => r.width > 0 && r.height > 0)
+      .map((r) => ({ left: r.left, top: r.top, right: r.right, bottom: r.bottom }));
+    const hard = rects('#bbq-stick, #bbq-act');
+    const soft = rects('#bbq-orders .card');
+    const hits = (l: number, tp: number, obs: Box[]): Box | undefined => obs.find((o) =>
+      l < o.right + OFF_GAP && o.left - OFF_GAP < l + w && tp < o.bottom + OFF_GAP && o.top - OFF_GAP < tp + h);
+
+    // pinned axis + preferred position along the edge; slide along the edge to dodge obstacles
+    const vertical = dir === 'left' || dir === 'right';
+    const fixed = dir === 'left' ? minL : dir === 'right' ? vw - OFF_EDGE - w : dir === 'up' ? minT : vh - OFF_EDGE - h;
+    const lo = vertical ? minT : minL;
+    const hi = vertical ? maxT : maxL;
+    const pref = clamp(vertical ? iy - h / 2 : ix - w / 2, lo, hi);
+    const at = (s: number): [number, number] => (vertical ? [fixed, s] : [s, fixed]);
+    const place = (obs: Box[]): number | null => {
+      const cands = [pref, lo, hi];
+      for (const o of obs) {
+        if (vertical) cands.push(o.top - OFF_GAP - h - 0.5, o.bottom + OFF_GAP + 0.5);
+        else cands.push(o.left - OFF_GAP - w - 0.5, o.right + OFF_GAP + 0.5);
+      }
+      let best: number | null = null;
+      for (const c of cands) {
+        if (c < lo || c > hi) continue;
+        const [l, tp] = at(c);
+        if (hits(l, tp, obs)) continue;
+        if (best === null || Math.abs(c - pref) < Math.abs(best - pref)) best = c;
+      }
+      return best;
+    };
+    const s = place(hard.concat(soft)) ?? place(hard) ?? pref;
+    const [left, top] = at(s);
+    e.style.left = `${Math.round(left)}px`;
+    e.style.top = `${Math.round(top)}px`;
+  }
+
+  private hideOffscreen(): void {
+    if (this.offEl.style.display !== 'none') this.offEl.style.display = 'none';
   }
 
   /** one shared guide toast, visible for 2s (re-press restarts the timer, never stacks) */

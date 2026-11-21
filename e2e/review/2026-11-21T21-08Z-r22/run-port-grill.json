@@ -1,0 +1,267 @@
+{
+  "tag": "port",
+  "scene": "grill",
+  "vp": {
+    "width": 390,
+    "height": 844
+  },
+  "shots": [
+    "/tmp/bbq-r22/2026-11-21T21-08Z-r22/port-grill-grill-raw.png",
+    "/tmp/bbq-r22/2026-11-21T21-08Z-r22/port-grill-grill-t3.png",
+    "/tmp/bbq-r22/2026-11-21T21-08Z-r22/port-grill-grill-cooked.png",
+    "/tmp/bbq-r22/2026-11-21T21-08Z-r22/port-grill-grill-warn.png",
+    "/tmp/bbq-r22/2026-11-21T21-08Z-r22/port-grill-grill-burnt.png"
+  ],
+  "errors": [],
+  "warns": [
+    "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+  ],
+  "steps": {
+    "chopped": {
+      "dish": "pork",
+      "stage": "chopped"
+    },
+    "atGrill": {
+      "action": "去烤炉",
+      "gb": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "disp": "none",
+          "cls": "gb",
+          "text": ""
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "disp": "none",
+          "cls": "gb",
+          "text": ""
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "disp": "none",
+          "cls": "gb",
+          "text": ""
+        }
+      ]
+    },
+    "raw": {
+      "grill": [
+        {
+          "stage": "chopped",
+          "t": 0.11666666666666665
+        },
+        null,
+        null
+      ],
+      "gb": [
+        {
+          "x": 110,
+          "y": 456,
+          "w": 76,
+          "h": 34,
+          "disp": "flex",
+          "cls": "gb",
+          "text": "烤制中 6s"
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "disp": "none",
+          "cls": "gb",
+          "text": ""
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "disp": "none",
+          "cls": "gb",
+          "text": ""
+        }
+      ]
+    },
+    "t3": {
+      "grill": [
+        {
+          "stage": "chopped",
+          "t": 3.1166666666666605
+        },
+        null,
+        null
+      ],
+      "gb": [
+        {
+          "x": 110,
+          "y": 456,
+          "w": 76,
+          "h": 34,
+          "disp": "flex",
+          "cls": "gb",
+          "text": "烤制中 3s"
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "disp": "none",
+          "cls": "gb",
+          "text": ""
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "disp": "none",
+          "cls": "gb",
+          "text": ""
+        }
+      ]
+    },
+    "t66": {
+      "grill": [
+        {
+          "stage": "cooked",
+          "t": 6.716666666666648
+        },
+        null,
+        null
+      ],
+      "gb": [
+        {
+          "x": 110,
+          "y": 456,
+          "w": 76,
+          "h": 34,
+          "disp": "flex",
+          "cls": "gb done",
+          "text": "已熟 ✓"
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "disp": "none",
+          "cls": "gb",
+          "text": ""
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "disp": "none",
+          "cls": "gb",
+          "text": ""
+        }
+      ],
+      "action": "取烤串"
+    },
+    "t106": {
+      "grill": [
+        {
+          "stage": "cooked",
+          "t": 10.716666666666779
+        },
+        null,
+        null
+      ],
+      "gb": [
+        {
+          "x": 110,
+          "y": 456,
+          "w": 76,
+          "h": 34,
+          "disp": "flex",
+          "cls": "gb warn",
+          "text": "快焦了 2s"
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "disp": "none",
+          "cls": "gb",
+          "text": ""
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "disp": "none",
+          "cls": "gb",
+          "text": ""
+        }
+      ]
+    },
+    "t136": {
+      "grill": [
+        {
+          "stage": "waste",
+          "t": 13.716666666666928
+        },
+        null,
+        null
+      ],
+      "gb": [
+        {
+          "x": 110,
+          "y": 456,
+          "w": 76,
+          "h": 34,
+          "disp": "flex",
+          "cls": "gb burnt",
+          "text": "焦了 ✗"
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "disp": "none",
+          "cls": "gb",
+          "text": ""
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "disp": "none",
+          "cls": "gb",
+          "text": ""
+        }
+      ],
+      "waste": 0,
+      "popups": ""
+    },
+    "takeBurnt": {
+      "carrying": {
+        "dish": "pork",
+        "stage": "waste"
+      },
+      "waste": 0,
+      "action": "去垃圾桶"
+    }
+  },
+  "build": "2290acb-202611210547",
+  "freeze": true,
+  "ms": 112127
+}

@@ -1,0 +1,141 @@
+{
+  "tag": "land",
+  "scene": "serve",
+  "vp": {
+    "width": 844,
+    "height": 390
+  },
+  "shots": [
+    "/tmp/bbq-r22/2026-11-21T21-08Z-r22/land-serve-serve-plated.png",
+    "/tmp/bbq-r22/2026-11-21T21-08Z-r22/land-serve-serve-paid.png",
+    "/tmp/bbq-r22/2026-11-21T21-08Z-r22/land-serve-serve-after.png",
+    "/tmp/bbq-r22/2026-11-21T21-08Z-r22/land-serve-serve-spam.png"
+  ],
+  "errors": [],
+  "warns": [
+    "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+  ],
+  "steps": {
+    "grillReady": {
+      "grill": [
+        {
+          "stage": "cooked",
+          "t": 6.249999999999983
+        },
+        null,
+        null
+      ],
+      "action": "取烤串"
+    },
+    "tookFromGrill": {
+      "dish": "pork",
+      "stage": "cooked"
+    },
+    "plated": {
+      "carrying": {
+        "dish": "pork",
+        "stage": "plated"
+      },
+      "action": "去垃圾桶丢掉"
+    },
+    "spawned": true,
+    "customers": [
+      {
+        "id": 1,
+        "table": "t1",
+        "phase": "seated",
+        "patience": 74.7
+      }
+    ],
+    "moneyBefore": 0,
+    "atTable": {
+      "action": "上菜 烤五花肉拼盘"
+    },
+    "paid": {
+      "moneyBefore": 0,
+      "moneyAfter": 62,
+      "delta": 62,
+      "served": 1,
+      "carrying": null,
+      "popups": "+¥62",
+      "cards": 1
+    },
+    "afterEating": {
+      "customers": [
+        {
+          "id": 1,
+          "phase": "eating"
+        }
+      ],
+      "popups": "",
+      "money": 62
+    },
+    "spamTable": {
+      "money": 62,
+      "served": 1,
+      "angry": 0,
+      "carrying": null,
+      "phase": "playing",
+      "errs": 0
+    },
+    "spamCrate": {
+      "carrying": {
+        "dish": "pork",
+        "stage": "raw"
+      },
+      "money": 62,
+      "calls": 102,
+      "tris": 10798
+    },
+    "hud": {
+      "topbar": [
+        {
+          "x": 260,
+          "y": 8,
+          "w": 324,
+          "h": 36,
+          "disp": "flex",
+          "cls": "topbar",
+          "text": "第 1 关\n营业额\n¥62\n时间\n2:46\n评级"
+        }
+      ],
+      "act": [
+        {
+          "x": 742,
+          "y": 284,
+          "w": 76,
+          "h": 76,
+          "disp": "flex",
+          "cls": "deny",
+          "text": "手上有东西"
+        }
+      ],
+      "stick": [
+        {
+          "x": 22,
+          "y": 238,
+          "w": 130,
+          "h": 130,
+          "disp": "block",
+          "cls": "",
+          "text": ""
+        }
+      ],
+      "cards": [
+        {
+          "x": 692,
+          "y": 8,
+          "w": 142,
+          "h": 47,
+          "disp": "flex",
+          "cls": "card",
+          "text": "烤五花肉拼盘\n¥48 · 用餐中"
+        }
+      ]
+    }
+  },
+  "build": "2290acb-202611210547",
+  "freeze": true,
+  "ms": 98730
+}

@@ -1,0 +1,172 @@
+{
+ "ts": "2026-11-21T00:56:51.006Z",
+ "part": "portC",
+ "steps": {
+  "skewer": {
+   "worldSize": {
+    "x": 0.271,
+    "y": 0.037,
+    "z": 0.096
+   },
+   "stage": "cooked",
+   "hex": "#dd993e",
+   "hasCam": false,
+   "meshes": 7
+  },
+  "hexRaw": "#dc983e",
+  "hexCooked": "#241d18",
+  "serveAction": {
+   "a": "serve",
+   "label": "上菜 烤五花肉拼盘"
+  },
+  "popupSamples": [
+   {
+    "ms": 40,
+    "s": {
+     "text": "+¥61",
+     "box": [
+      182,
+      399,
+      27,
+      14
+     ],
+     "op": "0",
+     "tf": "matrix(0.7, 0, 0, 0.7, -19.1484, -6)",
+     "fontPx": 17,
+     "overflow": false
+    }
+   },
+   {
+    "ms": 28552,
+    "s": null
+   },
+   {
+    "ms": 28658,
+    "s": null
+   },
+   {
+    "ms": 55119,
+    "s": null
+   },
+   {
+    "ms": 55239,
+    "s": null
+   },
+   {
+    "ms": 55347,
+    "s": null
+   },
+   {
+    "ms": 55451,
+    "s": null
+   },
+   {
+    "ms": 55578,
+    "s": null
+   },
+   {
+    "ms": 55683,
+    "s": null
+   },
+   {
+    "ms": 55792,
+    "s": null
+   },
+   {
+    "ms": 55911,
+    "s": null
+   },
+   {
+    "ms": 56015,
+    "s": null
+   },
+   {
+    "ms": 56133,
+    "s": null
+   },
+   {
+    "ms": 56244,
+    "s": null
+   }
+  ],
+  "payState": {
+   "money": 61,
+   "served": 1
+  },
+  "eatDone": {
+   "cust": 0
+  },
+  "wrongDish": {
+   "guest": [
+    "seated"
+   ],
+   "before": {
+    "a": "none",
+    "label": "这桌要的是 烤菌子 · 去垃圾桶丢掉"
+   },
+   "m0": 61,
+   "money": 61,
+   "served": 1,
+   "carry": {
+    "dish": "pork",
+    "stage": "plated"
+   },
+   "pops": [],
+   "hudHint": [
+    ":第 1 关 营业额 ¥61 时间 2:33 评级",
+    "bbq-orders:烤菌子 ¥32 · 等待",
+    "bbq-bubbles:…",
+    "bbq-popups:",
+    "bbq-grillbars:",
+    "bbq-chop:",
+    "bbq-guide:"
+   ]
+  },
+  "wrongSpam": [
+   {
+    "money": 61,
+    "served": 1,
+    "carry": "plated",
+    "label": "这桌要的是 烤菌子 · 去垃圾桶丢掉"
+   },
+   {
+    "money": 61,
+    "served": 1,
+    "carry": "plated",
+    "label": "这桌要的是 烤菌子 · 去垃圾桶丢掉"
+   },
+   {
+    "money": 61,
+    "served": 1,
+    "carry": "plated",
+    "label": "这桌要的是 烤菌子 · 去垃圾桶丢掉"
+   },
+   {
+    "money": 61,
+    "served": 1,
+    "carry": "plated",
+    "label": "这桌要的是 烤菌子 · 去垃圾桶丢掉"
+   },
+   {
+    "money": 61,
+    "served": 1,
+    "carry": "plated",
+    "label": "这桌要的是 烤菌子 · 去垃圾桶丢掉"
+   },
+   {
+    "money": 61,
+    "served": 1,
+    "carry": "plated",
+    "label": "这桌要的是 烤菌子 · 去垃圾桶丢掉"
+   }
+  ],
+  "shotFail_port-16-wrongdish-spam": "Error: page.screenshot: Target page, context or browser has been closed"
+ },
+ "errors": [],
+ "warnings": [
+  "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+  "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+ ],
+ "bootMs": 32062,
+ "ok": true
+}

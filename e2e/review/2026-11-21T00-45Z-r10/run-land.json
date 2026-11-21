@@ -1,0 +1,190 @@
+{
+ "ts": "2026-11-21T01:02:08.504Z",
+ "out": "e2e/review/2026-11-21T00-45Z-r10",
+ "steps": {
+  "hudGeom": {
+   "stick": [
+    22,
+    238,
+    130,
+    130
+   ],
+   "act": [
+    742,
+    284,
+    76,
+    76
+   ],
+   "orders": [
+    834,
+    8,
+    0,
+    0
+   ],
+   "status": null,
+   "statusByText": [
+    264,
+    8,
+    315,
+    36,
+    "第 1 关 营业额 ¥0 时间 3:00 评级"
+   ]
+  },
+  "grillMid": {
+   "text": "烤制中 3s",
+   "box": [
+    343,
+    195,
+    76,
+    34
+   ],
+   "bar": [
+    64,
+    8
+   ],
+   "hex": "#e39467",
+   "t": 3.3
+  },
+  "grillCooked": {
+   "text": "已熟 ✓",
+   "hex": "#d7953c"
+  },
+  "targetGuest": {
+   "table": "t1",
+   "patience": 77.8
+  },
+  "serve": {
+   "pops": [],
+   "money": 0,
+   "served": 0
+  },
+  "angry": {
+   "simSec": 0.35,
+   "angry": 1,
+   "pops": [
+    {
+     "text": "愤怒离店",
+     "cls": "popup warn",
+     "box": [
+      365,
+      160,
+      47,
+      16
+     ],
+     "inView": true
+    }
+   ],
+   "cards": 0,
+   "bubb": "烤菌子"
+  },
+  "afterAngry": {
+   "phase": "playing",
+   "level": 1,
+   "levelTarget": 180,
+   "money": 0,
+   "timeLeft": 159.25139999997344,
+   "served": 0,
+   "angry": 1,
+   "waste": 0,
+   "hint": {
+    "kind": "table",
+    "id": "t2",
+    "x": 0.3,
+    "z": -1.2
+   },
+   "carrying": {
+    "dish": "pork",
+    "stage": "plated"
+   },
+   "action": "none",
+   "actionLabel": "送去客桌",
+   "player": {
+    "x": -3.3,
+    "z": -1.2000000000000002
+   },
+   "stations": {
+    "bin": {
+     "x": -5.5,
+     "z": 2
+    },
+    "crate-pork": {
+     "x": -4.5,
+     "z": 2
+    },
+    "crate-mush": {
+     "x": -3.5,
+     "z": 2
+    },
+    "crate-mix": {
+     "x": -2.5,
+     "z": 2
+    },
+    "chop": {
+     "x": -1,
+     "z": 2
+    },
+    "grill": {
+     "x": 1.5,
+     "z": 2
+    },
+    "plate": {
+     "x": 4,
+     "z": 2
+    }
+   },
+   "tables": {
+    "t1": {
+     "x": -3.3,
+     "z": -1.2000000000000002
+    },
+    "t2": {
+     "x": 0.2999999999999998,
+     "z": -1.2000000000000002
+    },
+    "t3": {
+     "x": 3.9000000000000004,
+     "z": -1.2000000000000002
+    },
+    "t4": {
+     "x": 2.0999999999999996,
+     "z": 0.7999999999999998
+    }
+   },
+   "customers": [
+    {
+     "id": 2,
+     "dish": "pork",
+     "phase": "seated",
+     "patience": 74.10000000000005,
+     "table": "t2",
+     "x": -0.5,
+     "z": -2.4
+    }
+   ],
+   "grill": [
+    null,
+    null,
+    null
+   ],
+   "chop": {
+    "held": null,
+    "chopLeft": 0
+   },
+   "calls": 107,
+   "tris": 11562
+  }
+ },
+ "errors": [],
+ "warnings": [
+  "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+  "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+ ],
+ "bootMs": 60721,
+ "frames": 21,
+ "perf": {
+  "calls": 107,
+  "tris": 11562,
+  "programs": 16
+ },
+ "ok": true
+}

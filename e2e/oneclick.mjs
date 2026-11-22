@@ -7,7 +7,7 @@
 //  (b) t = 0.5 / 4.0 / 6.5 / 9.0 / 11.0 / 12.5 -> raw / perfect / perfect / over / over / burnt,
 //      continuous progressPct(t=4) !== progressPct(t=6.5) & segmented colors + countdown labels;
 //  (c) t = 6.5 lift -> money delta = price + full tip (and over window t = 10.5 = half tip, no double-pay);
-//  (d) t = 2.0 lift -> money unchanged, card back to idle, popup includes '夹生 · 重烤';
+//  (d) t = 2.0 lift -> money unchanged, waste + 1, card back to idle, popup includes '夹生丢弃 · 废料 +1';
 //  (e) 3 cards cooking -> 4th card disabled === true & label includes '烤位满了'; release 1 -> disabled === false;
 //  (f) t > 12 without lift -> waste + 1 && angry + 1, customer leaves angry, card removed after burnt flash;
 //  (g) pageerror + console.error === 0 across 3 runs.
@@ -189,6 +189,9 @@ async function runViewport(tag, width, height, run) {
       assert.ok(snap.cs, `${tag} (b) t=${cp.t}: cardState('t1') is null`);
       assert.equal(snap.cs.cookWindow, cp.expect, `${tag} (b) t=${cp.t}: expected ${cp.expect}, got ${snap.cs.cookWindow} (cookT=${snap.cs.cookT})`);
       assert.equal(snap.domWindow, cp.expect, `${tag} (b) t=${cp.t}: DOM data-cook-window=${snap.domWindow} !== ${cp.expect}`);
+      if (cp.expect === 'raw') {
+        assert.match(snap.cs.label, /未熟 · 离熟 \d+s/, `${tag} (b) t=${cp.t}: label "${snap.cs.label}" missing 未熟 · 离熟 Ns`);
+      }
       if (cp.expect === 'perfect') {
         assert.match(snap.cs.label, /完美 \d+s/, `${tag} (b) t=${cp.t}: label "${snap.cs.label}" missing 完美 Ns`);
       }
@@ -275,7 +278,7 @@ async function runViewport(tag, width, height, run) {
     assert.equal(afterOver.money - beforeOver.money, expectedOverMush,
       `${tag} (c/over): t=10.5 mushroom gain=${afterOver.money - beforeOver.money}, expected ${expectedOverMush}`);
 
-    // ---- (d) t = 2.0 lift -> undercooked (money unchanged, card returns to idle, popup '夹生 · 重烤') ----
+    // ---- (d) t = 2.0 lift -> undercooked (money unchanged, waste + 1, card returns to idle, popup '夹生丢弃 · 废料 +1') ----
     await resetAndSeat(page, ['mixian']);
     const beforeD = await page.evaluate(() => window.__test.state());
     await page.locator('#bbq-orders .card[data-table="t1"] .card-btn').click({ timeout: TIMEOUT });
@@ -289,13 +292,13 @@ async function runViewport(tag, width, height, run) {
       popups: [...document.querySelectorAll('#bbq-popups .popup')].map((p) => (p.textContent ?? '').trim()),
     }));
     assert.equal(afterD.st.money, beforeD.money, `${tag} (d): money changed on undercooked lift (${beforeD.money} -> ${afterD.st.money})`);
-    assert.equal(afterD.st.waste, beforeD.waste, `${tag} (d): waste changed on undercooked lift`);
+    assert.equal(afterD.st.waste, beforeD.waste + 1, `${tag} (d): expected waste + 1 on undercooked discard (${beforeD.waste} -> ${afterD.st.waste})`);
     assert.equal(afterD.st.served, beforeD.served, `${tag} (d): served changed on undercooked lift`);
     assert.equal(afterD.card.cookWindow, 'idle', `${tag} (d): card did not return to idle (got ${afterD.card.cookWindow})`);
     assert.equal(afterD.domWindow, 'idle', `${tag} (d): DOM data-cook-window=${afterD.domWindow} !== idle`);
     assert.equal(afterD.card.slotIndex, -1, `${tag} (d): slotIndex not reset to -1`);
     assert.equal(afterD.slots.filter((s) => s.occupied).length, 0, `${tag} (d): grill slot not released on undercooked lift`);
-    assert.ok(afterD.popups.some((p) => p.includes('夹生 · 重烤')), `${tag} (d): missing popup '夹生 · 重烤', got ${JSON.stringify(afterD.popups)}`);
+    assert.ok(afterD.popups.some((p) => p.includes('夹生丢弃 · 废料 +1')), `${tag} (d): missing popup '夹生丢弃 · 废料 +1', got ${JSON.stringify(afterD.popups)}`);
 
     // ---- (e) 3 grill slots full -> 4th card disabled + '烤位满了' -> release 1 -> restored false ----
     await resetAndSeat(page, ['pork', 'mushroom', 'mixian', 'pork']);
@@ -335,7 +338,7 @@ async function runViewport(tag, width, height, run) {
       `[run ${run}/${RUNS}] ${tag} ${width}x${height} PASS | ` +
       `cardW=${cardW}px btn=${btnSz} | ` +
       `windows=[${samples.map((s) => `${s.t}:${s.cs.cookWindow}(${s.cs.progressPct.toFixed(1)}%)`).join(',')}] | ` +
-      `perfect=+¥${expectedFullPork} over=+¥${expectedOverMush} raw=¥0(idle) | ` +
+      `perfect=+¥${expectedFullPork} over=+¥${expectedOverMush} raw=¥0(idle,waste+1) | ` +
       `4th(full=${fullState.c4.disabled}/"${fullState.c4.label}"->free=${afterRelease.c4.disabled}) | ` +
       `burn(waste=${burntSnap.st.waste},angry=${burntSnap.st.angry},removed=true) | 0 JS err`,
     );

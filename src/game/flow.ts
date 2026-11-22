@@ -43,12 +43,17 @@ export interface Results {
 }
 
 export const COOK_EPS = 1e-6;
+export const RAW_LOCK_SEC = 0.6;
 
 export function cookWindowFor(t: number): 'raw' | 'perfect' | 'over' | 'burnt' {
   if (t + COOK_EPS >= COOK.burnTime) return 'burnt';
   if (t + COOK_EPS >= COOK.overStart) return 'over';
   if (t + COOK_EPS >= COOK.perfectStart) return 'perfect';
   return 'raw';
+}
+
+function isRawLocked(win: CookWindow, grillT: number): boolean {
+  return win === 'raw' && grillT + COOK_EPS < RAW_LOCK_SEC;
 }
 
 export interface OrderCardState {
@@ -62,6 +67,7 @@ export interface OrderCardState {
   cookT: number;
   progressPct: number;
   disabled: boolean;
+  rawLocked: boolean;
   label: string;
   statusText: string;
   slotIndex: number;
@@ -466,9 +472,11 @@ export class Flow {
     const item = slot.item!;
     const win = cookWindowFor(item.grillT);
     if (win === 'raw') {
+      if (isRawLocked(win, item.grillT)) return true;
       const rawItem = this.grill.take(slot);
       disposeTree(rawItem.obj);
-      this.ev.onPopup(table.pos.clone(), '夹生 · 重烤', 'warn');
+      this.waste += 1;
+      this.ev.onPopup(table.pos.clone(), '夹生丢弃 · 废料 +1', 'warn');
       this.ev.onOrders(this.customers, this.tables);
       return true;
     }
@@ -506,6 +514,7 @@ export class Flow {
           cookT: 0,
           progressPct: 0,
           disabled: true,
+          rawLocked: false,
           label: '用餐中',
           statusText: `¥${price} · 用餐中`,
           slotIndex: -1,
@@ -522,7 +531,7 @@ export class Flow {
         let label: string;
         if (win === 'raw') {
           const rem = Math.max(1, Math.ceil(COOK.perfectStart - (rawT + COOK_EPS)));
-          label = `生串 ${rem}s`;
+          label = `未熟 · 离熟 ${rem}s`;
         } else if (win === 'perfect') {
           const rem = Math.max(1, Math.ceil(COOK.overStart - (rawT + COOK_EPS)));
           label = `完美 ${rem}s`;
@@ -532,6 +541,7 @@ export class Flow {
         } else {
           label = '焦糊';
         }
+        const rawLocked = isRawLocked(win, rawT);
         out.push({
           tableId: c.table,
           customerId: c.id,
@@ -543,8 +553,9 @@ export class Flow {
           cookT,
           progressPct,
           disabled: win === 'burnt',
+          rawLocked,
           label,
-          statusText: `¥${price} · ${label}`,
+          statusText: win === 'raw' ? label : `¥${price} · ${label}`,
           slotIndex,
         });
       } else {
@@ -560,6 +571,7 @@ export class Flow {
           cookT: 0,
           progressPct: 0,
           disabled: grillFull,
+          rawLocked: false,
           label,
           statusText: grillFull ? `¥${price} · 烤位满了` : `¥${price} · 等待`,
           slotIndex: -1,
@@ -581,6 +593,7 @@ export class Flow {
         cookT: Number(entry.cookT.toFixed(4)),
         progressPct: 100,
         disabled: true,
+        rawLocked: false,
         label: '焦糊',
         statusText: `¥${price} · 焦糊`,
         slotIndex: -1,

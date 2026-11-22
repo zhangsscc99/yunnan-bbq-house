@@ -2,6 +2,7 @@
 // Budget: ≤8 maps (ART-DIRECTION §4). Each factory returns a THREE texture.
 
 import * as THREE from 'three';
+import { DISHES } from '../config.ts';
 
 function canvas(size: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
   const c = document.createElement('canvas');
@@ -182,20 +183,25 @@ export function menuBoardTex(): THREE.CanvasTexture {
   g.strokeRect(9, 9, 494, 494);
   g.fillStyle = '#f0e6d4';
   g.textAlign = 'center';
-  g.font = '600 52px "PingFang SC", "Noto Sans SC", sans-serif';
-  g.fillText('柳真真烤肉', 256, 92);
-  g.font = '500 34px "PingFang SC", "Noto Sans SC", sans-serif';
+  g.font = '600 44px "PingFang SC", "Noto Sans SC", sans-serif';
+  g.fillText('柳真真·云贵烤肉', 256, 86);
+  g.font = '500 29px "PingFang SC", "Noto Sans SC", sans-serif';
   g.fillStyle = '#e8d9b8';
-  const rows = [['烤五花肉拼盘', '¥48'], ['烤菌子', '¥32'], ['豆泥米线', '¥26']];
-  rows.forEach(([n, p], i) => {
-    const y = 190 + i * 84;
-    g.textAlign = 'left'; g.fillText(n, 60, y);
-    g.textAlign = 'right'; g.fillStyle = '#f0c060'; g.fillText(p, 452, y);
+  const featured = [
+    DISHES['modern-beef'],
+    DISHES['lemongrass-chicken-thigh'],
+    DISHES['yunnan-porcini'],
+    DISHES['southwest-celtuce-tip'],
+  ];
+  featured.forEach((d, i) => {
+    const y = 176 + i * 76;
+    g.textAlign = 'left'; g.fillText(d.name, 52, y);
+    g.textAlign = 'right'; g.fillStyle = '#f0c060'; g.fillText(`¥${d.price}`, 460, y);
     g.fillStyle = '#e8d9b8';
     g.strokeStyle = 'rgba(230,217,184,0.35)';
     g.lineWidth = 2;
     g.setLineDash([4, 8]);
-    g.beginPath(); g.moveTo(60, y + 18); g.lineTo(452, y + 18); g.stroke();
+    g.beginPath(); g.moveTo(52, y + 18); g.lineTo(460, y + 18); g.stroke();
   });
   return toTex(c, 1);
 }

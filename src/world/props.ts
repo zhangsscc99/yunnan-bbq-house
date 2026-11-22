@@ -1,5 +1,5 @@
-// Yunnan-flavour dressing: chili strings, pottery, tie-dye banner, dried
-// mushroom baskets, pendant lamp hardware. Shared MATS → merges cheaply.
+// Yunnan-flavour dressing: chili strings, pottery, tie-dye banner, woven
+// bamboo baskets, pendant lamp hardware. Shared MATS → merges cheaply.
 
 import * as THREE from 'three';
 import { cellToWorld } from './layout.ts';

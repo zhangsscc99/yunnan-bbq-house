@@ -24,7 +24,7 @@ src/
     layout.ts         12×9 格子数据：walkable / 站点占位表
     kitchen.ts        台面/烤炉/料箱/切配/装盘/垃圾桶 几何+站点实体
     dining.ts         门/餐桌/椅/等待位
-    props.ts          云南装饰(辣椒串/陶罐/扎染/青瓦/菌筐/吊灯杆)
+    props.ts          云南装饰(辣椒串/陶罐/扎染/青瓦/竹筐/吊灯杆)
   game/
     types.ts          Dish/Item/Station/Customer/Order/Phase 类型
     items.ts          物品工厂 + 网格外观(串→切→熟→焦→菜)

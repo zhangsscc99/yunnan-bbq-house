@@ -2,8 +2,8 @@
 // tick down patience, eat when served, or leave after burnt/angry.
 
 import * as THREE from 'three';
-import { DISHES } from '../config.ts';
-import type { DishId } from '../config.ts';
+import { DISHES, DISHES_BY_CATEGORY } from '../config.ts';
+import type { DishCategory, DishId } from '../config.ts';
 import type { Customer } from './types.ts';
 import type { TableRuntime } from '../world/dining.ts';
 import { buildChibi } from './player.ts';
@@ -23,11 +23,27 @@ const SKINS = [0xf0c8a0, 0xe8b890, 0xd8a880, 0xf5d0b0];
 
 let nextCustomerId = 1;
 
+const CATEGORY_WEIGHTS: readonly [DishCategory, number][] = [
+  ['真真牛', 0.48],
+  ['云贵风味鸡', 0.16],
+  ['云贵菌类', 0.22],
+  ['特色时蔬', 0.14],
+];
+
 export function pickDish(rng: () => number = Math.random): DishId {
-  const r = rng();
-  if (r < 0.45) return 'pork';
-  if (r < 0.75) return 'mushroom';
-  return 'mixian';
+  const r = Math.min(0.999999, Math.max(0, rng()));
+  let acc = 0;
+  for (const [cat, weight] of CATEGORY_WEIGHTS) {
+    if (r < acc + weight) {
+      const list = DISHES_BY_CATEGORY[cat];
+      const frac = (r - acc) / weight;
+      const idx = Math.min(list.length - 1, Math.floor(frac * list.length));
+      return list[idx].id;
+    }
+    acc += weight;
+  }
+  const fallback = DISHES_BY_CATEGORY['真真牛'];
+  return fallback[0].id;
 }
 
 export function spawnCustomer(

@@ -49,22 +49,124 @@ export const RENDER = {
 
 // ---- gameplay numbers (v2: GAME-DESIGN §0/§1) ----
 
-export type DishId = 'pork' | 'mushroom' | 'mixian';
+// ---- real store menu (柳真真·云贵山岭烤肉 · 17 exact dishes across 4 categories) ----
+
+export type DishCategory = '真真牛' | '云贵风味鸡' | '云贵菌类' | '特色时蔬';
+
+export const DISH_CATEGORIES: readonly DishCategory[] = [
+  '真真牛',
+  '云贵风味鸡',
+  '云贵菌类',
+  '特色时蔬',
+] as const;
+
+// 小程序左侧其它五个类目暂缺菜品图：仅在数据结构预留空位，不编菜
+export const RESERVED_CATEGORIES = [
+  '山味上新',
+  '四大招牌',
+  '真真必吃系列',
+  '猪肉系列',
+  '虾虾丸子',
+] as const;
+
+export type ReservedCategory = (typeof RESERVED_CATEGORIES)[number];
+export type MenuCategory = DishCategory | ReservedCategory;
+
+export type DishId =
+  | 'modern-beef'
+  | 'mint-beef'
+  | 'cumin-beef'
+  | 'basil-chili-beef'
+  | 'secret-beef-intestine'
+  | 'chili-oil-beef-tendon'
+  | 'shancheng-beef-tripe'
+  | 'beef-mid-intestine'
+  | 'lemongrass-chicken-thigh'
+  | 'lemongrass-chicken-gizzard'
+  | 'yunnan-porcini'
+  | 'velvet-antler-mushroom'
+  | 'cordyceps-flower'
+  | 'button-mushroom'
+  | 'zucchini'
+  | 'alpine-mint-leaf'
+  | 'southwest-celtuce-tip';
 
 export interface Dish {
   id: DishId;
   name: string;
   shortName: string;
+  category: DishCategory;
   price: number;
   patience: number;   // seconds
-  hue: number;        // main ingredient colour
+  hue: number;        // natural ingredient colour
+  isNew?: boolean;
+  note?: string;
+}
+
+export interface MenuEntry {
+  id: DishId;
+  name: string;
+  category: DishCategory;
+  price: number;
+  isNew: boolean;
+  note: string | null;
 }
 
 export const DISHES: Record<DishId, Dish> = {
-  pork:     { id: 'pork',     name: '烤五花肉拼盘', shortName: '五花肉', price: 48, patience: 75,  hue: 0xe8907c },
-  mushroom: { id: 'mushroom', name: '烤菌子',       shortName: '烤菌子', price: 32, patience: 90,  hue: 0xa97b4f },
-  mixian:   { id: 'mixian',   name: '豆泥米线',     shortName: '米线',   price: 26, patience: 100, hue: 0xe8c96a },
+  // 真真牛 (8) — 牛肉偏红/酱红自然肉色，价格梯度 ¥42–¥58
+  'modern-beef':                { id: 'modern-beef',                name: '摩登现烤牛肉',     shortName: '现烤牛肉', category: '真真牛',     price: 58, patience: 75, hue: 0xb8463a },
+  'mint-beef':                  { id: 'mint-beef',                  name: '云南高山薄荷牛肉', shortName: '薄荷牛肉', category: '真真牛',     price: 56, patience: 75, hue: 0xad4a3e },
+  'cumin-beef':                 { id: 'cumin-beef',                 name: '特色山岭孜然牛肉', shortName: '孜然牛肉', category: '真真牛',     price: 54, patience: 75, hue: 0xb55336 },
+  'basil-chili-beef':           { id: 'basil-chili-beef',           name: '罗勒糊辣椒牛肉',   shortName: '糊椒牛肉', category: '真真牛',     price: 54, patience: 75, hue: 0xa83c32 },
+  'secret-beef-intestine':      { id: 'secret-beef-intestine',      name: '真真秘制牛小肠',   shortName: '秘制小肠', category: '真真牛',     price: 48, patience: 75, hue: 0xc47b62, isNew: true },
+  'chili-oil-beef-tendon':      { id: 'chili-oil-beef-tendon',      name: '油辣子牛板筋',     shortName: '牛板筋',   category: '真真牛',     price: 46, patience: 75, hue: 0xb85234 },
+  'shancheng-beef-tripe':       { id: 'shancheng-beef-tripe',       name: '山城风味牛肚',     shortName: '风味牛肚', category: '真真牛',     price: 46, patience: 75, hue: 0x9e6348 },
+  'beef-mid-intestine':         { id: 'beef-mid-intestine',         name: '烤牛中肠丝',       shortName: '牛中肠丝', category: '真真牛',     price: 42, patience: 75, hue: 0xb86e54 },
+
+  // 云贵风味鸡 (2) — 腌渍浅金褐/深红褐，价格梯度 ¥36–¥38
+  'lemongrass-chicken-thigh':   { id: 'lemongrass-chicken-thigh',   name: '云南香茅草鸡腿肉', shortName: '香茅鸡腿', category: '云贵风味鸡', price: 38, patience: 82, hue: 0xd69a68 },
+  'lemongrass-chicken-gizzard': { id: 'lemongrass-chicken-gizzard', name: '云贵香茅草鸡胗',   shortName: '香茅鸡胗', category: '云贵风味鸡', price: 36, patience: 82, hue: 0xa95e4c },
+
+  // 云贵菌类 (4) — 褐/杏/奶白菌菇色，价格梯度 ¥26–¥34
+  'yunnan-porcini':             { id: 'yunnan-porcini',             name: '云南牛肝菌',       shortName: '牛肝菌',   category: '云贵菌类',   price: 34, patience: 90, hue: 0x9c6e46, note: '不可和啤酒同食' },
+  'velvet-antler-mushroom':     { id: 'velvet-antler-mushroom',     name: '鹿茸菌',           shortName: '鹿茸菌',   category: '云贵菌类',   price: 30, patience: 90, hue: 0xb58656 },
+  'cordyceps-flower':           { id: 'cordyceps-flower',           name: '虫草花',           shortName: '虫草花',   category: '云贵菌类',   price: 28, patience: 90, hue: 0xd49642, note: '婴幼儿、儿童、孕妇、食用菌过敏者不宜食用' },
+  'button-mushroom':            { id: 'button-mushroom',            name: '口蘑',             shortName: '口蘑',     category: '云贵菌类',   price: 26, patience: 90, hue: 0xd6cbb8 },
+
+  // 特色时蔬 (3) — 自然青翠时蔬色，价格梯度 ¥16–¥22
+  'zucchini':                   { id: 'zucchini',                   name: '西葫芦',           shortName: '西葫芦',   category: '特色时蔬',   price: 18, patience: 95, hue: 0x7aa658 },
+  'alpine-mint-leaf':           { id: 'alpine-mint-leaf',           name: '云南高山薄荷叶',   shortName: '薄荷叶',   category: '特色时蔬',   price: 16, patience: 95, hue: 0x4e8a52 },
+  'southwest-celtuce-tip':      { id: 'southwest-celtuce-tip',      name: '西南翠凤尾',       shortName: '翠凤尾',   category: '特色时蔬',   price: 22, patience: 95, hue: 0x639c4c, isNew: true },
 };
+
+export const DISH_LIST: readonly Dish[] = Object.values(DISHES);
+
+export const DISHES_BY_CATEGORY: Record<DishCategory, readonly Dish[]> = {
+  '真真牛': DISH_LIST.filter((d) => d.category === '真真牛'),
+  '云贵风味鸡': DISH_LIST.filter((d) => d.category === '云贵风味鸡'),
+  '云贵菌类': DISH_LIST.filter((d) => d.category === '云贵菌类'),
+  '特色时蔬': DISH_LIST.filter((d) => d.category === '特色时蔬'),
+};
+
+export const MENU_SCHEMA: Record<MenuCategory, readonly Dish[]> = {
+  '山味上新': [],
+  '四大招牌': [],
+  '真真必吃系列': [],
+  '猪肉系列': [],
+  '虾虾丸子': [],
+  ...DISHES_BY_CATEGORY,
+};
+
+export const MENU_EXPORT: readonly MenuEntry[] = Object.freeze(
+  DISH_LIST.map((d) => Object.freeze({
+    id: d.id,
+    name: d.name,
+    category: d.category,
+    price: d.price,
+    isNew: Boolean(d.isNew),
+    note: d.note ?? null,
+  })),
+);
 
 export const COOK = {
   prepTime: 3.0,          // 后台自动备菜时长 (s)

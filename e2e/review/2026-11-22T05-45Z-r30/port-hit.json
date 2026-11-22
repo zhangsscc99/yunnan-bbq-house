@@ -1,0 +1,86 @@
+{
+ "layers": {
+  "chop": {
+   "display": "block",
+   "pe": "none",
+   "opacity": "1",
+   "z": "auto",
+   "rect": [
+    0,
+    0,
+    390,
+    844
+   ]
+  },
+  "stick": {
+   "display": "block",
+   "pe": "auto",
+   "opacity": "0.85",
+   "z": "auto",
+   "rect": [
+    22,
+    692,
+    130,
+    130
+   ]
+  },
+  "act": {
+   "display": "flex",
+   "pe": "auto",
+   "opacity": "1",
+   "z": "auto",
+   "rect": [
+    280,
+    730,
+    84,
+    84
+   ]
+  },
+  "orders": {
+   "display": "flex",
+   "pe": "none",
+   "opacity": "1",
+   "z": "auto",
+   "rect": [
+    137,
+    60,
+    243,
+    68
+   ]
+  },
+  "popups": {
+   "display": "block",
+   "pe": "none",
+   "opacity": "1",
+   "z": "auto",
+   "rect": [
+    0,
+    0,
+    390,
+    844
+   ]
+  },
+  "offscreen": null
+ },
+ "btnRect": [
+  315,
+  66,
+  56,
+  56
+ ],
+ "hitElement": "svg#.[object SVGAnimatedString]",
+ "stack": [
+  "svg#.[object.SVGAnimatedString]",
+  "span#.btn-ico",
+  "button#.card-btn",
+  "canvas#game.",
+  "div#app.",
+  "body#."
+ ],
+ "money0": 0,
+ "afterRealClick": {
+  "label": "起锅",
+  "slots": 1
+ },
+ "errors": []
+}

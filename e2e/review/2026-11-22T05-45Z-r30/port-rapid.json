@@ -1,0 +1,57 @@
+{
+ "view": "port",
+ "stage": "rapid",
+ "errors": [
+  "SHOT_FAIL 12-rapid: Error: page.screenshot: Target page, context or browser has been closed"
+ ],
+ "warnings": [
+  "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+  "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+ ],
+ "shots": [],
+ "data": {
+  "build": "ebc762a-202611220549",
+  "entry": "index-CncmyXxh.js",
+  "rapid": {
+   "found": true,
+   "before": {
+    "money": 0,
+    "occ": 0,
+    "cards": 3
+   },
+   "after": {
+    "money": 0,
+    "occ": 1,
+    "cards": 4
+   },
+   "label": "起锅",
+   "disabled": false,
+   "cardRects": [
+    {
+     "w": 243,
+     "x": 137,
+     "y": 60,
+     "h": 68
+    },
+    {
+     "w": 243,
+     "x": 137,
+     "y": 134,
+     "h": 68
+    },
+    {
+     "w": 243,
+     "x": 137,
+     "y": 208,
+     "h": 68
+    },
+    {
+     "w": 243,
+     "x": 137,
+     "y": 282,
+     "h": 68
+    }
+   ]
+  }
+ }
+}

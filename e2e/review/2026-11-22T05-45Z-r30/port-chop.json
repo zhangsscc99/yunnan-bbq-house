@@ -1,0 +1,68 @@
+{
+ "view": "port",
+ "stage": "chop",
+ "errors": [],
+ "warnings": [
+  "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+  "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+ ],
+ "shots": [
+  "port-04-chopbar.png",
+  "port-05-chop-done.png"
+ ],
+ "data": {
+  "build": "ebc762a-202611220549",
+  "entry": "index-CncmyXxh.js",
+  "chop": {
+   "carrying": null,
+   "chopBar": {
+    "w": 390,
+    "h": 844,
+    "display": "block",
+    "text": ""
+   },
+   "chop": {
+    "held": null,
+    "chopLeft": 0
+   }
+  },
+  "chopTaps": [
+   {
+    "carrying": null,
+    "chopLeft": 0,
+    "action": "none",
+    "label": "去料箱取料"
+   },
+   {
+    "carrying": null,
+    "chopLeft": 0,
+    "action": "none",
+    "label": "去料箱取料"
+   },
+   {
+    "carrying": null,
+    "chopLeft": 0,
+    "action": "none",
+    "label": "去料箱取料"
+   },
+   {
+    "carrying": null,
+    "chopLeft": 0,
+    "action": "none",
+    "label": "去料箱取料"
+   },
+   {
+    "carrying": null,
+    "chopLeft": 0,
+    "action": "none",
+    "label": "去料箱取料"
+   },
+   {
+    "carrying": null,
+    "chopLeft": 0,
+    "action": "none",
+    "label": "去料箱取料"
+   }
+  ]
+ }
+}

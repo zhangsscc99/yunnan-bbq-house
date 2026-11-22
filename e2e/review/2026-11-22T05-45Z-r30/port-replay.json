@@ -1,0 +1,26 @@
+{
+ "view": "port",
+ "stage": "replay",
+ "errors": [
+  "SHOT_FAIL 17-replay-ok: Error: page.screenshot: Target page, context or browser has been closed",
+  "STAGE_FAIL: Error: page.evaluate: Target page, context or browser has been closed"
+ ],
+ "warnings": [
+  "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+  "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+ ],
+ "shots": [],
+ "data": {
+  "build": "ebc762a-202611220549",
+  "resultsPhase": "results",
+  "clicked": {
+   "found": true,
+   "text": "再 开 一 局",
+   "phase": "playing",
+   "money": 0,
+   "served": 0,
+   "level": 1,
+   "timeLeft": 180
+  }
+ }
+}

@@ -1,0 +1,121 @@
+{
+ "view": "port",
+ "stage": "loop",
+ "errors": [],
+ "warnings": [
+  "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+  "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+ ],
+ "shots": [
+  "port-13-loop-idle.png",
+  "port-14-loop-raw.png",
+  "port-15-loop-perfect.png",
+  "port-16-loop-served.png"
+ ],
+ "data": {
+  "build": "ebc762a-202611220549",
+  "before": {
+   "money": 0,
+   "cards": 1,
+   "btn": "上炉"
+  },
+  "click1": {
+   "label": "起锅",
+   "slots": [
+    {
+     "occupied": true,
+     "dish": "pork",
+     "t": 0.15
+    },
+    {
+     "occupied": false,
+     "dish": null,
+     "t": 0
+    },
+    {
+     "occupied": false,
+     "dish": null,
+     "t": 0
+    }
+   ],
+   "card": {
+    "cookWindow": "raw",
+    "cookT": 0.15,
+    "progressPct": 1.25,
+    "btn": {
+     "w": 56,
+     "h": 56
+    },
+    "disabled": false,
+    "label": "生串 4s",
+    "slotIndex": 0
+   }
+  },
+  "perfect": {
+   "card": {
+    "cookWindow": "idle",
+    "cookT": 0,
+    "progressPct": 0,
+    "btn": {
+     "w": 56,
+     "h": 56
+    },
+    "disabled": false,
+    "label": "上炉",
+    "slotIndex": -1
+   },
+   "label": "上炉",
+   "slots": [
+    {
+     "occupied": false,
+     "dish": null,
+     "t": 0
+    },
+    {
+     "occupied": false,
+     "dish": null,
+     "t": 0
+    },
+    {
+     "occupied": false,
+     "dish": null,
+     "t": 0
+    }
+   ],
+   "ring": {
+    "html": "<div class=\"order-ring\" data-order-ring=\"t2\" style=\"--rc: #7fd08a; display: block; left: 295.4px; top: 335.192px;\"></div>"
+   }
+  },
+  "served": {
+   "s": {
+    "money": 0,
+    "served": 0,
+    "angry": 1,
+    "waste": 1
+   },
+   "popups": [],
+   "label": "起锅",
+   "slots": [
+    {
+     "occupied": true,
+     "dish": "pork",
+     "t": 0.3
+    },
+    {
+     "occupied": false,
+     "dish": null,
+     "t": 0
+    },
+    {
+     "occupied": false,
+     "dish": null,
+     "t": 0
+    }
+   ],
+   "cust": [
+    "seated",
+    "seated"
+   ]
+  }
+ }
+}

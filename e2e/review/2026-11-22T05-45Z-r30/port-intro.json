@@ -1,0 +1,136 @@
+{
+ "view": "port",
+ "stage": "intro",
+ "errors": [],
+ "warnings": [
+  "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+  "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+ ],
+ "shots": [
+  "port-01-title.png",
+  "port-02-started.png",
+  "port-03-customer.png"
+ ],
+ "data": {
+  "build": "05afe9b-202611220449",
+  "entry": "index-uMHCucrV.js",
+  "title": {
+   "panelText": "柳真真云南烤肉\n炭火生香，小店开张。\n取料 → 切配 → 炭烤 → 装盘 → 上菜\n第 1 关 · 目标：3 分钟营业额 ¥180\n开 店",
+   "rect": {
+    "x": 0,
+    "y": 0,
+    "w": 390,
+    "h": 844
+   },
+   "btns": [
+    {
+     "text": "开 店",
+     "w": 150,
+     "h": 45
+    }
+   ]
+  },
+  "afterStart": {
+   "phase": "playing",
+   "level": 1,
+   "levelTarget": 180,
+   "money": 0,
+   "timeLeft": 134.38333333329703,
+   "served": 0,
+   "angry": 0,
+   "waste": 0,
+   "hint": {
+    "kind": "station",
+    "id": "crate-pork",
+    "x": -4.5,
+    "z": 2
+   },
+   "carrying": null,
+   "action": "none",
+   "actionLabel": "去料箱取料",
+   "player": {
+    "x": -2.5,
+    "z": 0
+   },
+   "stations": {
+    "bin": {
+     "x": -5.5,
+     "z": 2
+    },
+    "crate-pork": {
+     "x": -4.5,
+     "z": 2
+    },
+    "crate-mush": {
+     "x": -3.5,
+     "z": 2
+    },
+    "crate-mix": {
+     "x": -2.5,
+     "z": 2
+    },
+    "chop": {
+     "x": -1,
+     "z": 2
+    },
+    "grill": {
+     "x": 1.5,
+     "z": 2
+    },
+    "plate": {
+     "x": 4,
+     "z": 2
+    }
+   },
+   "tables": {
+    "t1": {
+     "x": -3.3,
+     "z": -1.2000000000000002
+    },
+    "t2": {
+     "x": 0.2999999999999998,
+     "z": -1.2000000000000002
+    },
+    "t3": {
+     "x": 3.9000000000000004,
+     "z": -1.2000000000000002
+    },
+    "t4": {
+     "x": 2.0999999999999996,
+     "z": 0.7999999999999998
+    }
+   },
+   "customers": [
+    {
+     "id": 1,
+     "dish": "mixian",
+     "phase": "seated",
+     "patience": 579.4166666666854,
+     "table": "t2",
+     "x": -0.5,
+     "z": -2.43
+    },
+    {
+     "id": 2,
+     "dish": "mixian",
+     "phase": "seated",
+     "patience": 579.4166666666854,
+     "table": "t1",
+     "x": -4.1,
+     "z": -2.43
+    }
+   ],
+   "grill": [
+    null,
+    null,
+    null
+   ],
+   "chop": {
+    "held": null,
+    "chopLeft": 0
+   },
+   "calls": 92,
+   "tris": 20884
+  }
+ }
+}

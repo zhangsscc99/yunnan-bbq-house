@@ -1,0 +1,37 @@
+{
+ "view": "port",
+ "stage": "end",
+ "errors": [],
+ "warnings": [
+  "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+  "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+ ],
+ "shots": [
+  "port-10-results.png",
+  "port-11-after-replay.png"
+ ],
+ "data": {
+  "build": "ebc762a-202611220549",
+  "entry": "index-CncmyXxh.js",
+  "results": {
+   "phase": "results",
+   "money": 0,
+   "target": 180,
+   "served": 0,
+   "angry": 3,
+   "waste": 0,
+   "timeLeft": 0,
+   "panelText": "打烊结算\n离目标还差 ¥180\n营业额\n¥0 / ¥180\n服务顾客\n0 位\n愤怒离店\n3 位\n废料\n0 份\n再 开 一 局",
+   "btns": [
+    {
+     "text": "再 开 一 局",
+     "w": 150,
+     "h": 40
+    }
+   ]
+  },
+  "replay": {
+   "found": false
+  }
+ }
+}

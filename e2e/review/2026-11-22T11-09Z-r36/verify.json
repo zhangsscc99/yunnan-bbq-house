@@ -1,0 +1,142 @@
+{
+  "shots": [
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/verify-01-lock-tap.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/verify-02-hud-stars.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/verify-03-results.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/verify-04-after-next-click.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/verify-05-after-next-2s.png"
+  ],
+  "errors": [],
+  "warns": [
+    "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+  ],
+  "t": {
+    "build": "5c45b93-202611221108",
+    "cardReady": true,
+    "A_single": {
+      "wasteDelta": 0,
+      "slots": [
+        {
+          "occupied": true,
+          "dish": "pork",
+          "t": 0.2
+        },
+        {
+          "occupied": false,
+          "dish": null,
+          "t": 0
+        },
+        {
+          "occupied": false,
+          "dish": null,
+          "t": 0
+        }
+      ],
+      "card": {
+        "cw": "raw",
+        "lbl": "上炉中"
+      }
+    },
+    "B_secondClickInLock": {
+      "wasteDelta": 0,
+      "slots": [
+        {
+          "occupied": true,
+          "dish": "pork",
+          "t": 0.4
+        },
+        {
+          "occupied": false,
+          "dish": null,
+          "t": 0
+        },
+        {
+          "occupied": false,
+          "dish": null,
+          "t": 0
+        }
+      ],
+      "pops": []
+    },
+    "C_tripleAfterLock": {
+      "wasteDelta": 0,
+      "slots": [
+        {
+          "occupied": true,
+          "dish": "pork",
+          "t": 0.2
+        },
+        {
+          "occupied": false,
+          "dish": null,
+          "t": 0
+        },
+        {
+          "occupied": false,
+          "dish": null,
+          "t": 0
+        }
+      ]
+    },
+    "D_afterServe": {
+      "state": {
+        "served": 1,
+        "money": 59,
+        "angry": 0
+      },
+      "hudStars": "1"
+    },
+    "D_afterAngry": {
+      "angry": 0,
+      "hudStars": "1",
+      "angryNode": false,
+      "pops": []
+    },
+    "E_results": {
+      "phase": "results",
+      "stars": "3",
+      "panel": "打烊结算 | 目标达成，进入第 2 关 | 营业额 | ¥210 / ¥180 | 服务顾客 | 1 位 | 愤怒离店 | 0 位 | 废料 | 1 份 | 进入第 2 关 | 再开一局",
+      "btns": [
+        {
+          "txt": "进入第 2 关",
+          "x": 112.3,
+          "y": 481,
+          "w": 165.5,
+          "h": 48,
+          "pe": "auto",
+          "z": "auto"
+        },
+        {
+          "txt": "再开一局",
+          "x": 117,
+          "y": 539,
+          "w": 156,
+          "h": 48,
+          "pe": "auto",
+          "z": "auto"
+        }
+      ]
+    },
+    "E_afterClick1": {
+      "phase": "playing",
+      "level": 2,
+      "panel": null,
+      "money": 0,
+      "timeLeft": 179.26666666666608
+    },
+    "E_afterClick2": {
+      "phase": "playing",
+      "level": 2,
+      "panel": null,
+      "timeLeft": 156.04999999998094
+    },
+    "console": {
+      "errors": [],
+      "warns": [
+        "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+        "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+      ]
+    }
+  }
+}

@@ -1622,3 +1622,34 @@ vision 复核：竖屏放大后独立读出「三个筐＝红肉串 / 褐圆帽�
 参考：本项目 `GAME-DESIGN.md §0/§1`、`ART-DIRECTION.md §2`（装饰物饱和度低于核心可交互食材/元素）；《胡闹厨房 2》可交互工位与纯背景道具的明暗分层。
 
 本轮小结（第 35 轮）：线上仍是 `de55a6c` 的 v1 包（公网/本机同包、双端 `0` JS error），v2 仍在 `worktree gameplay-v2` 未提交；新开 3 条——`B-163` 移动端「去料箱取料」引导死路 P1、`B-164` 焦糊同帧双扣 + 立即清卡无重烤（合并 `B-156`）P1、`B-165` 后厨静态布景与可交互入口混淆 P2；沿用 `B-160`/`B-161`（v2 主循环与出菜窗口）、`B-125`（顶栏目标额）、`B-157`（未熟/焦糊文案）、`B-162`（文档同步）、`B-159`/`B-135`/`B-097`/`B-106`。综合评分 **3.1/5（比上轮 3.4 −0.3）**。
+
+## 2026-11-22 11:09Z 第 36 轮走查新增（B-166–B-169，生串期误丢弃 / 安全区与结算顶栏 / 废弃语义清零 / 加载骨架）
+
+### B-166 生串期禁用误丢弃操作、改进行态文案「烤制中」并保留菜价
+优先级：P1
+来源：第 36 轮走查（`port-03-cook-raw.png`、`port-04-doubleclick.png`、`land-03-cook-raw.png`、`verify-01-lock-tap.png`：生串期 `0.6–4.0s` 卡面抹掉菜价 `¥48`、副行与按钮双写「未熟」且按钮绘有向上“起锅”图标，玩家惯性补点即无二次确认触发 `夹生丢弃 · 废料 +1`，一次误触直接耗尽 `3★` 唯一废料容错）
+需求：① 在烤制生串期（v1 `0–4.0s` / v2 桌边烤未熟段）将订单卡主按钮设为不可破坏态（`disabled` 或点击无副作用，仅在进入可起锅/盛盘窗后解锁可点），彻底消除高频点按导致的误丢菜惩罚；② 主按钮文案改为进行态「烤制中」并替换掉易误读为“拿起”的向上箭头图标（改用炭火/计时环静态图标），严禁与副行同词双写「未熟」；③ 烤制全周期（含 `raw` / `perfect` / `over` / `burnt`）卡面始终保留菜价 `¥xx`（例如 `¥48 · 离熟 3s`），禁止价签在烤制中途消失造成视觉跳动与收益判断断裂。
+验收：e2e 在竖屏 `390×844` 与横屏 `844×390` 冻结时钟下对首张订单卡上炉，分别在 `t = 0.2s`、`1.5s`、`3.0s` 断言：(a) 卡片可见文本匹配 `/¥\d+/`，且不匹配 `/未熟[\s\S]*未熟/`，`.card-btn` 文本为 `烤制中` 且 `disabled === true`（或 `aria-disabled="true"`）；(b) 在 `t = 0.2s` 与 `t = 1.5s` 均对该卡 `.card-btn` 真实连点 6 次，断言 `state().waste === 0`、烤位占用恒为 `1`、`#bbq-popups .popup` 不含 `夹生丢弃`；(c) 推进至 `t = 5.5s`（`perfect`）断言按钮恢复 `disabled === false`、文案为 `起锅` 并可一次点击正常收款（`served === 1 && money > 0`）；(d) 双端连跑 3 次 `0` JS error。
+参考：《胡闹厨房 2》/《烹饪发烧友》（未熟前烤盘/锅具主入口处于稳定烹饪进行态，不把高危“丢弃食材”绑在主出餐键上）；`GAME-DESIGN.md §1`、`§4`。
+
+### B-167 竖屏订单卡抬离 iOS 底部手势安全区、横屏结算顶栏压边与横屏卡区压柜身
+优先级：P1
+来源：第 36 轮走查（`land-09-results.png` 实拍横屏 `844×390` 常驻 `.topbar` 压住结算卡上缘（标题可读但压边）；`port-03-cook-raw.png` 实拍竖屏 `390×844` 第 2 行卡底边落于 `y=820`、距底仅 `24px`，侵占 iPhone `34px` 底部手势条安全区；`land-02-orders.png` / `land-03-cook-raw.png` 横屏 3 张卡压住台面前沿柜身）
+需求：① 在 `menu` 与 `results` 弹窗态下自动隐藏局内顶栏 `.topbar`（或令结算卡片顶缘下移至 `topbar.bottom + 8px` 且压缩内边距保证不溢出），杜绝横屏 `844×390` 下 `.topbar` 压住结算卡（标题虽可读，但压边观感脏且违背 `ART-DIRECTION §5` 不遮挡要求）；② 竖屏（`aspect < 1`）底部订单卡停靠区 `#bbq-orders` 底部安全距由 `24px` 提升至 `max(34px, env(safe-area-inset-bottom))`，确保 `390×844` 下 1–4 张卡底边全部满足 `bottom <= 810px`（避让 iPhone Home Indicator），同时保持卡内主按钮 `>= 48×48px`、无页面滚动且与顶栏零交叠；③ 横屏（`aspect >= 1.5`）将底部订单卡停靠带与厨房台面前沿柜身解耦（不压柜面、不贴烤炉下沿），同时保证引导气泡不遮挡料箱实物与挂牌。
+验收：e2e 在竖屏 `390×844` 与横屏 `844×390` 下断言：(a) 进入 `results` 态，读取 `.topbar`（若可见）与 `.bbq-panel .card`、`.bbq-panel h1` 的 `getBoundingClientRect()`，断言交叠面积严格 `=== 0`（或 `.topbar` 不可见），且结算面板内全部按钮 `rect.bottom <= innerHeight - 8`；(b) 竖屏 `390×844` 渲染 3–4 张订单卡时，所有 `.card` 满足 `rect.bottom <= innerHeight - 34`、`.card-btn` 宽高均 `>= 48px`、页面 `scrollHeight <= innerHeight && scrollWidth <= innerWidth`；(c) 横屏 `844×390` 首位顾客就座与上炉态下，底部 `.card` 与台面前沿柜身投影矩形交叠面积 `=== 0`，且 `[data-onboard-tip]` 与 3 个料箱/挂牌投影交叠面积均 `=== 0`；(d) 双端连跑 3 次 `0` JS error。
+参考：Apple Human Interface Guidelines（iOS 底部 Home Indicator `34pt` 安全区）；`ART-DIRECTION.md §1`、`§5`、`B-159`。
+
+### B-168 废弃五步出餐语义全链路清零与构建产物门禁（禁止包内与状态机残留）
+优先级：P1
+来源：第 36 轮走查（尽管 UI 已删旧摇杆与动作键，但运行时实测 `__test.state().actionLabel === "去料箱取料"`、`stations` 仍含 `crate-pork/mush/mix/chop/plate/bin`，且线上生产包 `assets/index-BsdaUpmb.js` 仍编译进 `去料箱取料 / 取料 / 切配 / 装盘` 文案分支，直接违反 `GAME-DESIGN.md §1`「已废弃条款，代码里出现即视为 bug」）
+需求：① 彻底清理 `src/` 下已废弃五步流程的死逻辑、旧站台交互定义与文案分支（`去料箱取料 / 取料 / 切配 / 装盘 / crate-pork / crate-mush / crate-mix / chop / plate / bin`），仅保留静态 3D 美术布景渲染数据（与玩法状态机与交互站点表解耦）；② 同步收敛 `window.__test.state()` 的 `actionLabel`、`hint`、`stations` 字段为当前有效玩法语义（不再导出任何旧站点 id 或旧引导语）；③ 在构建验证或 E2E 门禁脚本中增加自动化扫描：同时检查生产构建产物 `dist/assets/*.js` 与运行时 `window.__test.state()`，出现已废弃五步关键字即判失败。
+验收：(a) 运行 `npm run build` 后扫描 `dist/assets/*.js`，断言匹配 `/去料箱取料|切配台|装盘台/` 的命中数为 `0`；(b) e2e 在竖屏 `390×844` 与横屏 `844×390` 进入 `playing` 态并就座 3 位顾客后读取 `window.__test.state()`，断言 `JSON.stringify(state)` 不匹配 `/去料箱取料|取料|切配|装盘|crate-pork|crate-mush|crate-mix/`，且 `state.stations`（若存在）不含 `bin`、`chop`、`plate`；(c) 既有主循环与渲染回归通过，双端 `0` JS error。
+参考：`GAME-DESIGN.md §0`、`§1`（「已废弃条款：切配台 / 装盘台 / 料箱走动取料 / 垃圾桶 / 五步出餐链 / `stations.ts` 旧语义，代码里出现即视为 bug」）；协同 `B-158`、`B-163`。
+
+### B-169 首屏即时内联加载骨架与生火进度提示（缓解 11–16s 冷启动黑屏等待）
+优先级：P2
+来源：第 36 轮走查（本轮软渲染冷启动实测竖屏首屏可读需 `16.2s`、横屏 `11.5s`，WebGL 与 bundle 初始化期间无加载骨架与进度反馈，弱网或低端机玩家易误以为页面卡死而直接流失）
+需求：① 在 `index.html` 中直接内联轻量零依赖 HTML/CSS 启动骨架 `[data-boot-skeleton]`（无需等待主 JS 包下载与 Three.js 编译即可首帧绘制），采用 `ART-DIRECTION.md §5` 暖黑金边风格，展示店招「柳真真云南烤肉」、动态炭火呼吸点、分段提示文案（「正在生火备炭…」→「准备开店…」）与平滑不确定进度条；② 在 `main.ts` 完成首帧渲染并切入 `phase === 'menu'` 后，立即在 `<= 300ms` 内淡出并从 DOM 移除 `[data-boot-skeleton]`（使用 CSS transition 或 `flow` 帧驱动，不残留透明遮罩拦截点击）；③ 若初始化发生不可恢复的 WebGL 异常，在骨架内就地展示友好错误提示与刷新按钮而非永久白/黑屏。
+验收：e2e 在冷启动（清缓存、`390×844` 与 `844×390`）下断言：(a) `DOMContentLoaded` 后 `<= 300ms` 查询 `[data-boot-skeleton]` 存在且可见（`offsetWidth > 0 && offsetHeight > 0`），文本含 `柳真真云南烤肉`；(b) 待 `window.__test?.state().phase === 'menu'` 后 `<= 500ms`，`document.querySelector('[data-boot-skeleton]') === null`（或 `display === 'none'` 且 `pointerEvents === 'none'`），此时「开店」按钮 `elementFromPoint` 100% 命中自身且可正常开局；(c) 双端 `0` JS error。
+参考：`ART-DIRECTION.md §5`（暖黑金边视觉体系）；升级并收敛既有 `B-009`。
+本轮小结（第 36 轮）：线上与本机同包 `5c45b93-202611221108`（`assets/index-BsdaUpmb.js`）、双端 `0` JS error；`B-156` 焦糊可重烤 / `B-157` 卡色阶文案去重 / `B-152` 生串 0.6s 防抖 / 订单卡落底部拇指区 本轮均核实已修复；真点「进入第 2 关」可正常切关运行。新开 4 条——`B-166` 生串期主按钮误丢弃 P1、`B-167` 竖屏底部安全区 + 横屏结算顶栏压边 + 横屏卡区压柜身 P1、`B-168` 废弃五步语义与构建产物清零 P1、`B-169` 首屏加载骨架 P2；沿用 `B-160`/`B-161`（v2 主循环与出菜窗口 P0）、`B-149`（失客计数）、`B-162`（文档同步）、`B-125`/`B-153`/`B-097`/`B-006`/`B-009`。综合评分 **3.3/5（比上轮 3.1 +0.2）**。

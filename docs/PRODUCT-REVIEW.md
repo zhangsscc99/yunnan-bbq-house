@@ -3,6 +3,109 @@
 > 只写文档，不改代码。每轮 3–4 个剧本步骤深挖，轮转覆盖 ①–⑩。
 > 截图目录：`e2e/review/<UTC>-live/`（竖屏 `port-*` 390×844、横屏 `land-*` 844×390，含 `run-*.json` 原始测量）。
 
+
+## 2026-11-22 11:09Z 第 36 轮
+综合评分：3.3/5（比上轮 +0.2）
+
+> 本轮评测对象为线上 `https://openfolio.uk/bbq/` 与本机 `:3035` 同包构建 `assets/index-BsdaUpmb.js`（`window.__build = "5c45b93-202611221108"`，双端 `0` JS error，仅 2 条既有 Three.js 弃用 warning）。本轮已逐张核对全部 25 张实拍截图，确认上轮核心止血项 **已修复**：① 订单卡已迁至竖屏底部拇指区与横屏底部单排（与顶栏交叠 `0`、`<44px` 按钮 `0` 个、无出界/无滚动，见 `/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-02-orders.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-03-cook-raw.png`）；② `B-156` 焦糊解耦已修复——烤满 `12s` 仅计 `waste 0→1`、不瞬间赶客，驻留 `1.2s` 后恢复可点「重烤」并可二次上炉完美出餐，`waste=1 / angry=0` 正常达成 `3★`（见 `/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-05-burnt.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-05-burnt.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-06-burnt-retry.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/verify-03-results.png`）；③ `B-157` 卡片色阶与「焦糊 焦糊」重名已修复（现为红框 + `¥48 · 重烤可上炉` + `重烤`）；④ `B-152` 生串 `0.6s` 锁内连点防抖有效（见 `/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/verify-01-lock-tap.png`）；⑤ 首屏文案已清除「取料/切配/装盘」且鼠标真点「进入第 2 关」稳定切关运行（见 `/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-01-title.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/verify-04-after-next-click.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/verify-05-after-next-2s.png`）。以下基于实拍证据与机测事实给出本轮评分与问题清单。
+
+| 维度 | 分数 | 证据（含截图文件名） |
+|---|---|---|
+| ① 画面像不像《胡闹厨房》 | 3.2/5 | 正交俯视木板拼缝、模块化一字台面、高饱和五花肉/菌子/米线实物料箱与斗方挂牌、Q 版白帽朱红围裙厨师及竹凳方桌辨识度稳定（`port-02-orders.png`、`land-02-orders.png`）；扣分在竖屏绿檐上方仍露多余木板、靛蓝扎染布幔上下截断且右侧 3 号桌与烤炉右半截出画（`port-03-cook-raw.png`），横屏顶排三桌与顾客头顶被视口顶缘裁切（`land-03-cook-raw.png`），且炉上烤串体量偏小、视觉存在感弱于 OC。 |
+| ② 灯光有没有 Saltline 味道 | 3.2/5 | 竖屏暖铜吊灯体积光锥、桌面暖光池与炭火烤炉前木地板的橙暖湿反明暗层次在线（`port-02-orders.png`、`port-08-angry.png`）；扣分在横屏吊灯本体全部出画（`land-02-orders.png`），竖屏底部纯黑停靠带硬截断地板暖光（`port-07-served.png`），且烤串在生→熟→焦全周期未见 3D 串体金黄/焦黑变色与金烟/灰烟层次（`port-03-cook-raw.png`、`port-05-burnt.png`、`land-05-burnt.png`）。 |
+| ③ HUD 是否整齐 | 3.5/5 | 订单卡已落竖屏底部拇指区（`184×95 @(8,725)`、按钮 `56×56 @(128,758)`）与横屏底部单排，顶栏 `315×36` 与卡区交叠 `0`、无滚动、无 `<44px` 按钮、无出界元素（`port-02-orders.png`、`port-03-cook-raw.png`、`land-03-cook-raw.png`）。扣分集中在四处实拍瑕疵：① **横屏结算态顶栏 `.topbar` 压住结算卡上缘、标题紧贴顶栏**（`land-09-results.png`；机器复核：标题字面完整可读，属压边而非截断）；② 竖屏底行卡底边在 `y=820`（距底仅 `24px`），侵占 iPhone 底部 `34px` 手势安全区（`port-03-cook-raw.png`）；③ 横屏 3 张订单卡压住台面前沿柜身（`land-02-orders.png`、`land-03-cook-raw.png`）；④ 顶栏缺本关目标额与持久失客计数（`port-06-burnt-retry.png`、`verify-04-after-next-click.png`）。 |
+| ④ 有没有明显缺陷 | 3.3/5 | 双端 `0` JS error，`B-156` 焦糊重烤、`B-157` 焦糊色阶/文案去重、`B-152` `0.6s` 防双击锁与真点切入第 2 关均核实通过（`port-05-burnt.png`、`land-06-burnt-retry.png`、`verify-01-lock-tap.png`、`verify-04-after-next-click.png`）。主要扣分项：① **规范级 P0**：线上仍跑已废止的 v1 两步循环，未合入 `GAME-DESIGN §0/§1` v2 三步链；② 横屏结算顶栏压住结算卡上缘（`land-09-results.png`）；③ 生串期 `0.6–4.0s` 按钮仍带“向上起锅”图标且双写「未熟」并抹掉菜价，误点即丢串 `waste+1`（`port-03-cook-raw.png`、`port-04-doubleclick.png`）；④ 愤怒离店无顶栏持久计数（`port-08-angry.png`、`land-08-angry.png`）与代码/包内残留旧五步语义（`actionLabel === "去料箱取料"`）。 |
+
+| 维度 | 分数 | 证据 |
+|---|---|---|
+| 上手清晰度 | 3.3/5 | 首屏已全面切换清晰两步文案与唯一金色 CTA「开店」（`port-01-title.png`、`land-01-title.png`），开局气泡 `点一下上炉` → `金环亮起就起锅` 并在首单收款后自动撤掉（`port-02-orders.png`、`port-03-cook-raw.png`、`verify-02-hud-stars.png`），焦糊后 `¥48 · 重烤可上炉` + `重烤` 语义明确（`port-05-burnt.png`、`land-05-burnt.png`）。扣分在：① 生串期 `未熟 · 离熟 2s` 与按钮 `未熟` 重复、隐藏菜价 `¥48` 且配向上“起锅”图标，易诱导玩家补点（`port-03-cook-raw.png`、`verify-01-lock-tap.png`）；② 顶栏无目标额，进第 2 关后全程看不到 `¥260` 门槛（`verify-04-after-next-click.png`、`verify-05-after-next-2s.png`）；③ 顶栏无持久失客数，开局零营业额即亮 `1★`（`port-02-orders.png`、`port-08-angry.png`）。 |
+| 操作手感 | 3.6/5 | 竖屏底部 `56×56` 拇指热区顺手、无误滑滚动（`port-02-orders.png`），`0.6s` 生串锁拦下瞬间连点不扣废料（`verify-01-lock-tap.png`），焦糊 `1.2s` 后「重烤」可救回订单并正常进完美窗出餐（`land-06-burnt-retry.png`），真点「进入第 2 关」瞬时清屏切关（`verify-04-after-next-click.png`）。扣分在：① 过 `0.6s` 锁后至 `4.0s` 期间点主按钮无二次确认即直接丢串 `waste+1`（`port-04-doubleclick.png`、`land-04-doubleclick.png`），手机高频点按误触代价过高；② 竖屏第 2 行卡片底边落 `y=820`（距底 `24px < 34px` iOS 手势条高），真机易误触发系统底部横条（`port-03-cook-raw.png`）。 |
+| 正反馈/爽感 | 3.2/5 | `B-156` 落地后焦糊不再一击击穿 `3★` 容错，实测 `waste=1 / angry=0` 仍能拿到满星 `★★★`（`verify-03-results.png`），起锅收款有明确金色 `+¥26` 飘字、顶栏营业额同步跳涨至 `¥26` / `¥59` 且卡切绿勾 `✓ 已上`（`port-07-served.png`、`verify-02-hud-stars.png`）。扣分在：3D 烤炉端缺乏火候变金黄/焦黑与烟效反馈，爽感仍高度依赖 2D 订单卡圆环与文字（`port-03-cook-raw.png`、`port-05-burnt.png`），且顾客愤怒离店后顶栏毫无持久红线提示（`port-06-burnt-retry.png`、`land-08-angry.png`），失分张力不足。 |
+
+### 我能做的（Capability）
+- **双端零报错同包上线、底部单手热区达标（已修复）**：公网 `https://openfolio.uk/bbq/` 与本机 `:3035` 同跑 `5c45b93-202611221108`（`assets/index-BsdaUpmb.js`），双端 `0` JS error；订单卡落竖屏底部拇指区（`184×95 @(8,725)`、按钮 `56×56 @(128,758)`）与横屏底部单排，与顶栏 `315×36` 交叠 `0`、无滚动、无 `<44px` 按钮（`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-02-orders.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-03-cook-raw.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-03-cook-raw.png`）。
+- **焦糊解耦可重烤与色阶去重闭环成立（已修复）**：烤满 `12s` 仅计 `waste 0→1`、飘字 `焦糊 · 废料 +1`，顾客仍在座，卡片切红框并经 `1.2s` 进入 `¥48 · 重烤可上炉` + `重烤`（无「焦糊 焦糊」重名），点击「重烤」可再次进入 `perfect/起锅` 出餐，`waste=1, angry=0` 可达 `3★`（`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-05-burnt.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-05-burnt.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-06-burnt-retry.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/verify-03-results.png`）。
+- **生串 `0.6s` 防抖、收款与第 2 关切换可靠**：`0.6s` 锁内连点 2–3 次 `waste` 不变（`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/verify-01-lock-tap.png`）；起锅收款触发 `+¥26` 飘字与顶栏 `¥0→¥26`/`¥59` 同步（`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-07-served.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/verify-02-hud-stars.png`）；结算面板鼠标真点「进入第 2 关」稳定进入 `level=2, timeLeft=179.27, panel=null` 并持续运行（`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/verify-04-after-next-click.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/verify-05-after-next-2s.png`）；横屏 `served=0 / angry=3` 正确锁 `1★`（`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-09-results.png`）。
+
+### 我看不懂的（Clarity）
+1. **生串期按钮画着“向上起锅”图标且双写「未熟」、隐藏菜价 `¥48`**：上炉进入 `raw` 后（`0.6–4.0s`），卡片副行写 `未熟 · 离熟 2s`（菜价 `¥48` 消失），右侧圆钮同时写 `未熟` 并配向上箭头“拿起”图标（`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-03-cook-raw.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-03-cook-raw.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/verify-01-lock-tap.png`），玩家既看不清是否正在烤、也看不出点它竟会“丢弃生串 +1 废料”。
+2. **愤怒离店与废料损耗在顶栏零留痕**：无论失客 2 位（`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-08-angry.png`）还是 3 位（`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-08-angry.png`），飘字消失后顶栏始终只有 `营业额` 与 `★☆☆`（`[data-angry-count]` 为 `null`），玩家完全不知道距离 `angry ≥ 3` 锁 `1★` 红线还有多少余量。
+3. **局内与第 2 关全程缺失目标营业额，结算无丢星归因**：顶栏只写 `第 1 关 营业额 ¥26` / `第 2 关 营业额 ¥0`，切入第 2 关后全程看不到 `¥260` 目标额（`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/verify-04-after-next-click.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/verify-05-after-next-2s.png`）；`2★` 结算仅列数字，未说明为何未满 `3★`（`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-09-results.png`）。
+4. **冷启动长达 11.5–16.2s 无加载骨架与进度提示**：软渲染下竖屏首屏可读需 `16.2s`、横屏 `11.5s`，期间缺乏即时加载反馈，新手极易误判页面卡死。
+
+### 让我不爽的（Friction）
+1. **生串期误点主按钮无确认即丢串扣 `waste +1`**：虽有 `0.6s` 锁防瞬间双击，但只要玩家在 `0.6–4.0s` 期间惯性再点「未熟」圆钮，系统立刻执行 `夹生丢弃 · 废料 +1` 并释放/重烤（`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-04-doubleclick.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-04-doubleclick.png`），一次误触直接用光 `3★` 允许的唯一 1 份废料容错。
+2. **横屏结算态顶栏压住结算卡上缘**：在 `844×390` 结算态下，常驻顶栏 `.topbar` 叠压在结算卡片最上方，压住卡面上缘、标题紧贴顶栏（机器复核：标题字面完整可读，属压边/观感冲突，非截断）（`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-09-results.png`）。
+3. **竖屏底部卡区贴进 iPhone 手势安全区、横屏卡区压住台面前沿柜身**：竖屏 `390×844` 底行卡底边 `y=820`、按钮底边 `y=814`（距底 `24px / 30px`），落入 iOS 底部 `34px` Home Indicator 禁区（`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-03-cook-raw.png`）；横屏 3 张卡紧贴烤炉下沿、压住台面前沿柜身（`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-02-orders.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-03-cook-raw.png`）。
+
+### 让我想继续玩的（Hook）
+- **单手底部停靠区 + 焦糊可重烤让核心循环首次具备“容错与翻盘感”**：订单卡迁到底部拇指区、`56×56` 热区稳固，加上 `B-156` 让烤焦一次后仍可留桌重烤并保住 `3★`（`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-05-burnt.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-06-burnt-retry.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/verify-03-results.png`），配合暖光池与竹凳烤炉的云南夜市基调，只要补齐 v2 出菜窗口三击节奏、去掉生串误触丢菜陷阱并修掉顶栏/安全区缺陷，单手轻经营的爽感底座就能立住。
+
+### P0 阻塞（不修没法玩）
+1) **线上仍运行已废止的 v1 两步循环，未合入 `GAME-DESIGN.md §0/§1` v2 核心玩法（沿用既有 `B-160`、`B-161`）**
+   - 现象：线上同包 `5c45b93-202611221108`（`assets/index-BsdaUpmb.js`）首屏仍为 `点订单卡两步出餐：上炉 → 起锅上菜 / 金色完美窗起锅拿满小费 · 3 个烤位排队`，局内点订单卡直接占后厨 3 个共享烤位（`12s` 焦糊），完全没有 `GAME-DESIGN.md §0/§1` 最高优先定调的 v2 玩法（顾客自助点单 → 后台自动备菜 `3s` → 出菜窗口 `3` 槽堆满暂停 → 取菜手持唯一 → 桌边 `8s` 自带炭炉烤制 → 盛盘）。
+   - 复现步骤：在竖屏 `390×844` 与横屏 `844×390` 打开 `https://openfolio.uk/bbq/` 与 `http://127.0.0.1:3035/bbq/`，读取首屏规则文案，点击「开店」后观察顾客就座是否存在 `3s` 自动备菜环与「出菜窗口」3 槽队列。
+   - 截图路径：`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-01-title.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-02-orders.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-01-title.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-02-orders.png`
+   - **验收标准**：沿用 `B-160` / `B-161`——双端冻结时钟下：(a) 首屏文本含 `取菜`、`烤`、`盛盘` 且不匹配 `/两步出餐|3 个烤位|取料|切配|装盘/`；(b) 顾客就座自动 `3s` 备菜并送入出菜窗口，窗口托盘上限 `=== 3` 且满 3 份时第 4 客备菜计时冻结；(c) 跑通「点窗口取菜（手持期间再点窗口被拦截）→ 点桌卡上桌烤（每桌独立 `8s` 炭炉）→ 盛盘收款（`served === 1 && money > 0`）」固定 3 击链路；(d) 公网与本机同包、双端 `0` JS error。
+
+### P1 明显缺陷
+1) **生串期（`0.6–4.0s`）主按钮带“向上起锅”图标且双写「未熟」+ 丢菜价，轻点无确认即丢串 `waste +1`（对应新增 `B-166`）**
+   - 现象：订单卡点击上炉进入 `raw` 态后，副行显示 `未熟 · 离熟 2s`（原菜价 `¥48` 消失），右侧 `56×56` 主按钮同时写「未熟」并展示向上“拿起/起锅”箭头图标；虽 `0.6s` 锁能拦下瞬间双击，但只要玩家在 `0.6–4.0s` 期间再点一次该按钮，即无二次确认直接触发 `夹生丢弃 · 废料 +1` 并释放烤位/重烤，连点 6 次实测 `waste 0→1`。
+   - 复现步骤：双端开店后对 1 号桌 `烤五花肉拼盘` 点 1 次上炉，待 `grillT > 0.6s` 且 `< 4.0s` 时观察卡面文案、菜价与按钮图标，再对该卡主按钮执行点击或连续点击，读取 `state().waste`、卡面文案与飘字。
+   - 截图路径：`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-03-cook-raw.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-04-doubleclick.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-03-cook-raw.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-04-doubleclick.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/verify-01-lock-tap.png`
+   - **验收标准**：见 `B-166`——双端冻结时钟下对订单卡上炉并在 `raw` 全时段（`t = 0.2s / 1.5s / 3.0s`）断言：(a) 卡面可见文本始终匹配 `/¥\d+/`（菜价不消失），按钮文案为进行态「烤制中」（副行与按钮去空白后不等，不匹配 `/未熟[\s\S]*未熟/`）且按钮为非破坏态（`disabled === true` 或 `aria-disabled="true"`）；(b) 在 `t = 0.2s` 与 `t = 1.5s` 分别真实连点 6 次该按钮，断言 `state().waste === 0`、烤位占用恒为 `1`、不触发 `夹生丢弃` 飘字；(c) 推进至 `perfect` 窗口后按钮立即恢复可点「起锅」并正常收款，双端 `0` JS error。
+
+2) **横屏结算顶栏压住结算卡上缘 + 竖屏底部卡区侵占 iPhone 手势安全区 + 横屏卡区压住台面前沿（对应新增 `B-167`，联动 `B-159`）**
+   - 现象：① 横屏 `844×390` 进入结算态时，常驻顶栏 `.topbar`（`y=8..44`）直接叠压在结算卡片顶端，压住卡面上缘、标题紧贴顶栏（机器复核：标题字面完整可读，属压边/观感冲突而非截断）；② 竖屏 `390×844`（iPhone 12/13/14 视口）底部 2 行订单卡底边落在 `y=820`（距视口底仅 `24px`），按钮底边 `y=814`（距底 `30px`），均侵占 iOS 底部 `34px` Home Indicator 手势安全区，真机易被横条压边或误触上滑；
+   - 复现步骤：① 横屏 `844×390` 推进至 `results` 态，读取 `.topbar` 与 `.bbq-panel h1` 的 `getBoundingClientRect()`；② 竖屏 `390×844` 坐满 3 位顾客，读取底部行 `.card` 与 `.card-btn` 的 `bottom` 距 `innerHeight` 余量；③ 横屏 `844×390` 首位顾客就座与上炉态，读取 `[data-onboard-tip]` 与菌子料箱投影包围盒交叠面积。
+   - 截图路径：`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-09-results.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-03-cook-raw.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-02-orders.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-02-orders.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-03-cook-raw.png`
+   - **验收标准**：见 `B-167`——(a) 横屏 `844×390` 与竖屏 `390×844` 在 `menu` / `results` 态下，`.topbar` 隐藏（`display === 'none'` 或 `visibility === 'hidden'`）或与 `.bbq-panel .card` 及 `.bbq-panel h1` 矩形交叠面积均 `=== 0`，且结算双按钮底边 `<= innerHeight - 8`；(b) 竖屏 `390×844` 渲染 3–4 张订单卡时，所有 `.card` 底边满足 `rect.bottom <= innerHeight - 34`（同时 CSS 绑定 `max(34px, env(safe-area-inset-bottom))`），卡内按钮仍 `>= 48×48px`、无滚动、与 `.topbar` 交叠 `0`；(c) 横屏 `844×390` 下底部 `.card` 与台面前沿柜身投影矩形交叠面积 `=== 0`，且 `[data-onboard-tip]` 与料箱/挂牌投影交叠面积 `=== 0`，双端 `0` JS error。
+
+3) **顾客愤怒离店缺少持久 HUD 失客计数与锁星红线提示（沿用既有 `B-149`）**
+   - 现象：顾客耐心归零转 `leaving-angry` 后仅同帧闪过 `愤怒离店` 飘字，DOM 实测 `document.querySelector('[data-angry-count]') === null`，顶栏 `#bbq-hud .stars` 全程维持 `data-stars="1"`（即使愤怒离店 2 位或 3 位），玩家从顶栏读不出已失客数量，也感知不到 `angry ≥ 3` 锁 `1★` 红线。
+   - 复现步骤：双端开店并令 1–3 位顾客耐心归零离店，待飘字消失后检查顶栏 `.topbar` 文本、`[data-angry-count]` 节点与 `.stars` 状态。
+   - 截图路径：`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-06-burnt-retry.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-08-angry.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-07-served.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-08-angry.png`
+   - **验收标准**：沿用 `B-149`——双端冻结时钟下：(a) 开局 `[data-angry-count]` 可见且含 `0/3`、顶栏不溢出；(b) 1 位顾客愤怒离店后同帧更新为 `1/3` 且呈警示红 `#e05a3a`（`rgb(224, 90, 58)`）；(c) 累计 3 位离店后挂载 `data-star-capped="true"` 并含 `3/3`，双端 `0` JS error。
+
+4) **状态机与线上包内仍残留已废弃的五步出餐语义（`去料箱取料 / 取料 / 切配 / 装盘` 与 `crate-pork/chop/plate/bin`）（对应新增 `B-168`，协同 `B-158` / `B-163`）**
+   - 现象：尽管界面上已移除摇杆与旧动作键，但运行时实测 `__test.state().actionLabel === "去料箱取料"`、`stations` 仍返回 `crate-pork / crate-mush / crate-mix / chop / plate / bin`，且线上生产包 `assets/index-BsdaUpmb.js` 内仍完整打包了 `去料箱取料 / 取料 / 切配 / 装盘` 文案分支，直接触发 `GAME-DESIGN.md §1`「已废弃条款，代码里出现即视为 bug」。
+   - 复现步骤：打开 `https://openfolio.uk/bbq/` 进入 `playing` 态，读取 `window.__test.state().actionLabel` 与 `window.__test.state().stations`，并对构建产物 `dist/assets/index-*.js` 做关键字检索。
+   - 截图路径：`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-02-orders.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-02-orders.png`
+   - **验收标准**：见 `B-168`——(a) 运行时双端进入 `playing` 态读取 `window.__test.state()`，断言 `JSON.stringify(state)` 不匹配 `/去料箱取料|取料|切配|装盘|crate-pork|crate-mush|crate-mix/`，且 `stations`（若存在）不含 `bin`、`chop`、`plate`；(b) 生产构建产物 `dist/assets/*.js` 字符串扫描匹配 `/去料箱取料|切配台|装盘台/` 命中数为 `0`；(c) 全套 E2E 回归通过、双端 `0` JS error。
+
+5) **文档内部自相矛盾与局内缺目标额/结算缺归因（沿用既有 `B-162`、`B-125`、`B-153`）**
+   - 现象：① `docs/GAME-DESIGN.md` `§0/§1` 已改为 v2 三步链，但文首导语与 `§6` 仍写「两次点击：上炉 → 起锅上菜」、`§2` 仍写「切配 3 次点按 / 6.0s 熟 12.0s 焦 / 桌子 4s 后再坐」、`§5` 仍列料箱/切配台/装盘台/垃圾桶、`§7` 仍写台面跳切，整份权威文档前后互斥；② 顶栏缺失目标营业额，真点进入第 2 关后全程看不到 `¥260` 门槛（`verify-04-after-next-click.png`、`verify-05-after-next-2s.png`）；③ 结算面板无星级归因文案，重玩仍写含糊的「再开一局」且无「回到第 1 关」出口（`port-09-results.png`）。
+   - 复现步骤：① 检视 `docs/GAME-DESIGN.md` 导语及 `§0–§7`；② 通关第 1 关后真点「进入第 2 关」，观察局内顶栏与屏幕是否存在 `¥260` 提示；③ 核查结算页是否存在 `[data-star-reason]` 与回第 1 关入口。
+   - 截图路径：`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-09-results.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/verify-04-after-next-click.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/verify-05-after-next-2s.png`
+   - **验收标准**：沿用 `B-162` / `B-125` / `B-153`——(a) `docs/GAME-DESIGN.md` 除废弃声明段外无旧两步/切配/料箱站点自相矛盾条款；(b) 双端局内顶栏常驻显示 `¥{money}/¥{target}`（第 2 关匹配 `/¥\d+\s*\/\s*¥260/`）且不溢出；(c) 结算面板展示 `[data-star-reason]`、`重打第 N 关` 与第 2 关 `[data-back-lv1]` 入口。
+
+### P2 打磨项
+1) **首屏冷启动耗时 11.5–16.2s 缺少即时加载骨架与进度提示（对应新增 `B-169`，升级 `B-009`）**
+   - 现象：软渲染环境下竖屏首屏可读需 `16.2s`、横屏 `11.5s`，资源与 WebGL 管线初始化期间无内联加载骨架或进度条提示，弱网/低端机玩家易误判白屏卡死。
+   - 复现步骤：冷启动（清缓存/禁用 GPU 软渲染）访问 `https://openfolio.uk/bbq/`，记录 `DOMContentLoaded` 至 `phase === 'menu'` 期间的首屏渲染节点。
+   - 截图路径：`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-01-title.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-01-title.png`
+   - **验收标准**：见 `B-169`——`DOMContentLoaded` 后 `<= 300ms` 页面可见内联加载骨架 `[data-boot-skeleton]`（含店招与状态文案如「正在生火…」），`__game.phase === 'menu'` 就绪后 `<= 500ms` 自动销毁且不阻挡「开店」点击。
+2) **既有可复用打磨项（均沿用旧编号，不新开）**：
+   - 控制台 2 条 Three.js 弃用 warning（`THREE.Clock` → `THREE.Timer`、`PCFSoftShadowMap` → `PCFShadowMap`，沿用 `B-006`）。
+   - 3D 烤炉串体无熟/焦变色与烟效（`B-097`，见 `/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-03-cook-raw.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-05-burnt.png`）。
+   - 竖屏绿檐上方露多余木板、靛蓝扎染布幔截断与横屏顶排客头顶裁切（`B-135` / `B-016`，见 `/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-02-orders.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/land-03-cook-raw.png`）；开局零营业额即亮 `1★`（`B-106`）；「用餐中」完成态卡未降噪沉底（`B-151`，见 `/www/yunnan-bbq-house/e2e/review/2026-11-22T11-09Z-r36/port-07-served.png`）；`docs/ART-DIRECTION.md §5` 过期订单卡规格（`B-159`）。
+
+### 与本轮 SPEC 的差距（引用 GAME-DESIGN / ART-DIRECTION 的具体条款）
+- **`GAME-DESIGN.md §0 / §1`（最高优先 v2 玩法：顾客自助点单 → 后台自动备菜 `3s` → 出菜窗口 `3` 槽 → 取菜 → 桌边 `8s` 烤制 → 盛盘，3 击/份、手持唯一；「已废弃条款：切配台 / 装盘台 / 料箱走动取料 / 垃圾桶 / 五步出餐链 / `stations.ts` 旧语义，代码里出现即视为 bug」）**：
+  - 线上 `5c45b93` 仍是 v1 两步点击（3 个后厨烤位排队、`12s` 焦糊），`lane/gameplay-v2` 尚未合入，属本轮最大 SPEC 差距（沿用 `B-160`、`B-161`）。
+  - 运行时 `__test.state().actionLabel === "去料箱取料"`、`stations` 仍含 `crate-pork/mush/mix/chop/plate/bin`，且生产包仍残留 `去料箱取料 / 取料 / 切配 / 装盘` 文案分支，直接违背 `§1` 零残留规定（对应新增 `B-168`）。
+- **`GAME-DESIGN.md §2 / §5 / §6 / §7`（规范自洽性）**：
+  - 文档导语及 `§2/§5/§6/§7` 仍保留「两次点击」「切配 3 次点按」「6.0s 熟 → 12.0s 焦」「桌子 4s 后再坐」「料箱/切配台/装盘台/垃圾桶」等旧条款，与最高优先 `§0/§1` 严重自相矛盾（沿用 `B-162`）。
+- **`GAME-DESIGN.md §4`（评分公式与焦糊/失客规则）**：
+  - `§4`「焦糊只计废料 +1，不计愤怒离店，1.2s 后该桌回『重烤』可救」与 `served=0 / angry≥3` 锁 `1★` 条款**本轮已核实达标**（`port-05-burnt.png`、`land-09-results.png`、`verify-03-results.png`）。
+  - 差距在顶栏缺失持久失客计数与红线提示（`[data-angry-count]` 为 `null`，沿用 `B-149`）、缺目标营业额（`B-125`）及结算缺星级归因（`B-153`）。
+- **`ART-DIRECTION.md §1 / §2 / §3 / §5`（镜头安全区、布景、灯光与 UI 皮肤）**：
+  - `§1` 底部交互区须遵守 `env(safe-area-inset-bottom)` 安全边距，但竖屏底行订单卡底边 `y=820`（距底 `24px < 34px` iOS 手势区）；同时横屏结算态常驻 `.topbar` 压住结算卡上缘（标题未截断，属压边，对应新增 `B-167`）。
+  - `§5` 订单卡字号与无滚动达标，但文档仍写过期的「右上竖排 `top:150px` / 动作键」（沿用 `B-159`），且横屏底部订单卡压住台面前沿柜身（`land-03-cook-raw.png`）。
+  - `§3` 灯光暖光池与台面湿反在线，但 `GAME-DESIGN §7` 要求的烤熟金黄/焦黑变色与烟效仍缺失（`B-097`），且控制台遗留 2 条 Three.js 弃用 warning（`B-006`）。
+
+---
+
 ## 2026-11-22 10:38Z 第 35 轮
 综合评分：3.1/5（比上轮 3.4 −0.3，线上仍为同包 `de55a6c` 且 `B-081` 保持解决，但本轮深挖角色移动与焦糊全生命周期，坐实触屏引导死路「去料箱取料」与焦糊同帧 `angry+waste` 双扣清桌无重烤两大体验缺陷，且 v2 仍停留在 `worktree gameplay-v2` 未提交）
 
@@ -314,76 +417,3 @@
 - **`GAME-DESIGN.md §3（关卡：达标解锁下一关，进度写 `localStorage bbq.level`）`**：`bbq.level="2"` 已正确写入并推进到第 2 关（`target=260`），但设计未补齐“多关后退/重选第 1 关”闭环，导致实机上一旦进入第 2 关即单向锁死；且切入第 2 关后缺少新目标额展示，玩家盲打整局。
 - **`GAME-DESIGN.md §4（评分：3★ 需 `r ≥ 1.0 且 a = 0 且 w ≤ 1`，结算面板展示星级/营业额(+目标)/服务顾客数/满意度/废料数）`**：结算四项数据与 `calcStars` 数值计算均准确一致，但面板未向玩家解释 2★ 与 3★ 的判定门槛，玩家超额完成营业额（`¥210 / ¥180`）却看不懂为何少一颗星。
 - **`GAME-DESIGN.md §7（手感与反馈：收款桌面飘 `+¥xx` 0.8s）` & `ART-DIRECTION.md §5（UI 皮肤：不重叠、不挡操作）`**：本轮实测 `+¥58` 飘字（DOM 实测 `84×34 @(137,238)`、与 3 号卡交叠 `2856px²`）直接压住竖屏 3 号订单卡左侧（`port-03-served.png`），连点时 8 条 `夹生 · 重烤` 飘字铺满上半屏盖死订单卡与餐桌（`port-04-rapid.png`），严重违反 §5 不重叠、不挡操作规范；首屏/结算模态背景后 `.topbar` 透出（`B-133`）与按钮手打空格（`B-140`）亦仍未收口。
-
-## 2026-11-22 06:38Z 第 31 轮
-综合评分：2.6/5（比上轮 2.3 +0.3）
-
-本轮走查时间 `2026-11-22 06:38Z–06:52Z`（上一轮第 30 轮 `06:25Z`，综合 `2.3/5`）。**被测构建与环境**：双端（竖屏 `390×844`、横屏 `844×390`）全部 12 张截图与实测数据均采自线上干净部署包 `window.__build = "ebc762a-202611220549"`（入口 `assets/index-CncmyXxh.js`，非脏树）；公网 `https://openfolio.uk/bbq/` 与本机 `http://127.0.0.1:3035/bbq/` 本轮均稳定返回 HTTP 200 且入口 JS 一致，但 `/api/health` 仍仅返回 `{"ok":true}`（缺 `commit` / `bundleSha256` 溯源）。**覆盖步骤与断言方式**：本轮专项复核 **① 首屏识别/开始入口、② 角色移动、⑤ 订单卡上炉→完美窗起锅→收款、⑥ 耐心归零离店与评级、⑧ 竖屏 HUD/热区/系统栏**（③④⑦⑨⑩ 上轮已覆盖，本轮不重复深挖）；断言使用 Playwright `route.fulfill` 冻结部署包快照，进局后冻结 `performance.now` 并仅调用 `__test.tick()` 推进模拟，因此秒数与金额均为确定性实测，不受截屏耗时竞争干扰。双端全程 `pageerror + console.error = 0`，仅余 2 条既有 Three.js 弃用告警（`THREE.Clock ... deprecated`、`THREE.WebGLShadowMap: PCFSoftShadowMap has been removed`）及 2 条软渲染环境告警（`GPU stall due to ReadPixels`）。相较第 30 轮提分 `+0.3`，原因在于公网 502 已恢复且确定性冻结时钟首次证实双端「订单卡上炉 → 完美窗起锅 → 收款」闭环成立（洗清 B-147 中未验证的疑虑）；但因线上构建仍停在 `ebc762a`、`B-145`/`B-143`/`B-146`/`B-144` 均未落地，新旧双入口分裂、首屏死文案、双倒计时冲突、横屏订单卡占右半屏/卡宽不齐与 `(4)` 牌视觉叠角、以及愤怒离店零顶栏反馈仍将整体体验锁在不及格区间。
-
-| 维度 | 分数 | 证据 |
-|---|---|---|
-| ① 画面像不像《胡闹厨房》（正交俯视/格子感/高饱和食材/Q 版角色） | 3.0 | 正交俯视木地板拼缝、一字型模块厨房台面、五花肉/菌子/米线实物料箱与斗方挂牌、白帽朱红围裙 Q 版厨师及竹凳方桌辨识度稳定（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-02-move.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-02-move.png`）；扣分项包括竖屏绿檐上方仍露越界木地板与穿檐扎染布幔（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-06-hud.png`）、横屏 2×2 订单卡覆盖右半屏 `x 388–834 / y 150–282` 遮挡餐桌区且卡宽不齐（`221/221/184.3/221`，延续 `B-144`，`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-03-perfect-window.png`），以及烤炉 0 号槽生串仅数像素浅白条难辨熟度（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-03-perfect-window.png`、`land-03-perfect-window.png`）。 |
-| ② 灯光有没有 Saltline 那种味道（暖光池/炭火点光/雾/明暗层次） | 3.2 | 竖屏 3 盏暖铜吊灯与半透明体积光锥、桌面暖光池及炭火炉向台前木地板投射的橙暖湿反层次鲜明，符合 Saltline 暖光池基调（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-02-move.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-04-served.png`）；扣分在横屏吊灯本体出画仅剩桌面光斑、炭火炉前沿略泛白（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-02-move.png`），静帧难以辨识 `FogExp2` 远景层次，且竖屏底部纯暗操控带生硬截断地板下方暖光（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-06-hud.png`）。 |
-| ③ HUD 是否整齐（对齐/字号/不重叠/不挡操作） | 2.4 | 正向项：竖屏 `390×844` 下 `scrollW/CW=390/390`、`scrollH/CH=844/844`、`outside=[]`、`smallTargets=[]`，2 客时 `#bbq-orders` 为 `243×142 @(137,60)`（占屏高 `16.8%`），4 客同屏时 4 张卡均为 `243×68`、沿 `x=137` 纵向排至 `y 60…350`（占屏高 `34.4%`），按钮 `56×56`、字号 `16px`，所有 `.order-num` / `.tb-badge` 与 `.card` / `.card-btn` 交叠面积均为 `0`，摇杆/动作键/顶栏/订单区两两交叠面积为 `0`（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-06-hud.png`）。扣分项：横屏 4 客时 2×2 订单卡覆盖右半屏 `x 388–834 / y 150–282`（`t1 221×64 @(388,150)`、`t2 221×64 @(613,150)`、`t3 184.3×64 @(424.8,218)`、`t4 221×64 @(613,218)`），卡宽不齐（`221/184.3`，延续 `B-144`），世界桌号牌 `(4)`（`28×28 @(555.7,160.5)`）与 1 号卡按钮（`56×56 @(546,154)`）左上角交叠 `784px²`（占按钮面积 `3136px²` 的 `25%`，属视觉遮挡，`elementFromPoint` 在 4 张卡按钮中心 4/4 命中 `.card-btn` 自身 `<svg>`，不阻断点击，见 `/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-03-perfect-window.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-04-served.png`）；横屏摇杆 `112×112 @(16,262)` 仍占据左下厨房区（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-02-move.png`、`land-06-hud.png`）；竖屏摇杆底边 `822` 与动作键底边 `814` 仍差 `8px`、`.cap` 实测 `12px` 低于 `ART-DIRECTION §5` 的 `13px`；首屏双端 `.topbar` 仍在模糊背景后透出（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-01-title.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-01-title.png`）；DOM 残留全屏空层 `#bbq-chop`（`390×844` / `844×390`）。 |
-| ④ 有没有明显缺陷（穿模/悬空/贴图错误/文字溢出/错位） | 2.1 | 双端全阶段 `pageerror + console.error = 0`、无元素越界或文字横向溢出（`.cap` `scrollW===clientW===60`）、公网 `/bbq/` 恢复 200；但缺陷依然突出：① 首屏与局内全套旧五步引导与新一键订单卡正面冲突（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-01-title.png`、`port-02-move.png`）；② 双计时源同帧相差 3 秒：全场唯一可见的旧烤炉 `.gb` 徽章（横屏 `76×34 @(419,231)`）随烤制依次显示 `烤制中 6s → 烤制中 3s → 烤制中 1s`，而同一帧订单卡文案为 `生串 4s → 生串 1s → 完美 4s`（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-03-perfect-window.png`、`land-03-perfect-window.png`）；③ 横屏 4 客订单卡覆盖右半屏 `x 388–834 / y 150–282`、卡宽不齐（`221/221/184.3/221`，延续 `B-144`），且世界桌号牌 `(4)` 与 1 号卡按钮左上角视觉交叠 `784px²`（`25%`，不阻断按钮中心点击，`land-03-perfect-window.png`、`land-04-served.png`）。 |
-
-| 体验维度 | 分数 | 证据 |
-|---|---|---|
-| 上手清晰度 | 1.6 | 首屏仍宣贯已删除的「取料 → 切配 → 炭烤 → 装盘 → 上菜」（`/取料\|切配\|装盘/` 为 true、`/上炉\|起锅\|完美/` 为 false，见 `/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-01-title.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-01-title.png`）；局内继续保留摇杆、`去料箱取料` 大按钮与 `← 料箱` 离屏胶囊，而真正主操作（订单卡 `.card-btn`）零引导（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-02-move.png`、`land-02-move.png`）；点上炉后卡片 `生串 4s → 生串 1s → 完美 4s` 既语义含糊，又与同帧旧烤炉 `.gb` 徽章（`烤制中 6s → 烤制中 3s → 烤制中 1s`）相差 3 秒自相矛盾（`port-03-perfect-window.png`、`land-03-perfect-window.png`）。 |
-| 操作手感 | 2.8 | WASD 移动无锁死（竖屏 `x 4.5→5.673 (+1.17)`、`z 1.5→-2.073 (-3.57)`，横屏 `+1.17 / -4.8`），订单卡 `56×56` 圆形按钮双端 2 次点击即可完成「上炉 → 完美窗起锅收款」完整闭环，且横屏 4 客同屏下 `elementFromPoint` 在 4 张卡按钮中心 4/4 命中 `.card-btn` 自身 `<svg>`，点按无阻断（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-03-perfect-window.png`、`port-04-served.png`、`land-03-perfect-window.png`、`land-04-served.png`）；扣分在竖屏底部黄金拇指区（`y 692–822`）仍被无效的摇杆与动作键占据，迫使玩家伸手够顶部的订单卡（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-06-hud.png`），横屏左下亦仍被摇杆占据且 2×2 卡片卡宽不齐（`221/184.3`）并伴随 `(4)` 牌对 1 号卡按钮左上角 `25%` 视觉遮挡（`land-03-perfect-window.png`）。 |
-| 正反馈（爽感） | 2.5 | 本轮确定性验证跑通完整付费正反馈：进入 `t=5.5s` 完美窗按钮外圈亮起金色进度环（`45.83%`），第 2 击同帧 `served=1`、烤位释放、桌面摆出成品碗/盘、顶栏 `营业额` 同步跳涨（竖屏 `¥0→¥34`、横屏 `¥0→¥58`）并同帧触发 `+¥34`/`+¥58` DOM 飘字与 `✓ 已上` 状态（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-03-perfect-window.png`、`port-04-served.png`、`land-03-perfect-window.png`、`land-04-served.png`）。扣分在：① 顾客耐心归零甚至 3 人同帧愤怒离店（`angry 0→3`），顶栏 `★☆☆` 与营业额均纹丝不动，无任何持久负面反馈（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-05-after-angry.png`、`land-05-after-angry.png`、`land-06-hud.png`）；② `用餐中` 卡片与待操作卡片视觉区分弱；③ 基础价 `¥26`/`¥48` 与实收 `+¥34`/`+¥58` 仍无小费拆解，全作仍无音效。 |
-
-### 我能做的（Capability）
-- **订单卡一键循环（`上炉 → 完美窗起锅 → 收款`）本轮在双端均获确定性闭环实证（洗清 B-147 疑虑）**：在冻结 `performance.now` + `__test.tick()` 环境下，竖屏与横屏两轮独立采样均完整跑通——第 1 击后 `t=0.4s` 进入 `cookWindow=raw`、`label="生串 4s"`、`progressPct=3.33%`、占烤位 `slotIndex=0`、`money=0`；推进至 `t=5.5s` 准确切入 `cookWindow=perfect`、`label="完美 4s"`、`progressPct=45.83%`、按钮保持可点且亮金色外环；第 2 击同帧 `served=1`、烤位释放、卡片切 `cookWindow=eating`、`label="用餐中"`、按钮 `disabled` 并切绿勾 `✓ 已上`，同帧 DOM 触发收款飘字 `+¥34`（竖屏米线）/ `+¥58`（横屏五花肉），顶栏 `营业额` 同步由 `¥0` 涨至 `¥34` / `¥58`，桌面出现成品碗/盘（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-03-perfect-window.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-04-served.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-03-perfect-window.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-04-served.png`）。
-- **角色键盘移动、耐心归零状态机、竖屏 4 客布局、横屏按钮命中与公网可达性正常**：`teleport(4.5,1.5)` 后按 `D` 900ms / `W` 700ms，竖屏位移 `x 4.5→5.673 (+1.17)`、`z 1.5→-2.073 (-3.57)`，横屏 `+1.17 / -4.8`，无移动锁死（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-02-move.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-02-move.png`）；`setPatience(0.4)` 推进 1s 后顾客正确由 `seated` 转 `leaving-angry`、`patience=0`、`angry` 准确累积（竖屏 `0→1`，横屏 `0→3`）并移除对应订单卡（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-05-after-angry.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-05-after-angry.png`）；竖屏 `390×844` 无滚动/无溢出/无 `<44px` 按钮（`smallTargets=[]`、`outside=[]`），4 客同屏时 4 张 `243×68` 订单卡沿 `x=137` 纵向落于 `y 60…350`（占屏高 `34.4%`），所有 `.order-num` / `.tb-badge` 与 `.card` / `.card-btn` 交叠面积均为 `0`（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-06-hud.png`）；横屏 4 客下 4 张卡按钮中心 `elementFromPoint` 4/4 命中 `.card-btn` 自身 `<svg>`；公网 `/bbq/` 与本机 `:3035/bbq/` 均稳定 HTTP 200 且同指 `assets/index-CncmyXxh.js`，双端 `0` JS error。
-
-### 我看不懂的（Clarity）
-1. **首屏和左下/右下操控区全在教我「取料 → 切配 → 炭烤 → 装盘 → 上菜」，到底该走路去料箱还是点订单卡？** 首屏文本完全不含「上炉/起锅/完美」（`/上炉|起锅|完美/` 为 false），仍大字写着已废弃的五步流程（`/取料|切配|装盘/` 为 true）；开店后屏幕左下放着 `130×130` 摇杆、右下放着 `去料箱取料` 动作键、左侧悬着 `← 料箱` 胶囊，而唯一能推进核心循环的订单卡 `.card-btn` 全程零引导（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-01-title.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-02-move.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-01-title.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-02-move.png`）。
-2. **刚点「上炉」到 `t=5.5s`，为什么上面卡片写「完美 4s」，下面烤炉条却写「烤制中 1s」？** 两套计时源同帧相差 3 秒：订单卡按 `§1` 4–9s 完美窗口依次显示 `生串 4s → 生串 1s → 完美 4s`（且「完美 4s」本身语义含糊，新手分不清是“持续 4 秒”还是“还剩 4 秒”），而全场唯一可见的旧烤炉 `.gb` 徽章（横屏 `76×34 @(419,231)`）仍按老 6s 熟度依次显示 `烤制中 6s → 烤制中 3s → 烤制中 1s`，玩家根本不知道该立刻起锅还是再等 1 秒（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-03-perfect-window.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-03-perfect-window.png`）。
-3. **3 位顾客同时举手愤怒离店了，为什么顶栏还是 `★☆☆`、营业额一分没扣，看不出我做错了什么？** 实测 `angry` 在竖屏 `0→1`、横屏 `0→3` 时，`#bbq-hud .stars` 全程维持 `data-stars="1"`（`['#f0c060','none','none']`）且 `money` 不变，除了一条 2.2s 短暂飘字（同帧 DOM 可读，但消失后不留记录）外，顶栏没有任何持久失客计数、怒气警示或扣评提示（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-05-after-angry.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-05-after-angry.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-06-hud.png`）。
-4. **菜价标着 `¥26` / `¥48`，为什么收款涨了 `¥34` / `¥58`？已上菜的订单卡为什么还和待烤订单长几乎一样？** 收款飘字与顶栏均未拆解小费来源；且上菜后卡片进入 `用餐中` 状态，除右下小按钮变为灰绿 `✓ 已上` 外，卡片整体尺寸、底色、边框及标价 `¥26`/`¥48` 与活跃待操作订单卡几乎无差异，忙时一眼扫过去很难快速过滤已完成订单（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-04-served.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-04-served.png`）。
-
-### 让我不爽的（Friction）
-- **竖屏最顺手的底部拇指区被废控件白占，真正要点的订单卡却悬在最顶上**：竖屏 `y 692–822` 整条黄金触控带被已废弃的摇杆（`130×130 @(22,692)`）与 `去料箱取料`（`84×84 @(280,730)`，且两者底边还差 `8px`）占死，玩家单手玩时不得不把大拇指大幅上移去够 `y=60..350` 的订单卡，完全背离 `GAME-DESIGN §0` 竖屏单手体验（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-06-hud.png`）。
-- **横屏 4 客同屏时 2×2 订单卡占满右半屏、卡宽不齐且桌号牌 `(4)` 视觉叠角**：4 张卡（`t1 221×64 @(388,150)`、`t2 221×64 @(613,150)`、`t3 184.3×64 @(424.8,218)`、`t4 221×64 @(613,218)`）覆盖 `x 388–834 / y 150–282` 遮挡右侧餐桌区，第 3 张卡宽度缩水至 `184.3px` 导致列宽错位（延续 `B-144`），世界桌号牌 `(4)`（`28×28 @(555.7,160.5)`）与 1 号卡按钮（`56×56 @(546,154)`）左上角视觉交叠 `784px²`（占按钮面积 `3136px²` 的 `25%`，虽不阻断 4/4 按钮中心点击但观感凌乱），左下摇杆 `112×112 @(16,262)` 仍持续占据左下厨房区（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-03-perfect-window.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-04-served.png`）。
-- **软渲染冷启动成本偏高且无加载骨架**：从导航完成到首屏可读实测耗时竖屏 `32.2s`、横屏 `42.0s`（软渲染冷启动含 Three.js 初始化，属性能观测非功能缺陷，但暴露首帧开销高且无加载骨架）。
-
-### 让我想继续玩的（Hook）
-- **确定性闭环已证明「点卡上炉 → 盯金环起锅 → 瞬时收款」的节奏底座可靠**：`56×56` 圆形按钮响应干脆、金色外圈进度环推进直观，第 2 击瞬时释放烤位、桌面摆菜、顶栏涨钱形成干净利落的微循环（`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-03-perfect-window.png`、`port-04-served.png`、`land-03-perfect-window.png`、`land-04-served.png`）；一旦彻底铲除旧五步残骸（`B-145`/`B-143`）、把订单卡挪进底部单手拇指区（`B-146`）并补上失客压力与火候紧迫感（`B-149`/`B-150`），单手控火排队的核心爽点就能立住。
-
-### P0 阻塞（不修没法玩）
-1) **首屏与局内仍充斥废弃五步流程与旧操控控件，与唯一可用的订单卡一键循环正面分裂（沿用 `B-145` / `B-142` / `B-143`，本轮补齐双端新证据）**
-   - 现象：首屏卡片仍写 `取料 → 切配 → 炭烤 → 装盘 → 上菜`（`/取料|切配|装盘/` 为 true、`/上炉|起锅|完美/` 为 false）；进局后虚拟摇杆 `#bbq-stick`（竖 `130×130 @(22,692)`、横 `112×112 @(16,262)`）、动作键 `#bbq-act`（`84×84`，文案 `去料箱取料`）、左侧 `← 料箱` 离屏胶囊以及全屏空层 `#bbq-chop`（`390×844` / `844×390`，`inset:0`）全部健在；点卡上炉后，全场唯一可见的旧烤炉 `.gb` 徽章（横屏 `76×34 @(419,231)`）随烤制显示 `烤制中 6s → 烤制中 3s → 烤制中 1s`，与同帧订单卡文案 `生串 4s → 生串 1s → 完美 4s` 形成 3 秒双计时源冲突；唯一主入口订单卡 `.card-btn` 零引导。玩家无从判断该用摇杆/料箱还是点订单卡。
-   - 复现步骤：在 `390×844` 与 `844×390` 打开首屏检查文案，点 `开 店` 进入对局，观察底部控件与左侧 `← 料箱` 胶囊，点击任意订单卡 `.card-btn` 上炉并推进至 `t=5.5s` 同时对比卡片文案与烤炉上方 `.gb` 文本。
-   - 截图路径：`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-01-title.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-02-move.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-03-perfect-window.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-06-hud.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-01-title.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-02-move.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-03-perfect-window.png`
-   - **验收标准**：① 首屏文本包含 `上炉` 与 `起锅` 且不匹配 `/取料|切配|装盘/`；② 局内 `#bbq-stick`、`#bbq-act`、`#bbq-chop`、`.gb` 与 `← 料箱` 均不存在或 `display === 'none'`，全页可见文本不匹配 `/去料箱|取料|切配|装盘|烤制中/`；③ 首位顾客就座时首张 `.card-btn` 旁展示指向性引导（点击上炉后切提示起锅，完成首单后自动消失）；④ 双端仅靠 2 次点击 `.card-btn` 跑通收款，连跑 3 次 `0` JS error。
-
-### P1 明显缺陷
-1) **顾客耐心归零愤怒离店（甚至 3 人同帧离店）无任何持久可见惩罚或顶栏反馈，玩家感知不到失败**
-   - 现象：`setPatience(0.4)` 推进 1s 后，顾客由 `seated` 转 `leaving-angry`、`patience=0`、`angry` 计数递增（竖屏 `0→1`，横屏 3 位同帧 `0→3`），但双端顶栏 `#bbq-hud .stars` 全程锁在 `data-stars="1"`（`['#f0c060','none','none']`、`★☆☆`）无任何变化，`money` 无扣款，顶栏也无失客计数或怒气警示条；仅有的 2.2s `愤怒离店` 飘字同帧 DOM 可触发但消失后不留任何持久记录（注：截帧未见飘字系冻结 `performance.now` 后 CSS 墙钟动画与截屏耗时叠加的测量假象，非产品缺陷）。即便已触及 `GAME-DESIGN §4` 的 `angry ≥ 3 上限锁 1★` 红线，玩家从 HUD 上完全读不出任何损失。
-   - 复现步骤：双端开店并先完成 1 单（`served=1`，顶栏 `★☆☆`），对其余就座顾客调用 `setPatience(0.4)` 后推进 `1s`，读取 `angry`、顶栏 `.stars` 的 `data-stars` / SVG fill、营业额变化及顶栏可见文本。
-   - 截图路径：`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-05-after-angry.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-05-after-angry.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-06-hud.png`
-   - **验收标准**：① 顶栏新增持久可见的失客/怒气状态节点 `[data-angry-count]`（如 `失客 0/3`），`angry` 每递增 1 即实时更新数值、转警示红 `#e05a3a` 并触发持续 `>= 0.5s` 的闪红警示态（即使当前已是 `1★`）；② 当 `angry >= 3` 时节点明确标示星级上限锁定态（如 `data-star-capped="true"` + `锁1★` 或同类清晰提示）；③ 同帧 `#bbq-popups .popup` 明确写出 `愤怒离店` 与 `-1`；双端连跑 3 次 `0` JS error。
-2) **横屏 4 客同屏 2×2 订单卡覆盖右半屏且卡宽不齐（`221/184.3`），世界桌号牌 `(4)` 视觉遮挡 1 号卡按钮左上角 25%（沿用 `B-146` / `B-144`）**
-   - 现象：横屏 `844×390` 4 客就座时，2×2 订单卡实测为 `t1 221×64 @(388,150)`、`t2 221×64 @(613,150)`、`t3 184.3×64 @(424.8,218)`、`t4 221×64 @(613,218)`，覆盖右半屏 `x 388–834 / y 150–282` 遮挡餐桌区域，且 4 张卡宽不齐（`221/221/184.3/221`，延续 `B-144`）；世界桌号牌 `(4)`（`28×28 @(555.7,160.5)`）与 1 号卡按钮（`56×56 @(546,154)`）左上角交叠 `784px²`（占按钮面积 `3136px²` 的 `25%`），虽在 4 张卡按钮中心 `elementFromPoint` 仍 4/4 命中 `.card-btn` 自身 `<svg>`（属视觉遮挡、不阻断点击），但视觉重叠显著；另左下摇杆 `112×112 @(16,262)` 持续占用左下厨房区。
-   - 复现步骤：横屏 `844×390` 令 4 位顾客同时就座，量测所有 `.order-num`、`.tb-badge` 与 `#bbq-orders .card` / `.card-btn` 的包围盒交叠面积及 4 张卡宽度一致性。
-   - 截图路径：`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-02-move.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-03-perfect-window.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-04-served.png`
-   - **验收标准**：移除旧摇杆/动作键后将双端订单卡迁移至不挡场地的停靠区（竖屏落底部拇指区、横屏落底部单排或侧边非餐桌区），双端 4 客同屏断言：① 任意 `.order-num` / `.tb-badge` 与 `.card` / `.card-btn` 交叠面积 `=== 0`；② 同屏订单卡宽度一致（最大与最小卡宽差 `<= 2px`）；③ 所有 `.card-btn` 中心 `elementFromPoint` 命中自身，横屏餐桌与烤位主体不被订单栏覆盖；双端连跑 3 次 `0` JS error。
-3) **`/api/health` 仍缺构建溯源字段（沿用 `B-141`）**
-   - 现象：本轮公网 `/bbq/` 与本机 `:3035/bbq/` 均已恢复 200 且同指 `assets/index-CncmyXxh.js`（`ebc762a`），但 `GET /api/health` 仍仅返回 `{"ok":true}`，无 `commit`、`clean`、`entry` 与 `bundleSha256`，接口层仍无法自动校验线上包与仓库提交的一致性。
-   - 复现步骤：请求 `GET http://127.0.0.1:3035/api/health`，检查返回 JSON 字段。
-   - 截图路径：本轮全部 12 张截图均运行于 `window.__build="ebc762a-202611220549"`（如 `/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/port-01-title.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T06-41Z-r31/land-01-title.png`），但无法从 `/api/health` 独立核验。
-   - **验收标准**：`GET /api/health` 返回 HTTP 200 且包含 `ok: true`、`clean: true`、`commit`（与 `git rev-parse --short HEAD` 一致）、`entry` 与实算一致的 `bundleSha256`；部署脚本在脏树或公网非 200 时以非 0 退出码中止。
-
-### P2 打磨项
-1. **火候窗口文案语义含糊（「完美 4s」）与出餐后 `用餐中` 订单卡缺少完成态视觉区分**：`t=5.5s` 时卡片写 `完美 4s`，缺少「还剩 x 秒」的紧迫表达（`port-03-perfect-window.png`、`land-03-perfect-window.png`）；出餐后卡片切为 `用餐中` 但卡片底色、边框与全尺寸体量仍与待操作订单相同，忙时不易一眼跳过（`port-04-served.png`、`port-05-after-angry.png`、`port-06-hud.png`、`land-04-served.png`、`land-05-after-angry.png`、`land-06-hud.png`），见下文新开 `B-150`、`B-151`。
-2. **飘字模拟时钟解耦与既有 HUD/美术细节遗留**：飘字动画应与模拟时钟解耦，便于低帧率下保持一致观感（沿用 `B-014`）；首屏 `.topbar` 仍在模糊背景后透出（`port-01-title.png`、`land-01-title.png`，沿用 `B-133`）；首屏按钮 `开 店` 仍带手打空格（沿用 `B-140`）；竖屏摇杆与动作键底边差 `8px` 且 `.cap` 为 `12px`（移除旧控件 `B-145`/`B-143` 后自然消解）；竖屏绿檐上露越界木地板与穿檐扎染布幔（`port-02-move.png`、`port-06-hud.png`）；控制台仍有 2 条 Three.js 弃用 warning（沿用 `B-006`）；软渲染冷启动 32.2s/42.0s 暴露首帧缺加载骨架（沿用 `B-009`）。
-
-### 与本轮 SPEC 的差距（引用 GAME-DESIGN / ART-DIRECTION 的具体条款）
-- **`GAME-DESIGN.md §0（玩法方向：一条订单卡 = 两次点击、竖屏单手可玩、禁止/删除切配、装盘、料箱走动）`**：核心差距最大——订单卡本身已按 §0 跑通 2 次点击收款，但旧操控（摇杆、`去料箱取料` 按钮、`← 料箱`、首屏五步链、`#bbq-chop` 全屏空层）仍原封不动留在屏上，竖屏底部拇指区仍被废控件占领，与 §0 最高优先定调直接冲突。
-- **`GAME-DESIGN.md §1（核心循环：上炉→起锅两次点击，4–9s 完美窗满小费；顾客耐心归零→愤怒离店满意度 -1）`**：本轮确定性证实 `t=5.5s` 完美窗起锅收款（`+¥34`/`+¥58`）与 `patience=0` 离店逻辑已通，但① 唯一可见的旧烤炉 `.gb` 徽章（`烤制中 6s → 3s → 1s`）与同帧订单卡（`生串 4s → 1s → 完美 4s`）相差 3 秒破坏单一计时真相；② 顾客愤怒离店虽累积 `angry`，却没有任何“满意度 -1”的持久可视化表达。
-- **`GAME-DESIGN.md §4（评分：served=0 或 angry≥3 上限锁 1★，局内顶栏与结算共用同一函数）`**：`data-stars="1"` 与 `★☆☆` 渲染本身口径一致，但当本局尚处于 `1★` 起步阶段时，即便发生 3 人同时愤怒离店（`angry=3` 已锁死星级上限），顶栏星级毫无变化且缺少失客计数与锁星警示，规则对玩家不可见。
-- **`GAME-DESIGN.md §7（手感与反馈：烤熟金黄+"叮"+金烟；收款桌面飘 `+¥xx` 0.8s + 营业额滚动；愤怒离店红怒符号 0.6s）`**：顶栏营业额同步上涨与同帧 DOM 飘字触发（`+¥34`/`+¥58`、`愤怒离店`）均成立，但烤炉 3D 串体在 `t=5.5s` 仍仅数像素白条看不出金黄与金烟（`port-03-perfect-window.png`、`land-03-perfect-window.png`），全作仍无“叮”等任何音效（`B-066`），且飘字动画可按 `B-014` 与模拟时钟解耦以便低帧率下保持一致观感。
-- **`ART-DIRECTION.md §3（灯光 Saltline 规则：ACESFilmic exposure 1.05、炭火 `#ff8a3c` 湿反、3 盏 2700K 吊灯体积光锥、`FogExp2`、阴影）`**：竖屏暖铜吊灯光锥与炭火台前地板橙暖湿反落实较好；差距在横屏吊灯出画、远景 `FogExp2` 层次在静帧偏弱，且竖屏底部纯暗控制带生硬切断下方地板暖光。
-- **`ART-DIRECTION.md §5（UI 皮肤：HUD ≥13px、内联 SVG、横屏不降级、订单卡竖排 ≤3 张、不压状态条不挡操作）`**：订单卡按钮内联 SVG、字号 `16px` 及竖屏 4 卡零交叠达标；但旧动作键 `.cap` 仅 `12px`（低于 `≥13px`），横屏 4 卡 2×2 覆盖右半屏 `x 388–834 / y 150–282`、卡宽不齐（`221/184.3`，`B-144`）且桌号牌 `(4)` 与 1 号卡按钮左上角视觉交叠 `784px²`（`25%`，虽不阻断点击但违背界面不重叠规范）。
-

@@ -94,7 +94,6 @@ const CSS = `
   border: 1.5px solid rgba(232,180,90,.48); border-radius: 14px;
   padding: 5px 7px;
   pointer-events: auto;
-  transition: border-color .15s, box-shadow .15s, background-color .15s;
 }
 #bbq-orders .card .tb-badge {
   grid-area: badge;
@@ -130,16 +129,16 @@ const CSS = `
 }
 #bbq-orders .card[data-cook-window="perfect"] .pr { color: #f6cf70; }
 #bbq-orders .card[data-cook-window="over"] {
-  border-color: #ff8c24;
-  box-shadow: 0 0 14px rgba(255,140,36,.42);
+  border: 2px solid #e05a3a;
+  box-shadow: 0 0 14px rgba(224,90,58,.42);
 }
 #bbq-orders .card[data-cook-window="over"] .pr { color: #ffa048; }
 #bbq-orders .card[data-cook-window="burnt"] {
-  border-color: #e04836;
+  border-color: #c93b2b;
   background: rgba(54,18,14,.86);
-  box-shadow: 0 0 12px rgba(224,72,54,.42);
+  box-shadow: 0 0 12px rgba(201,59,43,.42);
 }
-#bbq-orders .card[data-cook-window="burnt"] .pr { color: #ff7a66; }
+#bbq-orders .card[data-cook-window="burnt"] .pr { color: #ff7a66; white-space: normal; }
 
 #bbq-orders .card .card-btn {
   grid-area: btn; justify-self: end;
@@ -153,7 +152,7 @@ const CSS = `
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 1px;
   pointer-events: auto; cursor: pointer; touch-action: manipulation;
-  transition: transform .08s, background-color .15s, opacity .15s, box-shadow .15s;
+  transition: transform .08s, opacity .15s;
 }
 #bbq-orders .card .card-btn:focus { outline: none; }
 #bbq-orders .card .card-btn:focus-visible { outline: 2px solid #f0c060; outline-offset: 2px; }
@@ -188,7 +187,7 @@ const CSS = `
 }
 #bbq-orders .card[data-cook-window="perfect"] .card-btn .btn-lbl { color: #f6cf70; }
 #bbq-orders .card[data-cook-window="over"] .card-btn {
-  background: rgba(62,30,10,.94);
+  background: rgba(224,90,58,.28);
   animation: bbq-over-pulse .65s ease-in-out infinite;
 }
 #bbq-orders .card[data-cook-window="over"] .card-btn .btn-lbl { color: #ffad5c; }
@@ -197,8 +196,8 @@ const CSS = `
 }
 #bbq-orders .card[data-cook-window="burnt"] .card-btn .btn-lbl { color: #ff8070; }
 @keyframes bbq-over-pulse {
-  0%, 100% { box-shadow: 0 0 4px rgba(255,140,36,.35); transform: scale(1); }
-  50% { box-shadow: 0 0 16px rgba(255,140,36,.9); transform: scale(1.04); }
+  0%, 100% { box-shadow: 0 0 4px rgba(224,90,58,.4); }
+  50% { box-shadow: 0 0 18px rgba(224,90,58,.95), inset 0 0 10px rgba(224,90,58,.45); }
 }
 @media (prefers-reduced-motion: reduce) {
   #bbq-orders .card[data-cook-window="over"] .card-btn { animation: none; }
@@ -579,7 +578,9 @@ export class Hud {
       return;
     }
     const mode = cooking ? 'lift' : 'put';
-    const text = cooking ? '金环亮起就起锅' : '点一下上炉';
+    const text = cooking
+      ? (cooking.cookWindow === 'over' ? '快焦了，立刻起锅！' : '金环亮起就起锅')
+      : '点一下上炉';
     this.onboardTableId = target.tableId;
     if (this.onboardText !== text) {
       this.onboardText = text;
@@ -630,6 +631,7 @@ export class Hud {
     card.dataset.table = tableId;
     card.dataset.cookWindow = 'idle';
     card.dataset.lockRaw = 'false';
+    card.dataset.burntRetry = 'false';
     const col = tableColor(tableId);
 
     const badge = el('div', 'tb-badge', card);
@@ -719,6 +721,7 @@ export class Hud {
             progressPct: 0,
             disabled: eating,
             rawLocked: false,
+            burntRetry: false,
             label: eating ? '用餐中' : '上炉',
             statusText: `¥${price} · ${eating ? '用餐中' : '等待'}`,
             slotIndex: -1,
@@ -783,6 +786,10 @@ export class Hud {
       if (view.root.dataset.lockRaw !== lockRaw) {
         view.root.dataset.lockRaw = lockRaw;
       }
+      const burntRetry = st.burntRetry ? 'true' : 'false';
+      if (view.root.dataset.burntRetry !== burntRetry) {
+        view.root.dataset.burntRetry = burntRetry;
+      }
       view.root.dataset.cookT = String(st.cookT);
       view.root.dataset.progressPct = String(st.progressPct);
       view.root.dataset.slotIndex = String(st.slotIndex);
@@ -838,9 +845,9 @@ export class Hud {
           break;
         case 'burnt':
           iconKey = 'warn';
-          btnText = '焦糊';
-          bgStroke = 'rgba(224,72,54,.32)';
-          arcStroke = '#e04836';
+          btnText = '已废';
+          bgStroke = 'rgba(201,59,43,.32)';
+          arcStroke = '#c93b2b';
           arcOpacity = '1';
           arcOffset = 0;
           icoColor = '#ff6b5a';
@@ -857,7 +864,7 @@ export class Hud {
             bgStroke = 'rgba(245,232,216,.28)';
           } else {
             iconKey = 'fire';
-            btnText = '上炉';
+            btnText = st.label || '上炉';
             bgStroke = 'rgba(232,180,90,.65)';
           }
           break;

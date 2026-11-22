@@ -77,7 +77,7 @@ export const COOK = {
   perfectStart: 4,      // [0, 4) raw (undercooked)
   overStart: 9,         // [4, 9) perfect, [9, 12) overcooked, >= 12 burnt
   overTipMult: 0.5,     // tip multiplier when lifted in overcooked window
-  burntLinger: 1.0,     // seconds burnt card stays visible in red before removal
+  burntLinger: 1.2,     // seconds burnt card stays visible in red before returning to retryable idle
 };
 
 export interface Level {

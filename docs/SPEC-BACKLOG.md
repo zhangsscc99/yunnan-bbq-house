@@ -1534,6 +1534,8 @@ vision 复核：竖屏放大后独立读出「三个筐＝红肉串 / 褐圆帽�
 需求：① 解耦烤焦惩罚，令 `t > 12s` 自动焦糊仅计 `waste += 1`、释放烤位并保持 `money` 不增（按 `GAME-DESIGN.md §1` 仅作废料结算），**不再同帧强制触发 `angry += 1` 赶走顾客**——顾客维持在座并继续消耗剩余耐心，仅当耐心真正归零时才 `angry += 1` 愤怒离店；② 焦糊发生后，该订单卡先以焦糊警示态驻留 `1.2s`（由 `flow.update(dt)` 驱动，禁 `setTimeout`），随后自动切回可重新上炉的 `idle` 态并附加 `[data-burnt-retry="true"]` 标记与「焦糊 · 重烤」轻提示角标直至玩家再次点击上炉；③ 焦糊飘字文案更新为 `焦糊了 · 废料 +1`，明确传达本次损耗口径，同步在 `GAME-DESIGN.md §1/§4` 写清焦糊仅计废料、不直接扣满意度的单一规则。
 验收：e2e 在竖屏 `390×844` 与横屏 `844×390` 冻结时钟下执行：(a) 点 1 号卡上炉并 `__test.tick()` 推进至 `t=12.1s`，断言同帧 `state().waste === 1`、`state().angry === 0`、`state().money === 0`，且 `#bbq-popups .popup` 文本同时包含 `焦糊` 与 `废料`；(b) `t=12.5s` 时该订单卡仍存在于 `#bbq-orders` 且 `dataset.cookWindow === 'burnt'`，继续推进 `1.5s` 后断言卡片切回 `dataset.cookWindow === 'idle'`、具备 `[data-burnt-retry="true"]` 且对应顾客仍为 `seated`；(c) 再次点击该卡上炉并于 `t=5.5s` 完美窗起锅收款，断言 `served === 1 && money > 0`，随后在 `money >= target, angry === 0, waste === 1` 条件下结算断言星级 `=== 3`；(d) 双端连跑 3 次 `0` JS error。
 参考：《胡闹厨房 2》/《沙威玛传奇》（烤焦仅损毁该份食材并要求重做，顾客耐心未归零前不会立刻离店，保留容错与翻盘空间）；`GAME-DESIGN.md §1`、`§4`、`TECH-STACK.md §2`。
+- [done 第 34 轮] `flow.ts` `triggerAutoBurn()` 删除 `angry += 1` 与 `leaving-angry`（顾客保持 `seated` 耐心不动）、飘字改 `焦糊 · 废料 +1`，`burntLinger` 调至 `1.2s` 并用 `burntRetry` 在驻留结束后切回 `idle` 显示「重烤」可再次上炉，新增 `e2e/burn-retry.mjs` 与更新 `e2e/oneclick.mjs` 验收全绿。
+  - 适用范围：本次修的是 v1 两次点击循环（线上在跑的版本）。`GAME-DESIGN.md §0/§1 v2` 落地时 `flow.ts` 会被重写，「焦糊只计一次、不得双扣、可重做」这条规则必须照搬到 v2 的桌边烤判定里，别丢。
 
 ### B-157 偏老/焦糊订单卡分级边框着色与消除「焦糊 焦糊」文案重复
 优先级：P1
@@ -1541,6 +1543,7 @@ vision 复核：竖屏放大后独立读出「三个筐＝红肉串 / 褐圆帽�
 需求：① 为 `#bbq-orders .card` 按 `[data-cook-window]` 落实明确色阶区分：`idle` 保持 `rgba(232, 180, 90, 0.48)`，`perfect` 切亮金 `#f0c060`，`over` 切 `ART-DIRECTION.md §5` 警示橙红 `#e05a3a`（`2px solid rgb(224, 90, 58)`）并同步把 `.card-btn` 背景改为可见暖橙警示填充（如 `rgba(224, 90, 58, 0.28)`）配轻呼吸动效，`burnt` 切深红 `#c93b2b`；② 消除 `burnt` 态「焦糊 焦糊」重名：副行状态文案改为 `已焦糊`，按钮文案改为 `已废`（且 `disabled`，衔接 `B-156` 在 `1.2s` 驻留结束后恢复可点 `上炉` / `重烤`），禁止卡片状态词与按钮词同名；③ 若 `[data-onboard-tip]` 仍可见且目标卡进入 `over` 态，提示文案同帧切换为 `快焦了，立刻起锅！`。
 验收：e2e 在竖屏 `390×844` 与横屏 `844×390` 冻结时钟下保持 2 号卡 `idle`、点 1 号卡上炉：(a) 推进至 `t=10.1s`（`over`）读取 `getComputedStyle(card1).borderColor` 与 `getComputedStyle(card2).borderColor`，断言两者严格不等且 `card1` 为 `rgb(224, 90, 58)`，`card1` `.card-btn` 的 `backgroundColor` 严格不等同于 `card2` `.card-btn`；若 `[data-onboard-tip]` 可见则文本匹配 `/快焦|立刻/`；(b) 推进至 `t=12.1s`（`burnt`），断言 `card1` 状态文本与 `.card-btn` 文本去空白后严格不等，且 `card1.innerText` 不匹配 `/焦糊\s+焦糊/`；(c) 全部卡片内文本满足 `scrollWidth <= clientWidth` 且计算字号 `>= 13px`；(d) 双端连跑 3 次 `0` JS error。
 参考：《胡闹厨房 2》/《烹饪发烧友》（过火预警整卡切警示红框与按钮底色，焦糊结果态与操作词严格区分）；`ART-DIRECTION.md §5`、`GAME-DESIGN.md §1`。
+- [done 第 34 轮] `hud.ts` 将 `burnt` 按钮文案改 `已废`、副行改 `¥{price} · 已焦糊 · 废料 +1` 消除「焦糊 焦糊」重名，区分 `over`（`2px solid #e05a3a` 边框、`.pr #ffa048`、`.card-btn` `rgba(224,90,58,.28)` + 脉冲）与 `burnt`（`#c93b2b` 边框）色阶并即时生效。
 
 ### B-158 清理状态机与 `__test.state()` 废弃五步死语义（`crate-pork` / `去料箱取料` / `bin/chop/plate`）
 优先级：P2

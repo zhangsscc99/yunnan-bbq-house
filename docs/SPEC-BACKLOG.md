@@ -1370,7 +1370,7 @@ vision 复核：竖屏放大后独立读出「三个筐＝红肉串 / 褐圆帽�
 优先级：P0
 来源：第 29 轮走查（本机 `127.0.0.1:3035` 运行 `window.__build="05afe9b-202611220449"` 入口 `assets/index-uMHCucrV.js` 已含 `56×56` `.card-btn`，但 git HEAD `05afe9b` 源码并无 `.card-btn`，线上包编译自未提交脏树导致 commit 号不可信）
 需求：① 在构建/部署脚本（`scripts/ci-deploy.sh` 等）前置 `git status --porcelain` 强校验，工作区存在未提交改动时直接以非 0 退出码中止部署，杜绝半成品脏树上生产或测试服；② 构建产物同时生成构建清单（含完整 `commit`、`clean: true`、`builtAt`、`entry` 文件名及入口 JS 的 `bundleSha256`），由服务端 `GET /api/health` 直接返回，并与前端注入的 `window.__build` 共用同一 commit 来源；③ 部署完成后自动校验 `/api/health` 返回的 `bundleSha256` 与实际访问 `/` 引用的入口 JS 实算 SHA-256 一致（公网同步纳入该校验以根治 `B-081`）。
-验收：脚本与 e2e 断言——(a) 在人为制造 1 个未提交改动时执行部署脚本返回非 0 退出码且不覆盖线上 `dist`；(b) 干净提交并部署后，`GET http://127.0.0.1:3035/api/health` 返回 HTTP 200 且 JSON 满足 `clean === true`、`commit === $(git rev-parse --short HEAD)`、`bundleSha256 === sha256sum(dist/<entry>)`；(c) 浏览器访问页面读取 `window.__build` 以 `health.commit + "-"` 开头，且页面 `<script src>` 指向的文件名等于 `health.entry`；0 JS error。
+验收：脚本与 e2e 断言——(a) 在人为制造 1 个未提交改动时执行部署脚本返回非 0 退出码且不覆盖线上 `dist`；(b) 干净提交并部署后，`GET http://127.0.0.1:3035/api/health` 返回 HTTP 200 且 JSON 满足 `clean === true`、`commit === $(git rev-parse --short HEAD)`、`bundleSha256 === sha256sum(dist/<entry>)`；(c) 浏览器访问页面读取 `window.__build` 以 `health.commit + "-"` 开头，且页面 `<script src>` 指向的文件名等于 `health.entry`；(d) 同一次部署门禁同时探活公网 `GET https://openfolio.uk/bbq/` 与 `/transport/`，任一非 200（第 29 轮收尾实测两者均 `502`）即视为部署失败并告警，避免「本机 200、公网 502」长期无人察觉；0 JS error。
 参考：成熟 Web 游戏 / CI-CD 不可变制品实践（Git SHA + 制品 SHA-256 双锚定，禁止 dirty working tree 发布）。
 
 ### B-142 首屏玩法说明与「上炉 / 起锅」两步循环对齐

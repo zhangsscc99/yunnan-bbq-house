@@ -1,0 +1,285 @@
+{
+ "stage": "landscape",
+ "vp": {
+  "width": 844,
+  "height": 390
+ },
+ "samples": {
+  "appearNoTick": [
+   {
+    "step": 0,
+    "ticks": 0,
+    "cards": 0
+   },
+   {
+    "step": 1,
+    "ticks": 0,
+    "cards": 0
+   },
+   {
+    "step": 2,
+    "ticks": 0,
+    "cards": 0
+   },
+   {
+    "step": 3,
+    "ticks": 0,
+    "cards": 0
+   },
+   {
+    "step": 4,
+    "ticks": 0,
+    "cards": 0
+   },
+   {
+    "step": 5,
+    "ticks": 0,
+    "cards": 0
+   },
+   {
+    "step": 6,
+    "ticks": 0,
+    "cards": 0
+   },
+   {
+    "step": 7,
+    "ticks": 0,
+    "cards": 0
+   },
+   {
+    "step": 8,
+    "ticks": 0,
+    "cards": 0
+   },
+   {
+    "step": 9,
+    "ticks": 0,
+    "cards": 0
+   },
+   {
+    "step": 10,
+    "ticks": 0,
+    "cards": 0
+   },
+   {
+    "step": 11,
+    "ticks": 0,
+    "cards": 0
+   }
+  ],
+  "cards4": [
+   {
+    "id": "t1",
+    "text": "1 | 烤五花肉拼盘 | ¥48 · 等待 | 上炉",
+    "win": "idle",
+    "rect": {
+     "x": 7,
+     "y": 312,
+     "w": 203.8,
+     "h": 68,
+     "bottom": 380
+    },
+    "btn": {
+     "w": 56,
+     "h": 56,
+     "y": 318,
+     "bottom": 374
+    }
+   }
+  ],
+  "hud": {
+   "topbar": {
+    "x": 264.3,
+    "y": 8,
+    "w": 315.4,
+    "h": 36,
+    "bottom": 44
+   },
+   "popups": [],
+   "ctl": null,
+   "innerH": 390,
+   "innerW": 844,
+   "scroll": {
+    "sh": 390,
+    "sw": 844
+   }
+  },
+  "cards4Shot": "/www/yunnan-bbq-house/e2e/review/2026-11-22T12-10Z-r37/land-07-cards4.png",
+  "resultsText": "打烊结算 / 离目标还差 ¥180 / 营业额 / ¥0 / ¥180 / 服务顾客 / 0 位 / 愤怒离店 / 0 位 / 废料 / 0 份 / 再开一局",
+  "afterReplay": {
+   "state": {
+    "phase": "playing",
+    "level": 1,
+    "levelTarget": 180,
+    "money": 0,
+    "timeLeft": 180,
+    "served": 0,
+    "angry": 0,
+    "waste": 0,
+    "hint": {
+     "kind": "station",
+     "id": "crate-pork",
+     "x": -4.5,
+     "z": 2
+    },
+    "carrying": null,
+    "action": "none",
+    "actionLabel": "去料箱取料",
+    "player": {
+     "x": -2.5,
+     "z": 0
+    },
+    "stations": {
+     "bin": {
+      "x": -5.5,
+      "z": 2
+     },
+     "crate-pork": {
+      "x": -4.5,
+      "z": 2
+     },
+     "crate-mush": {
+      "x": -3.5,
+      "z": 2
+     },
+     "crate-mix": {
+      "x": -2.5,
+      "z": 2
+     },
+     "chop": {
+      "x": -1,
+      "z": 2
+     },
+     "grill": {
+      "x": 1.5,
+      "z": 2
+     },
+     "plate": {
+      "x": 4,
+      "z": 2
+     }
+    },
+    "tables": {
+     "t1": {
+      "x": -3.3,
+      "z": -1.2000000000000002
+     },
+     "t2": {
+      "x": 0.2999999999999998,
+      "z": -1.2000000000000002
+     },
+     "t3": {
+      "x": 3.9000000000000004,
+      "z": -1.2000000000000002
+     },
+     "t4": {
+      "x": 2.0999999999999996,
+      "z": 0.7999999999999998
+     }
+    },
+    "customers": [],
+    "grill": [
+     null,
+     null,
+     null
+    ],
+    "chop": {
+     "held": null,
+     "chopLeft": 0
+    },
+    "calls": 77,
+    "tris": 17064
+   },
+   "panel": null
+  },
+  "afterReplay2s": {
+   "state": {
+    "phase": "playing",
+    "level": 1,
+    "levelTarget": 180,
+    "money": 0,
+    "timeLeft": 176.9999999999976,
+    "served": 0,
+    "angry": 0,
+    "waste": 0,
+    "hint": {
+     "kind": "station",
+     "id": "crate-pork",
+     "x": -4.5,
+     "z": 2
+    },
+    "carrying": null,
+    "action": "none",
+    "actionLabel": "去料箱取料",
+    "player": {
+     "x": -2.5,
+     "z": 0
+    },
+    "stations": {
+     "bin": {
+      "x": -5.5,
+      "z": 2
+     },
+     "crate-pork": {
+      "x": -4.5,
+      "z": 2
+     },
+     "crate-mush": {
+      "x": -3.5,
+      "z": 2
+     },
+     "crate-mix": {
+      "x": -2.5,
+      "z": 2
+     },
+     "chop": {
+      "x": -1,
+      "z": 2
+     },
+     "grill": {
+      "x": 1.5,
+      "z": 2
+     },
+     "plate": {
+      "x": 4,
+      "z": 2
+     }
+    },
+    "tables": {
+     "t1": {
+      "x": -3.3,
+      "z": -1.2000000000000002
+     },
+     "t2": {
+      "x": 0.2999999999999998,
+      "z": -1.2000000000000002
+     },
+     "t3": {
+      "x": 3.9000000000000004,
+      "z": -1.2000000000000002
+     },
+     "t4": {
+      "x": 2.0999999999999996,
+      "z": 0.7999999999999998
+     }
+    },
+    "customers": [],
+    "grill": [
+     null,
+     null,
+     null
+    ],
+    "chop": {
+     "held": null,
+     "chopLeft": 0
+    },
+    "calls": 77,
+    "tris": 17064
+   },
+   "cards": []
+  },
+  "afterReplayShot": "/www/yunnan-bbq-house/e2e/review/2026-11-22T12-10Z-r37/land-08-after-replay.png"
+ },
+ "notes": [],
+ "errors": []
+}

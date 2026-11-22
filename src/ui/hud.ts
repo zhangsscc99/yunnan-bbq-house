@@ -230,37 +230,69 @@ const CSS = `
   pointer-events: none;
 }
 #bbq-orders .card {
-  display: flex; flex-direction: column; gap: 4px;
+  display: flex; flex-direction: column; gap: 3px;
   box-sizing: border-box;
   width: 100%; min-width: 0; max-width: 100%;
   background: rgba(24,16,12,.88); backdrop-filter: blur(10px);
   border: 1.5px solid rgba(232,180,90,.42); border-radius: 13px;
-  padding: 6px 7px;
+  padding: 5px 6px;
   pointer-events: auto;
   transition: border-color .15s, box-shadow .15s, background-color .15s;
 }
 #bbq-orders .card.clickable { cursor: pointer; }
 #bbq-orders .card .c-top {
-  display: flex; align-items: center; gap: 4px; min-width: 0;
+  display: flex; align-items: center; gap: 3px; min-width: 0;
 }
 #bbq-orders .card .tb-badge {
-  width: 20px; height: 20px; flex: none; box-sizing: border-box;
-  border-radius: 6px; border: 1.5px solid #f0c060;
+  width: 18px; height: 18px; flex: none; box-sizing: border-box;
+  border-radius: 5px; border: 1.5px solid #f0c060;
   background: rgba(16,10,7,.92); color: #f0c060;
-  font-size: 12px; font-weight: 800; line-height: 1;
+  font-size: 11px; font-weight: 800; line-height: 1;
   display: flex; align-items: center; justify-content: center;
   font-variant-numeric: tabular-nums;
 }
 #bbq-orders .card .nm {
   flex: 1 1 auto; min-width: 0;
   display: flex; align-items: center; gap: 3px;
-  font-size: 12px; color: #f5e8d8; font-weight: 700; line-height: 1.2;
+  font-size: 11.5px; color: #f5e8d8; font-weight: 700; line-height: 1.2;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 #bbq-orders .card .nm span { overflow: hidden; text-overflow: ellipsis; }
-#bbq-orders .card .nm svg.food-ico { width: 15px; height: 15px; flex: none; }
-#bbq-orders .card .ring { width: 20px; height: 20px; flex: none; }
+#bbq-orders .card .nm svg.food-ico { width: 14px; height: 14px; flex: none; }
+#bbq-orders .card .ring { width: 18px; height: 18px; flex: none; }
 #bbq-orders .card .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); display: block; }
+#bbq-orders .card .c-meta {
+  display: flex; align-items: center; gap: 4px; min-width: 0;
+  font-size: 10px; line-height: 1.15;
+}
+#bbq-orders .card .cat-tag {
+  padding: 1px 5px; border-radius: 4px;
+  background: rgba(240,192,96,.14);
+  border: 1px solid rgba(240,192,96,.34);
+  color: #ebd09e; font-size: 9.5px; font-weight: 700; white-space: nowrap;
+}
+#bbq-orders .card .new-badge {
+  padding: 1px 4px; border-radius: 4px;
+  background: #c83e2b; color: #fff4e8;
+  border: 1px solid #ff9c82;
+  font-size: 9px; font-weight: 800; letter-spacing: .4px; white-space: nowrap;
+}
+#bbq-orders .card .c-price {
+  margin-left: auto; color: #f0c060; font-size: 10.5px; font-weight: 800;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+#bbq-orders .card .dish-note {
+  display: none; align-items: flex-start; gap: 3px;
+  padding: 2px 4px; border-radius: 5px;
+  background: rgba(224,96,58,.18);
+  border: 1px solid rgba(255,146,108,.45);
+  color: #ffd49c; font-size: 9.5px; line-height: 1.25; font-weight: 600;
+}
+#bbq-orders .card .dish-note .note-tag {
+  flex: none; padding: 0 3px; border-radius: 3px;
+  background: rgba(224,96,58,.36); color: #ffe0cc;
+  font-size: 8.5px; font-weight: 800;
+}
 
 /* Segmented Grill Heat Bar / Patience Strip */
 #bbq-orders .card .bar-wrap {
@@ -515,6 +547,8 @@ interface CardView {
   badge: HTMLElement;
   patienceArc: SVGCircleElement;
   nm: HTMLElement;
+  metaEl: HTMLElement;
+  noteEl: HTMLElement;
   barFill: HTMLElement;
   statusEl: HTMLElement;
   btn: HTMLButtonElement;
@@ -877,7 +911,22 @@ export class Hud {
 
       if (view.dishKey !== st.dish) {
         view.dishKey = st.dish;
-        view.nm.innerHTML = `${FOOD_ICONS[st.dish]}<span>${DISHES[st.dish].name}</span>`;
+        const dish = DISHES[st.dish];
+        view.nm.innerHTML = `${FOOD_ICONS[st.dish]}<span>${dish.name}</span>`;
+        const newHtml = dish.isNew ? `<span class="new-badge">NEW</span>` : '';
+        const priceLabel = dish.price > 0 ? `¥${dish.price}` : '自助 ¥0';
+        view.metaEl.innerHTML = `<span class="cat-tag">${dish.category}</span>${newHtml}<span class="c-price">${priceLabel}</span>`;
+        if (dish.note) {
+          view.noteEl.innerHTML = `<span class="note-tag">提示</span><span>${dish.note}</span>`;
+          view.noteEl.style.display = 'flex';
+        } else {
+          view.noteEl.innerHTML = '';
+          view.noteEl.style.display = 'none';
+        }
+        view.root.dataset.dish = st.dish;
+        view.root.dataset.category = dish.category;
+        view.root.dataset.isNew = dish.isNew ? 'true' : 'false';
+        view.root.dataset.hasNote = dish.note ? 'true' : 'false';
       }
 
       const patFrac = st.orderState === 'done'
@@ -957,6 +1006,9 @@ export class Hud {
       </svg>`;
     const patienceArc = ring.querySelector('circle:nth-of-type(2)') as SVGCircleElement;
 
+    const metaEl = el('div', 'c-meta', card);
+    const noteEl = el('div', 'dish-note', card);
+
     const barWrap = el('div', 'bar-wrap', card);
     el('div', 'bar-zone-perfect', barWrap);
     el('div', 'bar-zone-burn', barWrap);
@@ -994,6 +1046,8 @@ export class Hud {
       badge,
       patienceArc,
       nm,
+      metaEl,
+      noteEl,
       barFill,
       statusEl,
       btn,

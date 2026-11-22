@@ -17,8 +17,9 @@ import type { GamePhase } from './game/types.ts';
 import { Hud } from './ui/hud.ts';
 import type { CardStateSnapshot } from './ui/hud.ts';
 import { Panels } from './ui/panels.ts';
-import { BIZ, COOK, DISHES, ECON } from './config.ts';
-import type { DishId } from './config.ts';
+import { MenuSheet } from './ui/menuSheet.ts';
+import { BIZ, COOK, DISHES, ECON, MENU_EXPORT } from './config.ts';
+import type { DishCategory, DishId } from './config.ts';
 import { spawnCustomer } from './game/customers.ts';
 import { calcDineDuration, calcEntryRevenue } from './game/economy.ts';
 
@@ -56,6 +57,7 @@ const lights = buildLighting(
 // ---- UI ----
 const hud = new Hud(uiRoot, rig.cam);
 const panels = new Panels(uiRoot);
+const menuSheet = new MenuSheet(uiRoot);
 
 // Non-invasive buffet economy status strip & panel adapter (leaves src/ui/* untouched for lane/ui)
 const econStyle = document.createElement('style');
@@ -326,6 +328,8 @@ interface TestHooks {
   camera(): ReturnType<CameraRig['info']>;
   cardState(tableId: string): CardStateSnapshot | null;
   passDomRects(): ReturnType<Hud['passDomRects']>;
+  openMenu(cat?: DishCategory | 'all'): void;
+  closeMenu(): void;
 }
 
 const ZERO_MOVE = new THREE.Vector2(0, 0);
@@ -386,6 +390,12 @@ const hooks: TestHooks = {
   },
   passDomRects() {
     return hud.passDomRects();
+  },
+  openMenu(cat = 'all') {
+    menuSheet.open(cat);
+  },
+  closeMenu() {
+    menuSheet.close();
   },
   state() {
     const nt = flow.player.navTarget;
@@ -478,6 +488,7 @@ const hooks: TestHooks = {
 
 (window as unknown as Record<string, unknown>).__frames = 0;
 (window as unknown as Record<string, unknown>).__perf = { calls: 0, tris: 0 };
+(window as unknown as Record<string, unknown>).__menu = MENU_EXPORT;
 (window as unknown as Record<string, unknown>).__game = flow;
 (window as unknown as Record<string, unknown>).__test = hooks;
 

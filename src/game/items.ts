@@ -11,22 +11,20 @@ let nextId = 1;
 // shared geometry
 const stickGeo = new THREE.CylinderGeometry(0.01, 0.01, 0.38, 5);
 const cubeGeo = new THREE.BoxGeometry(0.068, 0.054, 0.068);
-const cylGeo = new THREE.CylinderGeometry(0.055, 0.065, 0.042, 8);   // mushroom cap
-const noodleGeo = new THREE.TorusGeometry(0.042, 0.014, 6, 10);
+const capGeo = new THREE.CylinderGeometry(0.055, 0.065, 0.042, 8);    // wild fungus cap
+const sliceGeo = new THREE.BoxGeometry(0.072, 0.026, 0.076);          // crisp vegetable slice
 const trayGeo = new THREE.BoxGeometry(0.42, 0.024, 0.30);
 const plateGeo = new THREE.CylinderGeometry(0.16, 0.11, 0.028, 18);
 const plateRimGeo = new THREE.TorusGeometry(0.15, 0.014, 6, 18);
-const bowlGeo = new THREE.CylinderGeometry(0.105, 0.07, 0.08, 14, 1, true);
 
 const stickMat = new THREE.MeshStandardMaterial({ color: 0xc9a876, roughness: 0.8 });
 const trayMat = new THREE.MeshStandardMaterial({ color: 0x9b7444, roughness: 0.72 });
 const plateMat = new THREE.MeshStandardMaterial({ color: 0xe8e2d4, roughness: 0.3, metalness: 0.05 });
-const bowlMat = new THREE.MeshStandardMaterial({ color: 0x7a4a30, roughness: 0.5, side: THREE.DoubleSide });
-const fatMat = new THREE.MeshStandardMaterial({ color: 0xf5d0b8, roughness: 0.6 });
+const marbleMat = new THREE.MeshStandardMaterial({ color: 0xf2d6c4, roughness: 0.6 });
 
 for (const r of [
-  stickGeo, cubeGeo, cylGeo, noodleGeo, trayGeo, plateGeo, plateRimGeo, bowlGeo,
-  stickMat, trayMat, plateMat, bowlMat, fatMat,
+  stickGeo, cubeGeo, capGeo, sliceGeo, trayGeo, plateGeo, plateRimGeo,
+  stickMat, trayMat, plateMat, marbleMat,
 ]) {
   r.userData.shared = true;
 }
@@ -77,29 +75,23 @@ function buildSkewer(dish: DishId, stage: ItemStage): THREE.Group {
 
   const gap = 0.072;
   const burnt = stage === 'waste';
+  const cat = DISHES[dish].category;
   const m = dishMat(dish, stage);
   g.userData.meat = m;
 
-  if (dish === 'mixian') {
-    for (let i = -1; i <= 1; i++) {
-      const n = new THREE.Mesh(noodleGeo, m);
-      n.position.set(i * 0.062, 0.01, 0);
-      n.rotation.y = Math.PI / 2;
-      g.add(n);
-    }
-  } else {
-    for (let i = -1; i <= 1; i++) {
-      const geo = dish === 'mushroom' ? cylGeo : cubeGeo;
-      const p = new THREE.Mesh(geo, m);
-      p.position.set(i * gap, 0.014, 0);
-      if (dish === 'mushroom') p.rotation.z = i * 0.25;
-      g.add(p);
-      if (dish === 'pork' && !burnt) {
-        const fat = new THREE.Mesh(cubeGeo, fatMat);
-        fat.scale.set(1.02, 0.3, 1.02);
-        fat.position.copy(p.position);
-        g.add(fat);
-      }
+  for (let i = -1; i <= 1; i++) {
+    const geo = cat === '云贵菌类' ? capGeo : cat === '特色时蔬' ? sliceGeo : cubeGeo;
+    const p = new THREE.Mesh(geo, m);
+    p.position.set(i * gap, 0.014, 0);
+    if (cat === '云贵菌类') p.rotation.z = i * 0.25;
+    if (cat === '特色时蔬') p.rotation.y = i * 0.22;
+    if (cat === '云贵风味鸡') p.scale.set(1.06, 0.88, 0.94);
+    g.add(p);
+    if (cat === '真真牛' && !burnt) {
+      const marble = new THREE.Mesh(cubeGeo, marbleMat);
+      marble.scale.set(1.02, 0.24, 1.02);
+      marble.position.copy(p.position);
+      g.add(marble);
     }
   }
   g.traverse((o) => { o.castShadow = true; });
@@ -130,33 +122,20 @@ export function buildPassTray(dish: DishId): THREE.Group {
 
 function buildPlated(dish: DishId, skewer: THREE.Group): THREE.Group {
   const g = new THREE.Group();
-  if (dish === 'mixian') {
-    const bowl = new THREE.Mesh(bowlGeo, bowlMat);
-    bowl.position.y = 0.04;
-    g.add(bowl);
-    for (let i = 0; i < 4; i++) {
-      const n = new THREE.Mesh(noodleGeo, dishMat(dish, 'plated'));
-      n.position.set(((i * 31) % 7 - 3) * 0.009, 0.06 + (i % 2) * 0.008, ((i * 17) % 5 - 2) * 0.011);
-      n.rotation.x = -Math.PI / 2 + (i % 3) * 0.2;
-      n.scale.setScalar(0.62);
-      g.add(n);
-    }
-  } else {
-    const plate = new THREE.Mesh(plateGeo, plateMat);
-    plate.position.y = 0.014;
-    g.add(plate);
-    const rim = new THREE.Mesh(plateRimGeo, plateMat);
-    rim.rotation.x = Math.PI / 2;
-    rim.position.y = 0.026;
-    g.add(rim);
-    skewer.position.set(0, 0.055, -0.025);
-    skewer.rotation.set(0, 0.28, 0);
-    g.add(skewer);
-    const s2 = buildSkewer(dish, 'plated');
-    s2.position.set(0, 0.055, 0.045);
-    s2.rotation.y = -0.22;
-    g.add(s2);
-  }
+  const plate = new THREE.Mesh(plateGeo, plateMat);
+  plate.position.y = 0.014;
+  g.add(plate);
+  const rim = new THREE.Mesh(plateRimGeo, plateMat);
+  rim.rotation.x = Math.PI / 2;
+  rim.position.y = 0.026;
+  g.add(rim);
+  skewer.position.set(0, 0.055, -0.025);
+  skewer.rotation.set(0, 0.28, 0);
+  g.add(skewer);
+  const s2 = buildSkewer(dish, 'plated');
+  s2.position.set(0, 0.055, 0.045);
+  s2.rotation.y = -0.22;
+  g.add(s2);
   g.traverse((o) => { o.castShadow = true; });
   return g;
 }
@@ -172,8 +151,8 @@ export function setItemStage(item: Item, stage: ItemStage): void {
   const pos = old.position.clone();
   const rotY = old.rotation.y;
   item.stage = stage;
-  const plated = stage === 'plated' && item.dish !== 'mixian';
-  item.obj = stage === 'plated'
+  const plated = stage === 'plated';
+  item.obj = plated
     ? buildPlated(item.dish, old as THREE.Group)
     : buildSkewer(item.dish, stage);
   if (plated) item.obj.userData.meat = old.userData.meat;

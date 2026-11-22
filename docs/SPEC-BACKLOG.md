@@ -1317,3 +1317,19 @@ vision 复核：竖屏放大后独立读出「三个筐＝红肉串 / 褐圆帽�
 ---
 
 本轮（第 27 轮）新开 4 条，均为 P1：`B-133` 模态态补隐藏顶栏 + 首屏品类主视觉与「继续上次进度」、`B-134` 世界标注层与订单卡/已就座气泡双向避让、`B-135` 横屏上排餐桌取景安全区下移、`B-136` 上菜进食反馈 + 小费拆解 + 结算星级归因。本轮实测确认已修复、不再开单：`B-107`（愤怒离店红字飘字，竖屏 2 条 / 横屏 1 条）与 `B-126`（`menu`/`results` 态 `#bbq-stick/#bbq-act/#bbq-orders` 全 `display:none`、`0×0`）。仍存在并沿用原编号：`B-081`（公网旧包，唯一 P0）、`B-045`、`B-064`、`B-066`、`B-078`（横屏 `…` 气泡与顶栏交叠 `530px²`）、`B-093`、`B-103`、`B-112`、`B-125`、`B-128`（竖屏双客气泡 `@(206.1,191.3)`/`@(201.1,191.3)` 重合）。
+
+### B-134 状态：DONE（`738d08c`，部署包 `assets/index-DtJaLCl2.js`，`__build=738d08c-202611220409`，第 28 轮开发）
+实现（`src/ui/hud.ts` + `src/main.ts`，agy 回落后由调度方验收与提交）：
+1. `walking-in` 顾客不再渲染 `53×32` 的 `…` 气泡，改为 `.bubble.entering` 的 `10×10` 金色入店点（`.bubble.entering > * { display:none }`），落座后才换成正式菜名气泡。
+2. `updateBubbles()` 改为「先算再写」：每帧一次性量好 `#bbq-hud .topbar`、`#bbq-orders`（含每张 `.card`）、`.popup`、`.order-ring`/`.order-num` 与气泡自身尺寸，再由新私有方法 `placeBubble()` 顺序求解位置——优先上移，其次同排左右平移，再向下让位，最后全屏安全区兜底；每个已放置气泡会作为下一个气泡的硬障碍，因此同帧气泡互不重叠；视口约束 `left>=4 / right<=vw-4 / top>=topbar.bottom+6`。
+3. `updateRings()` 给 `.order-ring` / `.order-num` 加顶栏安全带（`top >= topbar.bottom+6`），横屏顶部机位不再把 `t2` 光圈/桌号压到顶栏里（B-135 的垂直部分）。
+4. `main.ts` 把 `step()` 与 `resize` 的调用顺序改为 `updateRings()` → `updateBubbles()`，让气泡当帧即能避让光圈。
+5. 新增 `e2e/labels.mjs`（双端 × `E2E_RUNS`，场景 1：3 客就座 + 1 客进店跨 4 个机位/走位；场景 2：2 客就座 + 2 客同时进店近重合），断言气泡与 `#bbq-orders`/`.card`/顶栏/光圈交叠全为 `0`、气泡两两不重叠且不出安全区、`walking-in` 气泡 `<=12×12` 且非 `…`。
+验收（调度方亲跑，非 agy 自述）：
+- `npx tsc --noEmit` 0 错；`npm run build` OK（`assets/index-DtJaLCl2.js`）。
+- `E2E_RUNS=3 node e2e/labels.mjs` 双端 **6/6 PASS `LABELS OK`**：竖屏 `s1` 交叠 `0`、`minRingTop=306.2`，横屏 `s1` 交叠 `0`、`minRingTop=50.5 >= 50`（原 `3.7`），`s2` 双进店点 `[10×10,10×10]` 两两交叠 `0`，双端 0 JS error。
+- 回归：`e2e/modal-hud.mjs`（`E2E_RUNS=2`）双端 **PASS**（menu/results 态 `stick/act/orders` 仍 `display:none`，B-126 语义未破）；`e2e/orders.mjs` **`ORDERS OK`**（a–f 全 PASS，卡片升序/光圈/数字牌一致）。
+- 部署：`ci-deploy.sh` DEPLOY OK；`127.0.0.1:3035/` 200、`127.0.0.1/bbq/` 200，index 引用 `assets/index-DtJaLCl2.js`。
+- vision 复核（4 张）：竖屏 `b134-port-01-card3-clear.png` 三张订单卡「完整可读、没有被其它元素明显压住」，卡片下方只有一枚小金色点不构成遮挡；`b134-port-02-dual-entering.png`「三张订单卡完整可读、未被遮挡」，三个菜名气泡「均无互相覆盖」；横屏 `b134-land-01-t2-cards-clear.png`「顶栏与订单卡完全分开，光圈/桌号/气泡均位于顶栏下方，无可读性问题」。
+遗留：竖屏 `t3` 桌光圈 `128×58 @(400,306)` 与桌号 `@(450,355)` 仍整块横向出画（既有 `B-128`/`B-125` 系列的横向越界，本轮只做了竖直钳制，未处理水平方向）。
+下一轮建议：`docs/GAME-DESIGN.md` 已在 `bf34db5` 定调「一键循环（上炉/起锅各一次点击）、废弃切配/装盘/料箱」，`B-129`（切配进度环）、`B-131`（烤位序号）、`B-132`（装盘暂存）按新方向已作废——下一轮应直接做玩法重构第一刀：订单卡内嵌圆形主按钮 + 3 烤位排队 + 4–9s 完美窗口判定，而不是继续打磨旧工位。

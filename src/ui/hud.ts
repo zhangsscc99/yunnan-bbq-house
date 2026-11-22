@@ -122,6 +122,13 @@ const CSS = `
 .bubble svg { flex: none; }
 .bubble svg.food-ico { width: 16px; height: 16px; flex: none; }
 .bubble.angry { border-color: #e05a3a; color: #ff9a80; }
+.bubble.entering {
+  width: 10px; height: 10px; box-sizing: border-box;
+  padding: 0; gap: 0; border-radius: 50%;
+  background: rgba(240,192,96,.92); border: 1.5px solid rgba(24,16,12,.85);
+  box-shadow: 0 0 6px rgba(240,192,96,.6);
+}
+.bubble.entering > * { display: none; }
 
 #bbq-grillbars { position: absolute; inset: 0; overflow: hidden; }
 .gb {
@@ -237,7 +244,15 @@ interface Bubble {
   label: string;
   frac: number;
   angry: boolean;
+  entering: boolean;
 }
+
+const BUBBLE_EDGE = 4;
+const BUBBLE_TOP_GAP = 6;
+const BUBBLE_PAD = 4;
+const BUBBLE_EPS = 0.5;
+const RING_TOP_GAP = 6;
+const RING_EPS = 0.5;
 
 const POPUP_LIFT = 44;
 const POPUP_EDGE = 8;
@@ -284,6 +299,7 @@ export class Hud {
   private cam: THREE.Camera;
   private tmp = new THREE.Vector3();
   private ringPos = new THREE.Vector3();
+  private headPos = new THREE.Vector3();
 
   constructor(uiRoot: HTMLElement, cam: THREE.Camera) {
     this.cam = cam;
@@ -557,6 +573,8 @@ export class Hud {
       if (c.phase === 'seated' || c.phase === 'eating') active.add(c.table);
     }
     this.cam.updateMatrixWorld();
+    const tb = this.topbarEl.getBoundingClientRect();
+    const topSafe = (tb.height > 0 ? tb.bottom : 0) + RING_TOP_GAP + RING_EPS;
     const byId = new Map<string, TableRuntime>(tables.map((t) => [t.id, t]));
     for (const tableId of active) {
       const table = byId.get(tableId);
@@ -581,11 +599,15 @@ export class Hud {
         entry.num.style.display = 'none';
       } else {
         entry.ring.style.display = 'block';
-        entry.ring.style.left = `${p.x}px`;
-        entry.ring.style.top = `${p.y}px`;
         entry.num.style.display = 'flex';
+        const ringH = entry.ring.offsetHeight || 58;
+        const numH = entry.num.offsetHeight || 28;
+        const ringCy = Math.max(p.y, topSafe + ringH / 2);
+        const numCy = Math.max(ringCy + 34, topSafe + numH / 2);
+        entry.ring.style.left = `${p.x}px`;
+        entry.ring.style.top = `${ringCy}px`;
         entry.num.style.left = `${p.x}px`;
-        entry.num.style.top = `${p.y + 34}px`;
+        entry.num.style.top = `${numCy}px`;
       }
     }
     for (const [tableId, entry] of this.ringMap) {
@@ -857,16 +879,177 @@ export class Hud {
     b.root.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px) translate(-50%, -100%)`;
   }
 
-  /** refresh world-anchored bubbles above customers: dish name + patience ring */
+  private placeBubble(
+    prefL: number,
+    prefT: number,
+    w: number,
+    h: number,
+    vw: number,
+    vh: number,
+    topSafe: number,
+    hardObs: Box[],
+    softObs: Box[],
+  ): { l: number; t: number } {
+    const minL = BUBBLE_EDGE + BUBBLE_EPS;
+    const maxL = Math.max(minL, vw - BUBBLE_EDGE - w - BUBBLE_EPS);
+    const minT = topSafe + BUBBLE_EPS;
+    const maxT = Math.max(minT, vh - BUBBLE_EDGE - h - BUBBLE_EPS);
+    const clamp = (v: number, lo: number, hi: number): number => Math.min(Math.max(v, lo), hi);
+    const l0 = clamp(prefL, minL, maxL);
+    const t0 = clamp(prefT, minT, maxT);
+    const maxLocalUp = Math.max(h * 2 + 16, 80);
+    const maxLocalDx = Math.max(w + 64, 150);
+    const stepX = Math.max(12, Math.round(w * 0.4));
+    const stepY = 8;
+
+    const solve = (obs: Box[], pad: number): { l: number; t: number } | null => {
+      const hits = (l: number, t: number): boolean =>
+        obs.some((o) => l < o.right + pad && o.left - pad < l + w && t < o.bottom + pad && o.top - pad < t + h);
+
+      if (!hits(l0, t0)) return { l: l0, t: t0 };
+
+      const upRows = (limit: number): number[] => {
+        const floorT = Math.max(minT, t0 - limit);
+        const rows: number[] = [];
+        for (const o of obs) {
+          const above = o.top - pad - h - 0.5;
+          if (above < t0 && above >= floorT) rows.push(above);
+        }
+        for (let t = t0 - stepY; t >= floorT; t -= stepY) rows.push(t);
+        if (floorT < t0) rows.push(floorT);
+        rows.sort((a, b) => b - a);
+        return rows;
+      };
+
+      const downRows = (): number[] => {
+        const rows: number[] = [];
+        for (const o of obs) {
+          const below = o.bottom + pad + 0.5;
+          if (below > t0 && below <= maxT) rows.push(below);
+        }
+        for (let t = t0 + stepY; t <= maxT; t += stepY) rows.push(t);
+        if (maxT > t0) rows.push(maxT);
+        rows.sort((a, b) => a - b);
+        return rows;
+      };
+
+      const findXOnRow = (t: number, localOnly: boolean): number | null => {
+        if (!hits(l0, t)) return l0;
+        const cands: number[] = [];
+        const add = (raw: number): void => {
+          const l = clamp(raw, minL, maxL);
+          if (localOnly && Math.abs(l - l0) > maxLocalDx) return;
+          cands.push(l);
+        };
+        for (const o of obs) {
+          if (t < o.bottom + pad && o.top - pad < t + h) {
+            add(o.left - pad - w - 0.5);
+            add(o.right + pad + 0.5);
+          }
+        }
+        const maxK = localOnly ? Math.ceil(maxLocalDx / stepX) : Math.ceil(vw / stepX);
+        for (let k = 1; k <= maxK; k++) {
+          add(l0 - k * stepX);
+          add(l0 + k * stepX);
+        }
+        if (!localOnly) {
+          add(minL);
+          add(maxL);
+        }
+        cands.sort((a, b) => Math.abs(a - l0) - Math.abs(b - l0));
+        for (const l of cands) {
+          if (!hits(l, t)) return l;
+        }
+        return null;
+      };
+
+      // 1) Move up first within local headroom
+      const localUp = upRows(maxLocalUp);
+      for (const t of localUp) {
+        if (!hits(l0, t)) return { l: l0, t };
+      }
+
+      // 2) Still conflicting -> shift left / right on anchor row, then upward rows
+      const lx0 = findXOnRow(t0, true);
+      if (lx0 !== null) return { l: lx0, t: t0 };
+      for (const t of localUp) {
+        const l = findXOnRow(t, true);
+        if (l !== null) return { l, t };
+      }
+
+      // 3) Local downward + horizontal when pinned under topbar or #bbq-orders (closest Manhattan)
+      let bestDown: { l: number; t: number } | null = null;
+      let bestDownDist = Infinity;
+      const down = downRows();
+      for (const t of down) {
+        const l = findXOnRow(t, true);
+        if (l !== null) {
+          const dist = Math.abs(l - l0) + Math.abs(t - t0);
+          if (dist < bestDownDist) {
+            bestDownDist = dist;
+            bestDown = { l, t };
+          }
+        }
+      }
+      if (bestDown) return bestDown;
+
+      // 4) Exhaustive safe-area fallback (closest Manhattan distance)
+      let best: { l: number; t: number } | null = null;
+      let bestDist = Infinity;
+      const allRows = [t0, ...upRows(Infinity), ...down];
+      for (const t of allRows) {
+        const l = findXOnRow(t, false);
+        if (l !== null) {
+          const dist = Math.abs(l - l0) + Math.abs(t - t0);
+          if (dist < bestDist) {
+            bestDist = dist;
+            best = { l, t };
+          }
+        }
+      }
+      return best;
+    };
+
+    const allObs = softObs.length ? hardObs.concat(softObs) : hardObs;
+    for (const pad of [BUBBLE_PAD, 1, 0.5]) {
+      const p = solve(allObs, pad);
+      if (p) return p;
+    }
+    if (softObs.length) {
+      for (const pad of [BUBBLE_PAD, 1, 0.5]) {
+        const p = solve(hardObs, pad);
+        if (p) return p;
+      }
+    }
+    return { l: l0, t: t0 };
+  }
+
+  /** refresh world-anchored bubbles above customers: dish name + patience ring (seated/eating) or <=12px entering dot (walking-in), with order-card / bubble / topbar avoidance */
   updateBubbles(customers: Customer[]): void {
     if (!this.playHudVisible) return;
+    this.cam.updateMatrixWorld();
+
+    // Place seated/eating bubbles before walking-in dots in deterministic order so seated labels stay anchored.
+    const ordered = customers
+      .filter((c) => c.phase === 'seated' || c.phase === 'eating' || c.phase === 'walking-in')
+      .sort((a, b) => {
+        const ae = a.phase === 'walking-in' ? 1 : 0;
+        const be = b.phase === 'walking-in' ? 1 : 0;
+        if (ae !== be) return ae - be;
+        return tableOrder(a.table) - tableOrder(b.table) || a.id - b.id;
+      });
+
     const live = new Set<number>();
-    for (const c of customers) {
-      if (c.phase !== 'seated' && c.phase !== 'eating' && c.phase !== 'walking-in') continue;
+    const pending: { b: Bubble; px: number; py: number }[] = [];
+
+    for (const c of ordered) {
       live.add(c.id);
       let b = this.bubbleMap.get(c.id);
       if (!b) {
         const root = el('div', 'bubble', this.bubblesEl);
+        root.style.left = '0px';
+        root.style.top = '0px';
+        root.dataset.table = c.table;
         root.innerHTML = `<svg width="26" height="26" viewBox="0 0 30 30">
           <circle cx="15" cy="15" r="${RING_R}" fill="none" stroke="rgba(240,192,96,.22)" stroke-width="3.5"/>
           <circle class="arc" cx="15" cy="15" r="${RING_R}" fill="none" stroke="#f0c060" stroke-width="3.5"
@@ -876,44 +1059,119 @@ export class Hud {
           root,
           arc: root.querySelector('.arc') as SVGElement,
           nm: root.querySelector('.nm') as HTMLElement,
-          label: '', frac: -1, angry: false,
+          label: '', frac: -1, angry: false, entering: false,
         };
         this.bubbleMap.set(c.id, b);
       }
-      const head = c.obj.position.clone();
-      head.y += 1.35;
-      const p = this.project(head);
-      if (!p) { b.root.style.opacity = '0'; continue; }
+
+      if (b.root.dataset.phase !== c.phase) b.root.dataset.phase = c.phase;
+      const entering = c.phase === 'walking-in';
+      if (entering !== b.entering) {
+        b.entering = entering;
+        b.root.classList.toggle('entering', entering);
+      }
+      if (entering) {
+        if (b.label !== '') {
+          b.label = '';
+          b.nm.innerHTML = '';
+        }
+        if (b.angry) {
+          b.angry = false;
+          b.root.classList.remove('angry');
+          b.arc.setAttribute('stroke', '#f0c060');
+        }
+      } else {
+        const frac = c.phase === 'eating' ? 1 : Math.min(1, Math.max(0, c.patience / c.patienceMax));
+        const angry = c.phase === 'seated' && frac < 0.25;
+        const label = c.phase === 'eating' ? '用餐中' : DISHES[c.dish].name;
+        const labelKey = `${c.dish}|${label}`;
+        if (labelKey !== b.label) {
+          b.label = labelKey;
+          b.nm.innerHTML = FOOD_ICONS[c.dish];
+          const span = document.createElement('span');
+          span.textContent = label;
+          b.nm.appendChild(span);
+        }
+        if (Math.abs(frac - b.frac) > 0.005) {
+          b.frac = frac;
+          b.arc.setAttribute('stroke-dashoffset', String(RING_C * (1 - frac)));
+        }
+        if (angry !== b.angry) {
+          b.angry = angry;
+          b.root.classList.toggle('angry', angry);
+          b.arc.setAttribute('stroke', angry ? '#e05a3a' : '#f0c060');
+        }
+      }
+
+      this.headPos.copy(c.obj.position);
+      this.headPos.y += 1.35;
+      const p = this.project(this.headPos);
+      if (!p) {
+        b.root.style.opacity = '0';
+        continue;
+      }
       b.root.style.opacity = '1';
-      b.root.style.left = `${p.x}px`;
-      b.root.style.top = `${Math.max(p.y, 66)}px`;
-      const frac = c.phase === 'eating' ? 1 : Math.min(1, Math.max(0, c.patience / c.patienceMax));
-      const angry = c.phase === 'seated' && frac < 0.25;
-      const label = c.phase === 'walking-in' ? '…' : c.phase === 'eating' ? '用餐中' : DISHES[c.dish].name;
-      const showIcon = c.phase !== 'walking-in';
-      const labelKey = showIcon ? `${c.dish}|${label}` : label;
-      if (labelKey !== b.label) {
-        b.label = labelKey;
-        b.nm.innerHTML = showIcon ? FOOD_ICONS[c.dish] : '';
-        const span = document.createElement('span');
-        span.textContent = label;
-        b.nm.appendChild(span);
-      }
-      if (Math.abs(frac - b.frac) > 0.005) {
-        b.frac = frac;
-        b.arc.setAttribute('stroke-dashoffset', String(RING_C * (1 - frac)));
-      }
-      if (angry !== b.angry) {
-        b.angry = angry;
-        b.root.classList.toggle('angry', angry);
-        b.arc.setAttribute('stroke', angry ? '#e05a3a' : '#f0c060');
-      }
+      pending.push({ b, px: p.x, py: p.y });
     }
+
     for (const [id, b] of this.bubbleMap) {
       if (!live.has(id)) {
         b.root.remove();
         this.bubbleMap.delete(id);
       }
+    }
+
+    if (!pending.length) return;
+
+    // Batch layout reads once per frame: obstacles + bubble dimensions.
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const tb = this.topbarEl.getBoundingClientRect();
+    const topSafe = (tb.height > 0 ? tb.bottom : 0) + BUBBLE_TOP_GAP;
+    const toBox = (r: DOMRect): Box => ({ left: r.left, top: r.top, right: r.right, bottom: r.bottom });
+
+    const hardObs: Box[] = [];
+    if (tb.width > 0 && tb.height > 0) hardObs.push(toBox(tb));
+    const ordersRect = this.ordersEl.getBoundingClientRect();
+    if (ordersRect.width > 0 && ordersRect.height > 0) hardObs.push(toBox(ordersRect));
+    this.popupsEl.querySelectorAll<HTMLElement>('.popup').forEach((n) => {
+      const r = n.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0) hardObs.push(toBox(r));
+    });
+
+    const softObs: Box[] = [];
+    this.ringsEl.querySelectorAll<HTMLElement>('.order-ring, .order-num').forEach((n) => {
+      if (n.style.display === 'none') return;
+      const r = n.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0) softObs.push(toBox(r));
+    });
+
+    const measured = pending.map((item) => {
+      const r = item.b.root.getBoundingClientRect();
+      return { ...item, w: r.width, h: r.height };
+    });
+
+    // Place sequentially so every bubble avoids #bbq-orders, topbar, active popups, table rings, and earlier bubbles.
+    const placedPos: { b: Bubble; cx: number; bottom: number }[] = [];
+    for (const item of measured) {
+      const { l, t } = this.placeBubble(
+        item.px - item.w / 2,
+        item.py - item.h,
+        item.w,
+        item.h,
+        vw,
+        vh,
+        topSafe,
+        hardObs,
+        softObs,
+      );
+      hardObs.push({ left: l, top: t, right: l + item.w, bottom: t + item.h });
+      placedPos.push({ b: item.b, cx: l + item.w / 2, bottom: t + item.h });
+    }
+
+    for (const p of placedPos) {
+      p.b.root.style.left = `${p.cx}px`;
+      p.b.root.style.top = `${p.bottom}px`;
     }
   }
 

@@ -157,7 +157,10 @@ panels.showStart(flow.cfg.target, flow.cfg.duration, restart, flow.level);
 window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   rig.resize(window.innerWidth, window.innerHeight);
-  if (flow.phase === 'playing') hud.updateRings(flow.customers, dining.tables);
+  if (flow.phase === 'playing') {
+    hud.updateRings(flow.customers, dining.tables);
+    hud.updateBubbles(flow.customers);
+  }
 });
 
 // ---- loop ----
@@ -207,9 +210,9 @@ function step(rawDt: number, draw = true, move?: THREE.Vector2): void {
   if (flow.phase === 'playing') {
     // action button semantics (same-frame DOM sync)
     syncAction();
-    // world-anchored bubbles & table order rings
-    hud.updateBubbles(flow.customers);
+    // world-anchored table order rings & bubbles (rings first so bubbles can avoid them same-frame)
     hud.updateRings(flow.customers, dining.tables);
+    hud.updateBubbles(flow.customers);
     hud.updateGrill(flow.grill.slots);
     hud.updateChop(chopBoard, COOK.chopTaps);
     hud.updateOffscreen(offscreenTarget());

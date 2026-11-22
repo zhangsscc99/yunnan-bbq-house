@@ -1,0 +1,762 @@
+{
+  "viewport": {
+    "width": 844,
+    "height": 390
+  },
+  "tag": "land",
+  "stage": "play",
+  "shots": [
+    "/tmp/bbq-r32/land-01-title.png",
+    "/tmp/bbq-r32/land-02-orders.png",
+    "/tmp/bbq-r32/land-03-served.png",
+    "/tmp/bbq-r32/land-04-rapid.png"
+  ],
+  "errors": [],
+  "warns": [
+    "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+  ],
+  "build": "ebc762a-202611220549",
+  "title": {
+    "rect": {
+      "x": 0,
+      "y": 0,
+      "width": 844,
+      "height": 390
+    },
+    "h1": "柳真真云南烤肉",
+    "sub": "炭火生香，小店开张。\n取料 → 切配 → 炭烤 → 装盘 → 上菜",
+    "target": "第 1 关 · 目标：3 分钟营业额 ¥180",
+    "verdict": null,
+    "verdictClass": null,
+    "stars": null,
+    "rows": [],
+    "buttons": [
+      {
+        "text": "开 店",
+        "btn": "start",
+        "disabled": false
+      }
+    ],
+    "text": "柳真真云南烤肉 | 炭火生香，小店开张。 | 取料 → 切配 → 炭烤 → 装盘 → 上菜 | 第 1 关 · 目标：3 分钟营业额 ¥180 | 开 店"
+  },
+  "afterStart": {
+    "panel": null,
+    "state": {
+      "phase": "playing",
+      "level": 1,
+      "levelTarget": 180,
+      "money": 0,
+      "timeLeft": 180,
+      "served": 0,
+      "angry": 0,
+      "waste": 0,
+      "hint": {
+        "kind": "station",
+        "id": "crate-pork",
+        "x": -4.5,
+        "z": 2
+      },
+      "carrying": null,
+      "action": "none",
+      "actionLabel": "去料箱取料",
+      "player": {
+        "x": -2.5,
+        "z": 0
+      },
+      "stations": {
+        "bin": {
+          "x": -5.5,
+          "z": 2
+        },
+        "crate-pork": {
+          "x": -4.5,
+          "z": 2
+        },
+        "crate-mush": {
+          "x": -3.5,
+          "z": 2
+        },
+        "crate-mix": {
+          "x": -2.5,
+          "z": 2
+        },
+        "chop": {
+          "x": -1,
+          "z": 2
+        },
+        "grill": {
+          "x": 1.5,
+          "z": 2
+        },
+        "plate": {
+          "x": 4,
+          "z": 2
+        }
+      },
+      "tables": {
+        "t1": {
+          "x": -3.3,
+          "z": -1.2000000000000002
+        },
+        "t2": {
+          "x": 0.2999999999999998,
+          "z": -1.2000000000000002
+        },
+        "t3": {
+          "x": 3.9000000000000004,
+          "z": -1.2000000000000002
+        },
+        "t4": {
+          "x": 2.0999999999999996,
+          "z": 0.7999999999999998
+        }
+      },
+      "customers": [],
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      },
+      "calls": 77,
+      "tris": 17064
+    }
+  },
+  "seatedCards": [],
+  "afterFirstClick": {
+    "cards": [
+      {
+        "text": "1 烤五花肉拼盘 ¥48 · 生串 4s 起锅",
+        "cookWindow": "raw",
+        "rect": {
+          "x": 388,
+          "y": 150,
+          "w": 221,
+          "h": 64
+        },
+        "btn": {
+          "disabled": false,
+          "x": 574,
+          "y": 182,
+          "w": 56,
+          "h": 56
+        }
+      },
+      {
+        "text": "2 烤五花肉拼盘 ¥48 · 等待 上炉",
+        "cookWindow": "idle",
+        "rect": {
+          "x": 613,
+          "y": 150,
+          "w": 221,
+          "h": 64
+        },
+        "btn": {
+          "disabled": false,
+          "x": 799,
+          "y": 182,
+          "w": 56,
+          "h": 56
+        }
+      },
+      {
+        "text": "3 烤五花肉拼盘 ¥48 · 等待 上炉",
+        "cookWindow": "idle",
+        "rect": {
+          "x": 613,
+          "y": 218,
+          "w": 221,
+          "h": 64
+        },
+        "btn": {
+          "disabled": false,
+          "x": 799,
+          "y": 250,
+          "w": 56,
+          "h": 56
+        }
+      }
+    ],
+    "state": {
+      "phase": "playing",
+      "level": 1,
+      "levelTarget": 180,
+      "money": 0,
+      "timeLeft": 159.93333333331736,
+      "served": 0,
+      "angry": 0,
+      "waste": 0,
+      "hint": {
+        "kind": "station",
+        "id": "crate-pork",
+        "x": -4.5,
+        "z": 2
+      },
+      "carrying": null,
+      "action": "none",
+      "actionLabel": "去料箱取料",
+      "player": {
+        "x": -2.5,
+        "z": 0
+      },
+      "stations": {
+        "bin": {
+          "x": -5.5,
+          "z": 2
+        },
+        "crate-pork": {
+          "x": -4.5,
+          "z": 2
+        },
+        "crate-mush": {
+          "x": -3.5,
+          "z": 2
+        },
+        "crate-mix": {
+          "x": -2.5,
+          "z": 2
+        },
+        "chop": {
+          "x": -1,
+          "z": 2
+        },
+        "grill": {
+          "x": 1.5,
+          "z": 2
+        },
+        "plate": {
+          "x": 4,
+          "z": 2
+        }
+      },
+      "tables": {
+        "t1": {
+          "x": -3.3,
+          "z": -1.2000000000000002
+        },
+        "t2": {
+          "x": 0.2999999999999998,
+          "z": -1.2000000000000002
+        },
+        "t3": {
+          "x": 3.9000000000000004,
+          "z": -1.2000000000000002
+        },
+        "t4": {
+          "x": 2.0999999999999996,
+          "z": 0.7999999999999998
+        }
+      },
+      "customers": [
+        {
+          "id": 1,
+          "dish": "pork",
+          "phase": "seated",
+          "patience": 56.58333333333438,
+          "table": "t1",
+          "x": -4.1,
+          "z": -2.43
+        },
+        {
+          "id": 2,
+          "dish": "pork",
+          "phase": "seated",
+          "patience": 58.83333333333425,
+          "table": "t2",
+          "x": -0.5,
+          "z": -2.43
+        },
+        {
+          "id": 3,
+          "dish": "pork",
+          "phase": "seated",
+          "patience": 61.083333333334124,
+          "table": "t3",
+          "x": 3.1,
+          "z": -2.43
+        }
+      ],
+      "grill": [
+        {
+          "stage": "raw",
+          "t": 0.39999999999999997
+        },
+        null,
+        null
+      ],
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      },
+      "calls": 90,
+      "tris": 21176
+    }
+  },
+  "atPerfect": {
+    "cards": [
+      {
+        "text": "1 烤五花肉拼盘 ¥48 · 完美 4s 起锅",
+        "cookWindow": "perfect",
+        "rect": {
+          "x": 388,
+          "y": 150,
+          "w": 221,
+          "h": 64
+        },
+        "btn": {
+          "disabled": false,
+          "x": 574,
+          "y": 182,
+          "w": 56,
+          "h": 56
+        }
+      },
+      {
+        "text": "2 烤五花肉拼盘 ¥48 · 等待 上炉",
+        "cookWindow": "idle",
+        "rect": {
+          "x": 613,
+          "y": 150,
+          "w": 221,
+          "h": 64
+        },
+        "btn": {
+          "disabled": false,
+          "x": 799,
+          "y": 182,
+          "w": 56,
+          "h": 56
+        }
+      },
+      {
+        "text": "3 烤五花肉拼盘 ¥48 · 等待 上炉",
+        "cookWindow": "idle",
+        "rect": {
+          "x": 613,
+          "y": 218,
+          "w": 221,
+          "h": 64
+        },
+        "btn": {
+          "disabled": false,
+          "x": 799,
+          "y": 250,
+          "w": 56,
+          "h": 56
+        }
+      }
+    ],
+    "state": {
+      "phase": "playing",
+      "level": 1,
+      "levelTarget": 180,
+      "money": 0,
+      "timeLeft": 154.8333333333133,
+      "served": 0,
+      "angry": 0,
+      "waste": 0,
+      "hint": {
+        "kind": "station",
+        "id": "crate-pork",
+        "x": -4.5,
+        "z": 2
+      },
+      "carrying": null,
+      "action": "none",
+      "actionLabel": "去料箱取料",
+      "player": {
+        "x": -2.5,
+        "z": 0
+      },
+      "stations": {
+        "bin": {
+          "x": -5.5,
+          "z": 2
+        },
+        "crate-pork": {
+          "x": -4.5,
+          "z": 2
+        },
+        "crate-mush": {
+          "x": -3.5,
+          "z": 2
+        },
+        "crate-mix": {
+          "x": -2.5,
+          "z": 2
+        },
+        "chop": {
+          "x": -1,
+          "z": 2
+        },
+        "grill": {
+          "x": 1.5,
+          "z": 2
+        },
+        "plate": {
+          "x": 4,
+          "z": 2
+        }
+      },
+      "tables": {
+        "t1": {
+          "x": -3.3,
+          "z": -1.2000000000000002
+        },
+        "t2": {
+          "x": 0.2999999999999998,
+          "z": -1.2000000000000002
+        },
+        "t3": {
+          "x": 3.9000000000000004,
+          "z": -1.2000000000000002
+        },
+        "t4": {
+          "x": 2.0999999999999996,
+          "z": 0.7999999999999998
+        }
+      },
+      "customers": [
+        {
+          "id": 1,
+          "dish": "pork",
+          "phase": "seated",
+          "patience": 51.48333333333467,
+          "table": "t1",
+          "x": -4.1,
+          "z": -2.43
+        },
+        {
+          "id": 2,
+          "dish": "pork",
+          "phase": "seated",
+          "patience": 53.73333333333454,
+          "table": "t2",
+          "x": -0.5,
+          "z": -2.43
+        },
+        {
+          "id": 3,
+          "dish": "pork",
+          "phase": "seated",
+          "patience": 55.983333333334414,
+          "table": "t3",
+          "x": 3.1,
+          "z": -2.43
+        }
+      ],
+      "grill": [
+        {
+          "stage": "cooked",
+          "t": 5.499999999999986
+        },
+        null,
+        null
+      ],
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      },
+      "calls": 90,
+      "tris": 21176
+    }
+  },
+  "afterServe": {
+    "cards": [
+      {
+        "text": "1 烤五花肉拼盘 ¥48 · 用餐中 已上",
+        "cookWindow": "eating",
+        "rect": {
+          "x": 388,
+          "y": 150,
+          "w": 221,
+          "h": 64
+        },
+        "btn": {
+          "disabled": true,
+          "x": 574,
+          "y": 182,
+          "w": 56,
+          "h": 56
+        }
+      },
+      {
+        "text": "2 烤五花肉拼盘 ¥48 · 等待 上炉",
+        "cookWindow": "idle",
+        "rect": {
+          "x": 613,
+          "y": 150,
+          "w": 221,
+          "h": 64
+        },
+        "btn": {
+          "disabled": false,
+          "x": 799,
+          "y": 182,
+          "w": 56,
+          "h": 56
+        }
+      },
+      {
+        "text": "3 烤五花肉拼盘 ¥48 · 等待 上炉",
+        "cookWindow": "idle",
+        "rect": {
+          "x": 613,
+          "y": 218,
+          "w": 221,
+          "h": 64
+        },
+        "btn": {
+          "disabled": false,
+          "x": 799,
+          "y": 250,
+          "w": 56,
+          "h": 56
+        }
+      }
+    ],
+    "state": {
+      "phase": "playing",
+      "level": 1,
+      "levelTarget": 180,
+      "money": 58,
+      "timeLeft": 153.28333333331207,
+      "served": 1,
+      "angry": 0,
+      "waste": 0,
+      "hint": {
+        "kind": "station",
+        "id": "crate-pork",
+        "x": -4.5,
+        "z": 2
+      },
+      "carrying": null,
+      "action": "none",
+      "actionLabel": "去料箱取料",
+      "player": {
+        "x": -2.5,
+        "z": 0
+      },
+      "stations": {
+        "bin": {
+          "x": -5.5,
+          "z": 2
+        },
+        "crate-pork": {
+          "x": -4.5,
+          "z": 2
+        },
+        "crate-mush": {
+          "x": -3.5,
+          "z": 2
+        },
+        "crate-mix": {
+          "x": -2.5,
+          "z": 2
+        },
+        "chop": {
+          "x": -1,
+          "z": 2
+        },
+        "grill": {
+          "x": 1.5,
+          "z": 2
+        },
+        "plate": {
+          "x": 4,
+          "z": 2
+        }
+      },
+      "tables": {
+        "t1": {
+          "x": -3.3,
+          "z": -1.2000000000000002
+        },
+        "t2": {
+          "x": 0.2999999999999998,
+          "z": -1.2000000000000002
+        },
+        "t3": {
+          "x": 3.9000000000000004,
+          "z": -1.2000000000000002
+        },
+        "t4": {
+          "x": 2.0999999999999996,
+          "z": 0.7999999999999998
+        }
+      },
+      "customers": [
+        {
+          "id": 1,
+          "dish": "pork",
+          "phase": "eating",
+          "patience": 51.48333333333467,
+          "table": "t1",
+          "x": -4.1,
+          "z": -2.43
+        },
+        {
+          "id": 2,
+          "dish": "pork",
+          "phase": "seated",
+          "patience": 52.18333333333463,
+          "table": "t2",
+          "x": -0.5,
+          "z": -2.43
+        },
+        {
+          "id": 3,
+          "dish": "pork",
+          "phase": "seated",
+          "patience": 54.4333333333345,
+          "table": "t3",
+          "x": 3.1,
+          "z": -2.43
+        }
+      ],
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      },
+      "calls": 122,
+      "tris": 22120
+    }
+  },
+  "rapid": {
+    "moneyBefore": 58,
+    "servedBefore": 1,
+    "afterSame": {
+      "money": 58,
+      "served": 1,
+      "angry": 0,
+      "waste": 0,
+      "slots": [
+        {
+          "occupied": false,
+          "dish": null,
+          "t": 0
+        },
+        {
+          "occupied": false,
+          "dish": null,
+          "t": 0
+        },
+        {
+          "occupied": false,
+          "dish": null,
+          "t": 0
+        }
+      ]
+    },
+    "afterOther": {
+      "money": 58,
+      "served": 1,
+      "angry": 0,
+      "waste": 0,
+      "phase": "playing",
+      "slots": [
+        {
+          "occupied": false,
+          "dish": null,
+          "t": 0
+        },
+        {
+          "occupied": false,
+          "dish": null,
+          "t": 0
+        },
+        {
+          "occupied": false,
+          "dish": null,
+          "t": 0
+        }
+      ],
+      "cards": [
+        {
+          "text": "2 烤五花肉拼盘 ¥48 · 等待 上炉",
+          "cookWindow": "idle",
+          "rect": {
+            "x": 388,
+            "y": 150,
+            "w": 221,
+            "h": 64
+          },
+          "btn": {
+            "disabled": false,
+            "x": 574,
+            "y": 182,
+            "w": 56,
+            "h": 56
+          }
+        },
+        {
+          "text": "3 烤五花肉拼盘 ¥48 · 等待 上炉",
+          "cookWindow": "idle",
+          "rect": {
+            "x": 613,
+            "y": 150,
+            "w": 221,
+            "h": 64
+          },
+          "btn": {
+            "disabled": false,
+            "x": 799,
+            "y": 182,
+            "w": 56,
+            "h": 56
+          }
+        }
+      ]
+    },
+    "errorsAfter": []
+  },
+  "finalCards": [
+    {
+      "text": "2 烤五花肉拼盘 ¥48 · 等待 上炉",
+      "cookWindow": "idle",
+      "rect": {
+        "x": 388,
+        "y": 150,
+        "w": 221,
+        "h": 64
+      },
+      "btn": {
+        "disabled": false,
+        "x": 574,
+        "y": 182,
+        "w": 56,
+        "h": 56
+      }
+    },
+    {
+      "text": "3 烤五花肉拼盘 ¥48 · 等待 上炉",
+      "cookWindow": "idle",
+      "rect": {
+        "x": 613,
+        "y": 150,
+        "w": 221,
+        "h": 64
+      },
+      "btn": {
+        "disabled": false,
+        "x": 799,
+        "y": 182,
+        "w": 56,
+        "h": 56
+      }
+    }
+  ],
+  "counts": {
+    "errors": 0,
+    "warns": 2
+  }
+}

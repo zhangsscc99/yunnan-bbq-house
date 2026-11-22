@@ -1,0 +1,208 @@
+{
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "cards0": [
+    {
+      "w": "idle",
+      "text": "1 烤五花肉拼盘 ¥48 · 等待 上炉",
+      "x": 343,
+      "y": 94,
+      "hit": {}
+    },
+    {
+      "w": "idle",
+      "text": "2 烤五花肉拼盘 ¥48 · 等待 上炉",
+      "x": 343,
+      "y": 168,
+      "hit": {}
+    }
+  ],
+  "fastTrace": [
+    {
+      "w": "raw",
+      "money": 0,
+      "clicks": 1,
+      "grill": 1
+    },
+    {
+      "w": "idle",
+      "money": 0,
+      "clicks": 2,
+      "grill": 0
+    },
+    {
+      "w": "raw",
+      "money": 0,
+      "clicks": 3,
+      "grill": 1
+    },
+    {
+      "w": "idle",
+      "money": 0,
+      "clicks": 4,
+      "grill": 0
+    },
+    {
+      "w": "raw",
+      "money": 0,
+      "clicks": 5,
+      "grill": 1
+    },
+    {
+      "w": "idle",
+      "money": 0,
+      "clicks": 6,
+      "grill": 0
+    },
+    {
+      "w": "raw",
+      "money": 0,
+      "clicks": 7,
+      "grill": 1
+    },
+    {
+      "w": "idle",
+      "money": 0,
+      "clicks": 8,
+      "grill": 0
+    },
+    {
+      "w": "raw",
+      "money": 0,
+      "clicks": 9,
+      "grill": 1
+    },
+    {
+      "w": "idle",
+      "money": 0,
+      "clicks": 10,
+      "grill": 0
+    }
+  ],
+  "afterFast": {
+    "state": {
+      "money": 0,
+      "served": 0,
+      "phase": "playing"
+    },
+    "cards": [
+      {
+        "w": "idle",
+        "text": "1 烤五花肉拼盘 ¥48 · 等待 上炉",
+        "x": 343,
+        "y": 94,
+        "hit": {}
+      },
+      {
+        "w": "idle",
+        "text": "2 烤五花肉拼盘 ¥48 · 等待 上炉",
+        "x": 343,
+        "y": 168,
+        "hit": {}
+      }
+    ],
+    "clicks": [
+      {
+        "card": "btn",
+        "x": 343,
+        "y": 94,
+        "t": 56122
+      },
+      {
+        "card": "btn",
+        "x": 343,
+        "y": 94,
+        "t": 56510
+      },
+      {
+        "card": "btn",
+        "x": 343,
+        "y": 94,
+        "t": 56945
+      },
+      {
+        "card": "btn",
+        "x": 343,
+        "y": 94,
+        "t": 57086
+      },
+      {
+        "card": "btn",
+        "x": 343,
+        "y": 94,
+        "t": 57251
+      },
+      {
+        "card": "btn",
+        "x": 343,
+        "y": 94,
+        "t": 57401
+      },
+      {
+        "card": "btn",
+        "x": 343,
+        "y": 94,
+        "t": 57530
+      },
+      {
+        "card": "btn",
+        "x": 343,
+        "y": 94,
+        "t": 57637
+      },
+      {
+        "card": "btn",
+        "x": 343,
+        "y": 94,
+        "t": 57736
+      },
+      {
+        "card": "btn",
+        "x": 343,
+        "y": 94,
+        "t": 57854
+      }
+    ]
+  },
+  "slow": {
+    "cards": [
+      {
+        "w": "raw",
+        "text": "1 烤五花肉拼盘 ¥48 · 生串 3s 起锅",
+        "x": 343,
+        "y": 94,
+        "hit": {}
+      },
+      {
+        "w": "idle",
+        "text": "2 烤五花肉拼盘 ¥48 · 等待 上炉",
+        "x": 343,
+        "y": 168,
+        "hit": {}
+      }
+    ],
+    "clicks": 11
+  },
+  "synthetic": {
+    "cards": [
+      {
+        "w": "idle",
+        "text": "1 烤五花肉拼盘 ¥48 · 等待 上炉",
+        "x": 343,
+        "y": 94,
+        "hit": {}
+      },
+      {
+        "w": "idle",
+        "text": "2 烤五花肉拼盘 ¥48 · 等待 上炉",
+        "x": 343,
+        "y": 168,
+        "hit": {}
+      }
+    ],
+    "clicks": 12
+  },
+  "errors": []
+}

@@ -1,0 +1,482 @@
+{
+  "viewport": {
+    "width": 844,
+    "height": 390
+  },
+  "tag": "land",
+  "stage": "results",
+  "shots": [
+    "/tmp/bbq-r32/land-05-playing-before-end.png",
+    "/tmp/bbq-r32/land-06-results-pass.png",
+    "/tmp/bbq-r32/land-07-next-level.png",
+    "/tmp/bbq-r32/land-08-results-fail.png",
+    "/tmp/bbq-r32/land-09-replay.png"
+  ],
+  "errors": [],
+  "warns": [
+    "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+  ],
+  "build": "ebc762a-202611220549",
+  "title": {
+    "rect": {
+      "x": 0,
+      "y": 0,
+      "width": 844,
+      "height": 390
+    },
+    "h1": "柳真真云南烤肉",
+    "sub": "炭火生香，小店开张。\n取料 → 切配 → 炭烤 → 装盘 → 上菜",
+    "target": "第 1 关 · 目标：3 分钟营业额 ¥180",
+    "verdict": null,
+    "verdictClass": null,
+    "stars": null,
+    "rows": [],
+    "buttons": [
+      {
+        "text": "开 店",
+        "btn": "start",
+        "disabled": false
+      }
+    ],
+    "text": "柳真真云南烤肉 | 炭火生香，小店开张。 | 取料 → 切配 → 炭烤 → 装盘 → 上菜 | 第 1 关 · 目标：3 分钟营业额 ¥180 | 开 店"
+  },
+  "resultsPass": {
+    "panel": {
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 844,
+        "height": 390
+      },
+      "h1": "打烊结算",
+      "sub": null,
+      "target": null,
+      "verdict": "目标达成，进入第 2 关",
+      "verdictClass": "verdict pass",
+      "stars": "2",
+      "rows": [
+        "营业额 ¥210 / ¥180",
+        "服务顾客 4 位",
+        "愤怒离店 1 位",
+        "废料 2 份"
+      ],
+      "buttons": [
+        {
+          "text": "进入第 2 关",
+          "btn": "next",
+          "disabled": false
+        },
+        {
+          "text": "再 开 一 局",
+          "btn": "replay",
+          "disabled": false
+        }
+      ],
+      "text": "打烊结算 | 目标达成，进入第 2 关 | 营业额 | ¥210 / ¥180 | 服务顾客 | 4 位 | 愤怒离店 | 1 位 | 废料 | 2 份 | 进入第 2 关 | 再 开 一 局"
+    },
+    "state": {
+      "phase": "results",
+      "level": 1,
+      "levelTarget": 180,
+      "money": 210,
+      "timeLeft": 0,
+      "served": 4,
+      "angry": 1,
+      "waste": 2,
+      "hint": null,
+      "carrying": null,
+      "action": "none",
+      "actionLabel": "去料箱取料",
+      "player": {
+        "x": -2.5,
+        "z": 0
+      },
+      "stations": {
+        "bin": {
+          "x": -5.5,
+          "z": 2
+        },
+        "crate-pork": {
+          "x": -4.5,
+          "z": 2
+        },
+        "crate-mush": {
+          "x": -3.5,
+          "z": 2
+        },
+        "crate-mix": {
+          "x": -2.5,
+          "z": 2
+        },
+        "chop": {
+          "x": -1,
+          "z": 2
+        },
+        "grill": {
+          "x": 1.5,
+          "z": 2
+        },
+        "plate": {
+          "x": 4,
+          "z": 2
+        }
+      },
+      "tables": {
+        "t1": {
+          "x": -3.3,
+          "z": -1.2000000000000002
+        },
+        "t2": {
+          "x": 0.2999999999999998,
+          "z": -1.2000000000000002
+        },
+        "t3": {
+          "x": 3.9000000000000004,
+          "z": -1.2000000000000002
+        },
+        "t4": {
+          "x": 2.0999999999999996,
+          "z": 0.7999999999999998
+        }
+      },
+      "customers": [
+        {
+          "id": 1,
+          "dish": "pork",
+          "phase": "seated",
+          "patience": 67.88333333333374,
+          "table": "t1",
+          "x": -4.1,
+          "z": -2.43
+        }
+      ],
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      },
+      "calls": 82,
+      "tris": 18436
+    },
+    "level": 1
+  },
+  "afterNext": {
+    "clicked": true,
+    "panel": null,
+    "state": {
+      "phase": "playing",
+      "level": 2,
+      "levelTarget": 260,
+      "money": 0,
+      "timeLeft": 180,
+      "served": 0,
+      "angry": 0,
+      "waste": 0,
+      "hint": {
+        "kind": "station",
+        "id": "crate-pork",
+        "x": -4.5,
+        "z": 2
+      },
+      "carrying": null,
+      "action": "none",
+      "actionLabel": "去料箱取料",
+      "player": {
+        "x": -2.5,
+        "z": 0
+      },
+      "stations": {
+        "bin": {
+          "x": -5.5,
+          "z": 2
+        },
+        "crate-pork": {
+          "x": -4.5,
+          "z": 2
+        },
+        "crate-mush": {
+          "x": -3.5,
+          "z": 2
+        },
+        "crate-mix": {
+          "x": -2.5,
+          "z": 2
+        },
+        "chop": {
+          "x": -1,
+          "z": 2
+        },
+        "grill": {
+          "x": 1.5,
+          "z": 2
+        },
+        "plate": {
+          "x": 4,
+          "z": 2
+        }
+      },
+      "tables": {
+        "t1": {
+          "x": -3.3,
+          "z": -1.2000000000000002
+        },
+        "t2": {
+          "x": 0.2999999999999998,
+          "z": -1.2000000000000002
+        },
+        "t3": {
+          "x": 3.9000000000000004,
+          "z": -1.2000000000000002
+        },
+        "t4": {
+          "x": 2.0999999999999996,
+          "z": 0.7999999999999998
+        }
+      },
+      "customers": [],
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      },
+      "calls": 81,
+      "tris": 18434
+    },
+    "game": {
+      "level": 2,
+      "target": 260,
+      "duration": 180,
+      "timeLeft": 180,
+      "money": 0,
+      "served": 0,
+      "phase": "playing"
+    }
+  },
+  "resultsFail": {
+    "panel": {
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 844,
+        "height": 390
+      },
+      "h1": "打烊结算",
+      "sub": null,
+      "target": null,
+      "verdict": "离目标还差 ¥255",
+      "verdictClass": "verdict fail",
+      "stars": "1",
+      "rows": [
+        "营业额 ¥5 / ¥260",
+        "服务顾客 0 位",
+        "愤怒离店 0 位",
+        "废料 0 份"
+      ],
+      "buttons": [
+        {
+          "text": "再 开 一 局",
+          "btn": "replay",
+          "disabled": false
+        }
+      ],
+      "text": "打烊结算 | 离目标还差 ¥255 | 营业额 | ¥5 / ¥260 | 服务顾客 | 0 位 | 愤怒离店 | 0 位 | 废料 | 0 份 | 再 开 一 局"
+    },
+    "state": {
+      "phase": "results",
+      "level": 2,
+      "levelTarget": 260,
+      "money": 5,
+      "timeLeft": 0,
+      "served": 0,
+      "angry": 0,
+      "waste": 0,
+      "hint": null,
+      "carrying": null,
+      "action": "none",
+      "actionLabel": "去料箱取料",
+      "player": {
+        "x": -2.5,
+        "z": 0
+      },
+      "stations": {
+        "bin": {
+          "x": -5.5,
+          "z": 2
+        },
+        "crate-pork": {
+          "x": -4.5,
+          "z": 2
+        },
+        "crate-mush": {
+          "x": -3.5,
+          "z": 2
+        },
+        "crate-mix": {
+          "x": -2.5,
+          "z": 2
+        },
+        "chop": {
+          "x": -1,
+          "z": 2
+        },
+        "grill": {
+          "x": 1.5,
+          "z": 2
+        },
+        "plate": {
+          "x": 4,
+          "z": 2
+        }
+      },
+      "tables": {
+        "t1": {
+          "x": -3.3,
+          "z": -1.2000000000000002
+        },
+        "t2": {
+          "x": 0.2999999999999998,
+          "z": -1.2000000000000002
+        },
+        "t3": {
+          "x": 3.9000000000000004,
+          "z": -1.2000000000000002
+        },
+        "t4": {
+          "x": 2.0999999999999996,
+          "z": 0.7999999999999998
+        }
+      },
+      "customers": [
+        {
+          "id": 2,
+          "dish": "pork",
+          "phase": "seated",
+          "patience": 55.35000000000112,
+          "table": "t1",
+          "x": -4.1,
+          "z": -2.43
+        }
+      ],
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      },
+      "calls": 82,
+      "tris": 18436
+    }
+  },
+  "afterReplay": {
+    "panel": null,
+    "state": {
+      "phase": "playing",
+      "level": 2,
+      "levelTarget": 260,
+      "money": 0,
+      "timeLeft": 178.4999999999988,
+      "served": 0,
+      "angry": 0,
+      "waste": 0,
+      "hint": {
+        "kind": "station",
+        "id": "crate-pork",
+        "x": -4.5,
+        "z": 2
+      },
+      "carrying": null,
+      "action": "none",
+      "actionLabel": "去料箱取料",
+      "player": {
+        "x": -2.5,
+        "z": 0
+      },
+      "stations": {
+        "bin": {
+          "x": -5.5,
+          "z": 2
+        },
+        "crate-pork": {
+          "x": -4.5,
+          "z": 2
+        },
+        "crate-mush": {
+          "x": -3.5,
+          "z": 2
+        },
+        "crate-mix": {
+          "x": -2.5,
+          "z": 2
+        },
+        "chop": {
+          "x": -1,
+          "z": 2
+        },
+        "grill": {
+          "x": 1.5,
+          "z": 2
+        },
+        "plate": {
+          "x": 4,
+          "z": 2
+        }
+      },
+      "tables": {
+        "t1": {
+          "x": -3.3,
+          "z": -1.2000000000000002
+        },
+        "t2": {
+          "x": 0.2999999999999998,
+          "z": -1.2000000000000002
+        },
+        "t3": {
+          "x": 3.9000000000000004,
+          "z": -1.2000000000000002
+        },
+        "t4": {
+          "x": 2.0999999999999996,
+          "z": 0.7999999999999998
+        }
+      },
+      "customers": [],
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      },
+      "calls": 78,
+      "tris": 17066
+    },
+    "game": {
+      "level": 2,
+      "target": 260,
+      "timeLeft": 178.4999999999988,
+      "money": 0,
+      "served": 0,
+      "phase": "playing",
+      "lsLevel": "2",
+      "lsBest": "210"
+    }
+  },
+  "counts": {
+    "errors": 0,
+    "warns": 2
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "dom": {
+    "outer": "<div class=\"card\" data-table=\"t1\" data-cook-window=\"idle\" data-cook-t=\"0\" data-progress-pct=\"0\" data-slot-index=\"-1\"><div class=\"tb-badge\" style=\"border-color: rgb(240, 192, 96); color: rgb(240, 192, 96);\">1</div><div class=\"ring\">\n      <svg width=\"30\" height=\"30\" viewBox=\"0 0 30 30\">\n        <circle cx=\"15\" cy=\"15\" r=\"13\" fill=\"none\" stroke=\"rgba(240,192,96,.2)\" stroke-width=\"3\"></circle>\n        <circle cx=\"15\" cy=\"15\" r=\"13\" fill=\"none\" stroke=\"#f0c060\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-dasharray=\"81.68140899333463\" stroke-dashoffset=\"0.38117990863553775\"></circle>\n      </svg></div><div class=\"txt\"><div class=\"nm\"><svg class=\"food-ico\" viewBox=\"0 0 24 24\" data-food=\"pork\" fill=\"none\" stroke=\"#f0c060\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\">\n    <path d=\"M3 21L21 3\"></path>\n    <g transform=\"rotate(-45 12 12)\">\n      <rect x=\"5\" y=\"9.2\" width=\"4.2\" height=\"5.6\" rx=\"1.1\" fill=\"#e8907c\"></rect>\n      <rect x=\"9.9\" y=\"9.2\" width=\"4.2\" height=\"5.6\" rx=\"1.1\" fill=\"#f5d0b8\"></rect>\n      <rect x=\"14.8\" y=\"9.2\" width=\"4.2\" height=\"5.6\" rx=\"1.1\" fill=\"#e8907c\"></rect>\n    </g>\n  </svg><span>烤五花肉拼盘</span></div><div class=\"pr\">¥48 · 等待</div></div><button type=\"button\" class=\"card-btn\" aria-label=\"上炉\">\n      <svg class=\"cook-ring\" viewBox=\"0 0 56 56\" aria-hidden=\"true\">\n        <circle class=\"cook-bg\" cx=\"28\" cy=\"28\" r=\"25\" fill=\"none\" stroke=\"rgba(232,180,90,.65)\" stroke-width=\"4\"></circle>\n        <circle class=\"cook-arc\" cx=\"28\" cy=\"28\" r=\"25\" fill=\"none\" stroke=\"#dcd6cc\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-da",
+    "rect": {
+      "x": 137,
+      "y": 60,
+      "w": 243,
+      "h": 68
+    },
+    "buttons": [
+      {
+        "tag": "BUTTON",
+        "cls": "card-btn",
+        "text": "上炉",
+        "x": 315,
+        "y": 66,
+        "w": 56,
+        "h": 56
+      }
+    ],
+    "pos": {
+      "x": -2.5,
+      "z": 0
+    },
+    "grill": [
+      null,
+      null,
+      null
+    ]
+  },
+  "afterRightClick": {
+    "grill": [
+      {
+        "stage": "raw",
+        "t": 0.49999999999999994
+      },
+      null,
+      null
+    ],
+    "player": {
+      "x": -2.5,
+      "z": 0
+    },
+    "carrying": null,
+    "label": "去料箱取料",
+    "phase": "playing"
+  },
+  "afterLeftClick": {
+    "grill": [
+      {
+        "stage": "raw",
+        "t": 1.0000000000000013
+      },
+      null,
+      null
+    ],
+    "player": {
+      "x": -2.5,
+      "z": 0
+    },
+    "carrying": null,
+    "label": "去料箱取料"
+  },
+  "errors": []
+}

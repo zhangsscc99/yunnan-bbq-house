@@ -1,0 +1,125 @@
+{
+  "vp": "land",
+  "title": {
+    "build": "05afe9b-202611220449",
+    "text": "第 1 关 营业额 ¥0 时间 3:00 评级 柳真真云南烤肉 炭火生香，小店开张。 取料 → 切配 → 炭烤 → 装盘 → 上菜 第 1 关 · 目标：3 分钟营业额 ¥180 开 店"
+  },
+  "hud": {
+    "vp": [
+      844,
+      390
+    ],
+    "stick": {
+      "x": 16,
+      "y": 262,
+      "w": 112,
+      "h": 112,
+      "op": 0.85
+    },
+    "act": {
+      "x": 734,
+      "y": 290,
+      "w": 84,
+      "h": 84,
+      "op": 1
+    },
+    "top": {
+      "x": 264,
+      "y": 8,
+      "w": 315,
+      "h": 36,
+      "op": 1
+    },
+    "cards": [
+      {
+        "x": 613,
+        "y": 150,
+        "w": 221,
+        "h": 64,
+        "text": "1 烤五花肉拼盘 ¥48 · 等待 上炉"
+      }
+    ],
+    "bubbles": [],
+    "ovStickAct": 0,
+    "ovStickTop": 0,
+    "ovActTop": 0,
+    "cardTop": [
+      0
+    ],
+    "cardStick": [
+      0
+    ],
+    "cardsOverlapEachOther": false,
+    "cardOverflow": [
+      false
+    ]
+  },
+  "serve": {
+    "picked": {
+      "dish": "pork",
+      "stage": "plated"
+    },
+    "target": {
+      "id": 1,
+      "dish": "pork",
+      "phase": "seated",
+      "patience": 65.45000000000054,
+      "table": "t1",
+      "x": -4.1,
+      "z": -2.43
+    },
+    "after": {
+      "moneyBefore": 0,
+      "money": 62,
+      "served": 1
+    }
+  },
+  "patience": {
+    "seatedBefore": [
+      {
+        "id": 2,
+        "p": 90
+      }
+    ],
+    "angry0": 0,
+    "atZero": {
+      "angry": 1,
+      "money": 62,
+      "served": 1,
+      "stars": null,
+      "customers": [
+        {
+          "id": 2,
+          "phase": "leaving-angry",
+          "p": 0
+        }
+      ],
+      "topbar": "第 1 关 营业额 ¥62 时间 2:43 评级",
+      "rings": []
+    },
+    "after": {
+      "angry": 1,
+      "served": 1,
+      "money": 62,
+      "customers": [
+        {
+          "id": 2,
+          "phase": "leaving-angry"
+        }
+      ],
+      "topbar": "第 1 关 营业额 ¥62 时间 2:40 评级"
+    }
+  },
+  "results": {
+    "phase": "results",
+    "text": "打烊结算 离目标还差 ¥118 营业额 ¥62 / ¥180 服务顾客 1 位 愤怒离店 1 位 废料 0 份 再 开 一 局",
+    "buttons": [
+      {
+        "t": "再 开 一 局",
+        "w": 150,
+        "h": 40
+      }
+    ]
+  },
+  "errors": []
+}

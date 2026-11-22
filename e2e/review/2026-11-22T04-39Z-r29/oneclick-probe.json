@@ -1,0 +1,705 @@
+{
+  "initial": {
+    "cards": [
+      {
+        "table": "t1",
+        "win": "idle",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 94,
+          "w": 56,
+          "h": 56,
+          "text": "上炉",
+          "disabled": false,
+          "aria": "上炉"
+        },
+        "text": "1 烤五花肉拼盘 ¥48 · 等待 上炉",
+        "overflow": false,
+        "w": 243
+      },
+      {
+        "table": "t2",
+        "win": "idle",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 168,
+          "w": 56,
+          "h": 56,
+          "text": "上炉",
+          "disabled": false,
+          "aria": "上炉"
+        },
+        "text": "2 烤菌子 ¥32 · 等待 上炉",
+        "overflow": false,
+        "w": 205
+      }
+    ],
+    "money": 0,
+    "served": 0,
+    "waste": 0,
+    "angry": 0,
+    "grill": [
+      null,
+      null,
+      null
+    ]
+  },
+  "afterFirstClick": {
+    "cards": [
+      {
+        "table": "t1",
+        "win": "raw",
+        "t": 0.2,
+        "pct": "1.6667",
+        "slot": "0",
+        "btn": {
+          "x": 343,
+          "y": 94,
+          "w": 56,
+          "h": 56,
+          "text": "起锅",
+          "disabled": false,
+          "aria": "起锅 · 生串 4s"
+        },
+        "text": "1 烤五花肉拼盘 ¥48 · 生串 4s 起锅",
+        "overflow": false,
+        "w": 243
+      },
+      {
+        "table": "t2",
+        "win": "idle",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 168,
+          "w": 56,
+          "h": 56,
+          "text": "上炉",
+          "disabled": false,
+          "aria": "上炉"
+        },
+        "text": "2 烤菌子 ¥32 · 等待 上炉",
+        "overflow": false,
+        "w": 205
+      }
+    ],
+    "money": 0,
+    "served": 0,
+    "waste": 0,
+    "angry": 0,
+    "grill": [
+      {
+        "stage": "raw",
+        "t": 0.19999999999999998
+      },
+      null,
+      null
+    ]
+  },
+  "at3": {
+    "cards": [
+      {
+        "table": "t1",
+        "win": "raw",
+        "t": 3.2,
+        "pct": "26.6667",
+        "slot": "0",
+        "btn": {
+          "x": 343,
+          "y": 94,
+          "w": 56,
+          "h": 56,
+          "text": "起锅",
+          "disabled": false,
+          "aria": "起锅 · 生串 1s"
+        },
+        "text": "1 烤五花肉拼盘 ¥48 · 生串 1s 起锅",
+        "overflow": false,
+        "w": 243
+      },
+      {
+        "table": "t2",
+        "win": "idle",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 168,
+          "w": 56,
+          "h": 56,
+          "text": "上炉",
+          "disabled": false,
+          "aria": "上炉"
+        },
+        "text": "2 烤菌子 ¥32 · 等待 上炉",
+        "overflow": false,
+        "w": 205
+      },
+      {
+        "table": "t3",
+        "win": "idle",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 242,
+          "w": 56,
+          "h": 56,
+          "text": "上炉",
+          "disabled": false,
+          "aria": "上炉"
+        },
+        "text": "3 豆泥米线 ¥26 · 等待 上炉",
+        "overflow": false,
+        "w": 217
+      },
+      {
+        "table": "t4",
+        "win": "idle",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 316,
+          "w": 56,
+          "h": 56,
+          "text": "上炉",
+          "disabled": false,
+          "aria": "上炉"
+        },
+        "text": "4 烤五花肉拼盘 ¥48 · 等待 上炉",
+        "overflow": false,
+        "w": 243
+      }
+    ],
+    "money": 0,
+    "served": 0,
+    "waste": 0,
+    "angry": 0,
+    "grill": [
+      {
+        "stage": "raw",
+        "t": 3.1999999999999935
+      },
+      null,
+      null
+    ]
+  },
+  "at65": {
+    "cards": [
+      {
+        "table": "t1",
+        "win": "perfect",
+        "t": 6.7,
+        "pct": "55.8333",
+        "slot": "0",
+        "btn": {
+          "x": 343,
+          "y": 94,
+          "w": 56,
+          "h": 56,
+          "text": "起锅",
+          "disabled": false,
+          "aria": "起锅 · 完美 3s"
+        },
+        "text": "1 烤五花肉拼盘 ¥48 · 完美 3s 起锅",
+        "overflow": false,
+        "w": 243
+      },
+      {
+        "table": "t2",
+        "win": "idle",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 168,
+          "w": 56,
+          "h": 56,
+          "text": "上炉",
+          "disabled": false,
+          "aria": "上炉"
+        },
+        "text": "2 烤菌子 ¥32 · 等待 上炉",
+        "overflow": false,
+        "w": 205
+      },
+      {
+        "table": "t3",
+        "win": "idle",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 242,
+          "w": 56,
+          "h": 56,
+          "text": "上炉",
+          "disabled": false,
+          "aria": "上炉"
+        },
+        "text": "3 豆泥米线 ¥26 · 等待 上炉",
+        "overflow": false,
+        "w": 217
+      },
+      {
+        "table": "t4",
+        "win": "idle",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 316,
+          "w": 56,
+          "h": 56,
+          "text": "上炉",
+          "disabled": false,
+          "aria": "上炉"
+        },
+        "text": "4 烤五花肉拼盘 ¥48 · 等待 上炉",
+        "overflow": false,
+        "w": 243
+      }
+    ],
+    "money": 0,
+    "served": 0,
+    "waste": 0,
+    "angry": 0,
+    "grill": [
+      {
+        "stage": "cooked",
+        "t": 6.6999999999999815
+      },
+      null,
+      null
+    ]
+  },
+  "afterLiftPerfect": {
+    "cards": [
+      {
+        "table": "t1",
+        "win": "eating",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 94,
+          "w": 56,
+          "h": 56,
+          "text": "已上",
+          "disabled": true,
+          "aria": "用餐中"
+        },
+        "text": "1 烤五花肉拼盘 ¥48 · 用餐中 已上",
+        "overflow": false,
+        "w": 243
+      },
+      {
+        "table": "t2",
+        "win": "idle",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 168,
+          "w": 56,
+          "h": 56,
+          "text": "上炉",
+          "disabled": false,
+          "aria": "上炉"
+        },
+        "text": "2 烤菌子 ¥32 · 等待 上炉",
+        "overflow": false,
+        "w": 205
+      },
+      {
+        "table": "t3",
+        "win": "idle",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 242,
+          "w": 56,
+          "h": 56,
+          "text": "上炉",
+          "disabled": false,
+          "aria": "上炉"
+        },
+        "text": "3 豆泥米线 ¥26 · 等待 上炉",
+        "overflow": false,
+        "w": 217
+      },
+      {
+        "table": "t4",
+        "win": "idle",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 316,
+          "w": 56,
+          "h": 56,
+          "text": "上炉",
+          "disabled": false,
+          "aria": "上炉"
+        },
+        "text": "4 烤五花肉拼盘 ¥48 · 等待 上炉",
+        "overflow": false,
+        "w": 243
+      }
+    ],
+    "money": 62,
+    "served": 1,
+    "waste": 0,
+    "angry": 0,
+    "grill": [
+      null,
+      null,
+      null
+    ]
+  },
+  "secondAt15": {
+    "cards": [
+      {
+        "table": "t1",
+        "win": "eating",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 94,
+          "w": 56,
+          "h": 56,
+          "text": "已上",
+          "disabled": true,
+          "aria": "用餐中"
+        },
+        "text": "1 烤五花肉拼盘 ¥48 · 用餐中 已上",
+        "overflow": false,
+        "w": 243
+      },
+      {
+        "table": "t2",
+        "win": "raw",
+        "t": 1.7,
+        "pct": "14.1667",
+        "slot": "0",
+        "btn": {
+          "x": 343,
+          "y": 168,
+          "w": 56,
+          "h": 56,
+          "text": "起锅",
+          "disabled": false,
+          "aria": "起锅 · 生串 3s"
+        },
+        "text": "2 烤菌子 ¥32 · 生串 3s 起锅",
+        "overflow": false,
+        "w": 223
+      },
+      {
+        "table": "t3",
+        "win": "idle",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 242,
+          "w": 56,
+          "h": 56,
+          "text": "上炉",
+          "disabled": false,
+          "aria": "上炉"
+        },
+        "text": "3 豆泥米线 ¥26 · 等待 上炉",
+        "overflow": false,
+        "w": 217
+      },
+      {
+        "table": "t4",
+        "win": "idle",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 316,
+          "w": 56,
+          "h": 56,
+          "text": "上炉",
+          "disabled": false,
+          "aria": "上炉"
+        },
+        "text": "4 烤五花肉拼盘 ¥48 · 等待 上炉",
+        "overflow": false,
+        "w": 243
+      }
+    ],
+    "money": 62,
+    "served": 1,
+    "waste": 0,
+    "angry": 0,
+    "grill": [
+      {
+        "stage": "raw",
+        "t": 1.6999999999999988
+      },
+      null,
+      null
+    ]
+  },
+  "afterEarlyLift": {
+    "cards": [
+      {
+        "table": "t1",
+        "win": "eating",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 94,
+          "w": 56,
+          "h": 56,
+          "text": "已上",
+          "disabled": true,
+          "aria": "用餐中"
+        },
+        "text": "1 烤五花肉拼盘 ¥48 · 用餐中 已上",
+        "overflow": false,
+        "w": 243
+      },
+      {
+        "table": "t2",
+        "win": "idle",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 168,
+          "w": 56,
+          "h": 56,
+          "text": "上炉",
+          "disabled": false,
+          "aria": "上炉"
+        },
+        "text": "2 烤菌子 ¥32 · 等待 上炉",
+        "overflow": false,
+        "w": 205
+      },
+      {
+        "table": "t3",
+        "win": "idle",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 242,
+          "w": 56,
+          "h": 56,
+          "text": "上炉",
+          "disabled": false,
+          "aria": "上炉"
+        },
+        "text": "3 豆泥米线 ¥26 · 等待 上炉",
+        "overflow": false,
+        "w": 217
+      },
+      {
+        "table": "t4",
+        "win": "idle",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 316,
+          "w": 56,
+          "h": 56,
+          "text": "上炉",
+          "disabled": false,
+          "aria": "上炉"
+        },
+        "text": "4 烤五花肉拼盘 ¥48 · 等待 上炉",
+        "overflow": false,
+        "w": 243
+      }
+    ],
+    "money": 62,
+    "served": 1,
+    "waste": 0,
+    "angry": 0,
+    "grill": [
+      null,
+      null,
+      null
+    ]
+  },
+  "slotsFull": {
+    "cards": [
+      {
+        "table": "t1",
+        "win": "eating",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 94,
+          "w": 56,
+          "h": 56,
+          "text": "已上",
+          "disabled": true,
+          "aria": "用餐中"
+        },
+        "text": "1 烤五花肉拼盘 ¥48 · 用餐中 已上",
+        "overflow": false,
+        "w": 243
+      },
+      {
+        "table": "t2",
+        "win": "raw",
+        "t": 0.7,
+        "pct": "5.8333",
+        "slot": "0",
+        "btn": {
+          "x": 343,
+          "y": 168,
+          "w": 56,
+          "h": 56,
+          "text": "起锅",
+          "disabled": false,
+          "aria": "起锅 · 生串 4s"
+        },
+        "text": "2 烤菌子 ¥32 · 生串 4s 起锅",
+        "overflow": false,
+        "w": 223
+      },
+      {
+        "table": "t3",
+        "win": "idle",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 242,
+          "w": 56,
+          "h": 56,
+          "text": "上炉",
+          "disabled": false,
+          "aria": "上炉"
+        },
+        "text": "3 豆泥米线 ¥26 · 等待 上炉",
+        "overflow": false,
+        "w": 217
+      },
+      {
+        "table": "t4",
+        "win": "idle",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 316,
+          "w": 56,
+          "h": 56,
+          "text": "上炉",
+          "disabled": false,
+          "aria": "上炉"
+        },
+        "text": "4 烤五花肉拼盘 ¥48 · 等待 上炉",
+        "overflow": false,
+        "w": 243
+      }
+    ],
+    "money": 62,
+    "served": 1,
+    "waste": 0,
+    "angry": 0,
+    "grill": [
+      {
+        "stage": "raw",
+        "t": 0.7000000000000005
+      },
+      null,
+      null
+    ]
+  },
+  "afterBurn": {
+    "cards": [
+      {
+        "table": "t3",
+        "win": "idle",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 94,
+          "w": 56,
+          "h": 56,
+          "text": "上炉",
+          "disabled": false,
+          "aria": "上炉"
+        },
+        "text": "3 豆泥米线 ¥26 · 等待 上炉",
+        "overflow": false,
+        "w": 217
+      },
+      {
+        "table": "t4",
+        "win": "idle",
+        "t": 0,
+        "pct": "0",
+        "slot": "-1",
+        "btn": {
+          "x": 343,
+          "y": 168,
+          "w": 56,
+          "h": 56,
+          "text": "上炉",
+          "disabled": false,
+          "aria": "上炉"
+        },
+        "text": "4 烤五花肉拼盘 ¥48 · 等待 上炉",
+        "overflow": false,
+        "w": 243
+      }
+    ],
+    "money": 62,
+    "served": 1,
+    "waste": 1,
+    "angry": 1,
+    "grill": [
+      null,
+      null,
+      null
+    ]
+  },
+  "errors": []
+}

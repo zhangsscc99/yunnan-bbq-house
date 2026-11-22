@@ -1,0 +1,343 @@
+{
+  "vp": "port",
+  "size": [
+    390,
+    844
+  ],
+  "steps": {
+    "title": {
+      "bodyText": "第 1 关 营业额 ¥0 时间 3:00 评级 柳真真云南烤肉 炭火生香，小店开张。 取料 → 切配 → 炭烤 → 装盘 → 上菜 第 1 关 · 目标：3 分钟营业额 ¥180 开 店",
+      "stick": {
+        "text": "",
+        "rect": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "display": "none",
+        "opacity": "0",
+        "inView": false
+      },
+      "act": {
+        "text": "",
+        "rect": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "display": "none",
+        "opacity": "0",
+        "inView": false
+      },
+      "orders": {
+        "text": "",
+        "rect": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "display": "none",
+        "opacity": "0",
+        "inView": false
+      },
+      "topbar": {
+        "text": "第 1 关营业额¥0时间3:00评级",
+        "rect": [
+          37,
+          8,
+          315,
+          36
+        ],
+        "display": "flex",
+        "opacity": "1",
+        "inView": true
+      },
+      "panel": {
+        "text": "柳真真云南烤肉\n        炭火生香，小店开张。取料 → 切配 → 炭烤 → 装盘 → 上菜\n        第 1 关 · 目标：3 分钟营业额 ¥180",
+        "rect": [
+          0,
+          0,
+          390,
+          844
+        ],
+        "display": "flex",
+        "opacity": "1",
+        "inView": true
+      },
+      "menuBtn": {
+        "text": "开 店",
+        "rect": [
+          120,
+          471,
+          150,
+          45
+        ],
+        "display": "inline-block",
+        "opacity": "1",
+        "inView": true
+      },
+      "phase": "menu",
+      "build": "05afe9b-202611220449",
+      "canStartIn": 26163
+    },
+    "hud": {
+      "viewport": [
+        390,
+        844
+      ],
+      "stick": {
+        "x": 22,
+        "y": 692,
+        "w": 130,
+        "h": 130,
+        "op": 0.85,
+        "disp": "block"
+      },
+      "act": {
+        "x": 280,
+        "y": 730,
+        "w": 84,
+        "h": 84,
+        "op": 1,
+        "disp": "flex"
+      },
+      "top": {
+        "x": 37,
+        "y": 8,
+        "w": 315,
+        "h": 36,
+        "op": 1,
+        "disp": "flex"
+      },
+      "cards": [],
+      "overlapStickAct": 0,
+      "overlapStickTop": 0,
+      "overlapActTop": 0,
+      "cardTopOverlap": [],
+      "cardOverlapStick": [],
+      "stickEdge": {
+        "left": 22,
+        "bottom": 22
+      },
+      "actEdge": {
+        "right": 26,
+        "bottom": 30
+      },
+      "topRect": {
+        "x": 37,
+        "y": 8,
+        "w": 315,
+        "h": 36,
+        "op": 1,
+        "disp": "flex"
+      },
+      "touchTargetsUnder44": []
+    },
+    "seed": [],
+    "spawned": {
+      "ok": true,
+      "customers": [
+        {
+          "id": 1,
+          "table": "t1",
+          "phase": "walking-in"
+        }
+      ]
+    },
+    "serve": {
+      "actBefore": "取 五花肉",
+      "carryRaw": {
+        "dish": "pork",
+        "stage": "raw"
+      },
+      "chopPresses": [
+        {
+          "label": "切配 0/3",
+          "carrying": null,
+          "chop": {
+            "held": "raw",
+            "chopLeft": 3
+          }
+        },
+        {
+          "label": "切配 1/3",
+          "carrying": null,
+          "chop": {
+            "held": "raw",
+            "chopLeft": 2
+          }
+        },
+        {
+          "label": "切配 2/3",
+          "carrying": null,
+          "chop": {
+            "held": "raw",
+            "chopLeft": 1
+          }
+        },
+        {
+          "label": "取回切好的串",
+          "carrying": null,
+          "chop": {
+            "held": "chopped",
+            "chopLeft": 0
+          }
+        },
+        {
+          "label": "去烤炉",
+          "carrying": {
+            "dish": "pork",
+            "stage": "chopped"
+          },
+          "chop": {
+            "held": null,
+            "chopLeft": 0
+          }
+        }
+      ],
+      "onGrill": [
+        {
+          "stage": "chopped",
+          "t": 0.09999999999999999
+        },
+        null,
+        null
+      ],
+      "at6": {
+        "grill": [
+          {
+            "stage": "cooked",
+            "t": 6.099999999999984
+          },
+          null,
+          null
+        ],
+        "label": "取烤串",
+        "badge": "已熟 ✓"
+      },
+      "at7": {
+        "grill": [
+          {
+            "stage": "cooked",
+            "t": 7.09999999999998
+          },
+          null,
+          null
+        ],
+        "label": "取烤串"
+      },
+      "picked": {
+        "dish": "pork",
+        "stage": "cooked"
+      },
+      "plated": {
+        "dish": "pork",
+        "stage": "plated"
+      },
+      "target": {
+        "id": 1,
+        "dish": "pork",
+        "phase": "seated",
+        "patience": 66.95000000000046,
+        "table": "t1",
+        "x": -4.1,
+        "z": -2.43
+      },
+      "moneyBefore": 0,
+      "patienceAtServe": 67,
+      "serveLabel": "上菜 烤五花肉拼盘",
+      "after": {
+        "money": 62,
+        "served": 1,
+        "angry": 0,
+        "waste": 0,
+        "customers": [
+          {
+            "id": 1,
+            "phase": "eating",
+            "patience": 67
+          }
+        ],
+        "popup": [
+          "+¥62"
+        ]
+      }
+    },
+    "patienceAtZero": {
+      "customers": [
+        {
+          "id": 1,
+          "phase": "leaving-happy"
+        },
+        {
+          "id": 2,
+          "phase": "walking-in"
+        }
+      ],
+      "angry": 0
+    },
+    "afterAngryLeave": {
+      "angry": 0,
+      "served": 1,
+      "money": 62,
+      "stars": null,
+      "customers": [
+        {
+          "id": 2,
+          "phase": "seated"
+        }
+      ],
+      "topbar": "第 1 关 营业额 ¥62 时间 2:43 评级"
+    },
+    "rapid": {
+      "before": null,
+      "after": {
+        "carrying": {
+          "dish": "mushroom",
+          "stage": "raw"
+        },
+        "chop": {
+          "held": null,
+          "chopLeft": 0
+        },
+        "waste": 0,
+        "money": 62,
+        "grill": [
+          null,
+          null,
+          null
+        ]
+      }
+    },
+    "results": {
+      "phase": "results",
+      "text": "打烊结算 离目标还差 ¥118 营业额 ¥62 / ¥180 服务顾客 1 位 愤怒离店 0 位 废料 0 份 再 开 一 局",
+      "buttons": [
+        {
+          "t": "再 开 一 局",
+          "w": 150,
+          "h": 40
+        }
+      ]
+    }
+  },
+  "bootToMenuMs": 10583,
+  "final": {
+    "phase": "results",
+    "level": 1,
+    "money": 62,
+    "served": 1,
+    "angry": 0,
+    "waste": 0,
+    "timeLeft": 0
+  },
+  "buildEnd": "05afe9b-202611220449",
+  "errors": [],
+  "warns": [
+    "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+  ]
+}

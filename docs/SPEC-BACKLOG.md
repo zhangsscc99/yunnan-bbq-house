@@ -1366,4 +1366,32 @@ vision 复核：竖屏放大后独立读出「三个筐＝红肉串 / 褐圆帽�
 验收：e2e 在竖屏 `390×844` 与横屏 `844×390` 进入首屏与达标结算面板，遍历所有可见 `.bbq-panel button` 断言：(a) `rect.height >= 44`，且达标结算面板内主/次按钮高度差 `Math.abs(h1 - h2) <= 1`；(b) 两按钮垂直间距 `btn2.top - btn1.bottom >= 10` 且全部 `rect.bottom <= innerHeight - 8`；(c) 按钮 `textContent.trim()` 不含中文字符间手打空格（不匹配 `/[\u4e00-\u9fa5][\s\u3000]+[\u4e00-\u9fa5]/`）；双端连跑 3 次 0 JS error。
 参考：Apple HIG / Material 移动触控 44px 最小热区规范、`ART-DIRECTION §5`。
 
-本轮小结：新开 4 条（`B-137` P1、`B-138` P1、`B-139` P2、`B-140` P2），P0 1 条（沿用 `B-081`）、P1 4 条（2 条新开 `B-137`/`B-138` + 2 条沿用 `B-112` / `B-093`；切配类 `B-129` 已随 `bf34db5` 新设计作废，仅存档），综合评分 **3.0/5（比上轮 3.0 ±0.0，仅适用于本机 `7116bbf-202611220228`）**。
+### B-141 构建与部署溯源门禁（Clean-Tree 校验 + 健康检查返回 commit 与 bundle SHA-256）
+优先级：P0
+来源：第 29 轮走查（本机 `127.0.0.1:3035` 运行 `window.__build="05afe9b-202611220449"` 入口 `assets/index-uMHCucrV.js` 已含 `56×56` `.card-btn`，但 git HEAD `05afe9b` 源码并无 `.card-btn`，线上包编译自未提交脏树导致 commit 号不可信）
+需求：① 在构建/部署脚本（`scripts/ci-deploy.sh` 等）前置 `git status --porcelain` 强校验，工作区存在未提交改动时直接以非 0 退出码中止部署，杜绝半成品脏树上生产或测试服；② 构建产物同时生成构建清单（含完整 `commit`、`clean: true`、`builtAt`、`entry` 文件名及入口 JS 的 `bundleSha256`），由服务端 `GET /api/health` 直接返回，并与前端注入的 `window.__build` 共用同一 commit 来源；③ 部署完成后自动校验 `/api/health` 返回的 `bundleSha256` 与实际访问 `/` 引用的入口 JS 实算 SHA-256 一致（公网同步纳入该校验以根治 `B-081`）。
+验收：脚本与 e2e 断言——(a) 在人为制造 1 个未提交改动时执行部署脚本返回非 0 退出码且不覆盖线上 `dist`；(b) 干净提交并部署后，`GET http://127.0.0.1:3035/api/health` 返回 HTTP 200 且 JSON 满足 `clean === true`、`commit === $(git rev-parse --short HEAD)`、`bundleSha256 === sha256sum(dist/<entry>)`；(c) 浏览器访问页面读取 `window.__build` 以 `health.commit + "-"` 开头，且页面 `<script src>` 指向的文件名等于 `health.entry`；0 JS error。
+参考：成熟 Web 游戏 / CI-CD 不可变制品实践（Git SHA + 制品 SHA-256 双锚定，禁止 dirty working tree 发布）。
+
+### B-142 首屏玩法说明与「上炉 / 起锅」两步循环对齐
+优先级：P1
+来源：第 29 轮走查（`/www/yunnan-bbq-house/e2e/review/2026-11-22T04-39Z-r29/port-01-title.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T04-39Z-r29/land-01-title.png`：双端首屏副标题仍显示废弃五步流程「取料 → 切配 → 炭烤 → 装盘 → 上菜」，与 `GAME-DESIGN §0` 最高优先方向直接矛盾）
+需求：① 替换首屏卡片内的废弃五步流程文案，改为简明的两步一键循环引导（例如主副行展示「点订单卡上炉 → 盯准金色完美窗起锅收款」及「3 个烤位 · 排队控火」提示），让新玩家 3 秒内学会正确玩法；② 同步清理首屏及局内 guide toast 中残留的「去料箱取料」「切配」「装盘」等旧流程话术。
+验收：e2e 在竖屏 `390×844` 与横屏 `844×390` 进入 `menu` 态，断言首屏面板 `textContent` 同时包含 `上炉` 与 `起锅`（且正则 `/取料|切配|装盘/` 命中为 `false`），首屏面板及内部文本全部 `scrollWidth <= clientWidth`、`rect.top >= 8 && rect.bottom <= innerHeight - 8`；双端连跑 3 次 `0` JS error。
+参考：《沙威玛传奇》/《胡闹厨房 2》开局卡片（首屏用一句话精准锚定核心交互，杜绝文案与实机机制脱节）。
+
+### B-143 下线旧五步操控链路并统一单源计时与飘字防压卡避让
+优先级：P1
+来源：第 29 轮走查（`/www/yunnan-bbq-house/e2e/review/2026-11-22T04-39Z-r29/port-03-customer.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T04-39Z-r29/port-31-card-cooking.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T04-39Z-r29/port-32-card-perfect.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T04-39Z-r29/port-33-slots-full.png`、`land-05-grill.png`：新旧双链路并存，点卡上炉时卡片写 `生串 4s` 而烤炉 `.gb` 写 `烤制中 6s` 互相冲突，`夹生 · 重烤` 飘字压住 3 号卡按钮，`.gb` 压住 `豆泥米线` 气泡，摇杆与动作键仍在喊 `去料箱取料`）
+需求：① 按 `GAME-DESIGN §0/§1` 彻底移除局内旧操控组件（隐藏并停用虚拟摇杆 `#bbq-stick`、右下动作键 `#bbq-act`、旧料箱/切配/烤炉地面引导箭头及手动切配/装盘触发），释放竖屏底部操控黑带与横屏左下料箱区（顺带消解 `B-093`）；② 烤制倒计时收敛为订单卡单一事实来源，移除使用旧 `6s` 逻辑的 `.gb` 烤炉徽章（避免 `4s` vs `6s` 冲突及遮挡 `豆泥米线` 气泡），改为烤位纯 3D 串体/火候光效与订单卡联动；③ `#bbq-popups .popup`（含 `夹生 · 重烤`、`焦糊了`、`+¥xx`）生成与布局时检测 `#bbq-orders` 容器包围盒并强制避让，禁止任何飘字覆盖订单卡或 `.card-btn`。
+验收：e2e 在竖屏 `390×844` 与横屏 `844×390` 开店进入 `playing` 态断言：(a) `#bbq-stick` 与 `#bbq-act` 不存在或 `display === 'none'`；(b) 点击订单卡 `上炉` 后屏幕上不存在文本含 `烤制中 6s` 的冲突倒计时节点，且 `.gb` 与 `.bubble` 交叠面积 `=== 0`；(c) 4 客同屏下对第 2 张卡在 `t=1.7s` 触发 `夹生 · 重烤` 及 `13s` 触发 `焦糊了` 当帧，断言所有可见 `.popup` 与所有 `#bbq-orders .card` 交叠面积 `=== 0`；(d) 仅通过 2 次点击 `.card-btn` 即可完成出餐 `money > 0 && served === 1`；双端连跑 3 次 `0` JS error。
+参考：《烹饪发烧友》/《沙威玛传奇》移动端单手触控布局（彻底移除虚拟摇杆与重复倒计时，所有状态飘字避开高频点击区）。
+
+### B-144 订单卡固定等宽排版与顶栏「评级」星级文本及状态同步
+优先级：P1
+来源：第 29 轮走查（竖屏 4 张订单卡出现 `217px` 与 `243px` 两种宽度导致左边缘参差不齐且首卡距顶栏仅 `16px`，见 `port-30-cards.png`、`port-32-card-perfect.png`；横屏顾客愤怒离店 `angry 0→1` 后顶栏「评级」处文本为空仅读到“评级”二字、无 `★`，见 `land-09-angry-left.png`）
+需求：① 为 `#bbq-orders .card` 设定按端点统一的固定宽度（例如竖屏恒定 `244px`、横屏恒定 `224px`，菜名列 `flex: 1; min-width: 0`），消除不同字数菜品导致的卡片宽窄不一与左缘参差，并在竖屏调整订单卡与顶栏垂直间距至 `>= 18px` 且控制 4 卡总高度不压住核心餐桌；② 修复顶栏「评级」星级渲染与语义暴露：使用文本 `★`/`☆` 或带显式 `aria-label` 与文本节点同步的星级容器（保证 DOM 文本读取始终含 `★`/`☆` 而非空串），并严格绑定 `calcStars()`——当 `angry` 递增触发评级下降或惩罚时同步触发 0.4s 警示闪红动效，确保局内顶栏与结算面板星级 100% 同源一致。
+验收：e2e 在竖屏 `390×844` 与横屏 `844×390` 断言：(a) 同时存在 4 张不同菜品（含 `烤五花肉拼盘`、`烤菌子`、`豆泥米线`）订单卡时，所有 `.card` 宽度极差 `max(w) - min(w) <= 1px`、左边缘坐标极差 `max(left) - min(left) <= 1px`、`card[0].top - topbar.bottom >= 18`，且卡内 `scrollWidth <= clientWidth`；(b) 开局、上菜后及横屏 `angry 0→1` 离店后，读取顶栏评级容器 `textContent` 均匹配 `/[★☆]{3}/`（绝不为空），且实心 `★` 数量严格等于 `Number(ratingEl.dataset.stars)` 与结算面板星级；双端连跑 3 次 `0` JS error。
+参考：《胡闹厨房 2》顶部定宽订单栏（所有订单卡严格等宽对齐、一眼扫视队列）与移动端 HUD 可访问状态规范。
+
+本轮小结（第 29 轮）：新开 4 条（`B-141` P0、`B-142`/`B-143`/`B-144` P1）；P0 2 条（`B-141` 构建溯源 + 沿用 `B-081` 公网旧包）、P1 5 条（`B-142`/`B-143`/`B-144` 新开 + 沿用 `B-125`/`B-136`），P2 2 条；综合评分 **2.8/5（比上轮 3.0 −0.2，仅适用于本机脏树构建 `05afe9b-202611220449`）**。

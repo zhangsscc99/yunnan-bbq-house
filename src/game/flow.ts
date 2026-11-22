@@ -9,7 +9,7 @@
 // One update(dt) drives everything — zero setTimeout in simulation logic.
 
 import * as THREE from 'three';
-import { COOK, DISHES, LEVELS, SAVE_KEYS } from '../config.ts';
+import { BIZ, COOK, ECON, LEVELS, SAVE_KEYS } from '../config.ts';
 import type { DishId, Level } from '../config.ts';
 import type {
   StationRuntime,
@@ -32,6 +32,17 @@ import { createEmptyTableGrill } from '../world/dining.ts';
 import { PLAYER_SPAWN, cellToWorld } from '../world/layout.ts';
 import { calcStars } from './stars.ts';
 import type { StarRating } from './stars.ts';
+import {
+  calcDineDuration,
+  calcEatDuration,
+  calcEntryRevenue,
+  calcServiceTip,
+  calcTurnRate,
+  clampSatisfaction,
+  publishEcon,
+  roundMoney,
+} from './economy.ts';
+import type { EconSnapshot } from './economy.ts';
 
 export interface FlowEvents {
   onPhase(phase: GamePhase): void;
@@ -45,8 +56,16 @@ export interface FlowEvents {
 export interface Results {
   stars: StarRating;
   money: number;
-  target: number;
+  entryFee: number;
+  entryRevenue: number;
+  tips: number;
+  target: number;        // 保留字段名兼容，语义 = targetGuests
+  targetGuests: number;
+  seats: number;
   served: number;
+  turnRate: number;
+  satisfaction: number;
+  earlyLeaves: number;
   angry: number;
   waste: number;
   pass: boolean;
@@ -105,10 +124,15 @@ let nextPassItemId = 1;
 export class Flow {
   phase: GamePhase = 'menu';
   money = 0;
+  entryRevenue = 0;
+  tips = 0;
   level = savedLevel();
   cfg: Level = LEVELS[this.level - 1];
+  seats = this.cfg.maxDiners;
   timeLeft = this.cfg.duration;
   served = 0;
+  satisfaction = ECON.satisfactionInit;
+  earlyLeaves = 0;
   angry = 0;
   waste = 0;
   clickCount = 0;
@@ -147,6 +171,28 @@ export class Flow {
     this.grillFX.attachTo(scene);
     this.highlighter = new Highlighter(scene);
     registerNavPoints([passStation], tables);
+    this.syncEcon();
+  }
+
+  econSnapshot(): EconSnapshot {
+    return {
+      entryFee: BIZ.entryFee,
+      entryRevenue: this.entryRevenue,
+      tips: this.tips,
+      money: this.money,
+      served: this.served,
+      seats: this.seats,
+      targetGuests: this.cfg.targetGuests,
+      satisfaction: this.satisfaction,
+      turnRate: calcTurnRate(this.served, this.seats),
+      earlyLeaves: this.earlyLeaves,
+      stars: this.starsNow(),
+      phase: this.phase,
+    };
+  }
+
+  syncEcon(): void {
+    publishEcon(this.econSnapshot());
   }
 
   placePlayer(): void {
@@ -183,9 +229,14 @@ export class Flow {
 
   startLevel(): void {
     this.phase = 'playing';
-    this.money = 0;
+    this.seats = this.cfg.maxDiners;
+    this.entryRevenue = calcEntryRevenue(this.seats, BIZ.entryFee);
+    this.tips = 0;
+    this.money = this.entryRevenue;
     this.timeLeft = this.cfg.duration;
     this.served = 0;
+    this.satisfaction = ECON.satisfactionInit;
+    this.earlyLeaves = 0;
     this.angry = 0;
     this.waste = 0;
     this.clickCount = 0;
@@ -227,24 +278,26 @@ export class Flow {
     }
     this.spawnPlayer();
 
+    this.syncEcon();
     this.ev.onPhase('playing');
-    this.ev.onMoney(0);
+    this.ev.onMoney(this.money);
     this.ev.onTimeLeft(this.timeLeft);
     this.ev.onSync();
   }
 
   starsNow(): StarRating {
     return calcStars({
-      money: this.money,
-      target: this.cfg.target,
       served: this.served,
+      targetGuests: this.cfg.targetGuests,
+      satisfaction: this.satisfaction,
       angry: this.angry,
       waste: this.waste,
     });
   }
 
   nextLevel(): void {
-    if (this.phase !== 'results' || this.money < this.cfg.target || this.level >= LEVELS.length) return;
+    const passed = this.served >= this.cfg.targetGuests && this.satisfaction >= ECON.tipMinSatisfaction;
+    if (this.phase !== 'results' || !passed || this.level >= LEVELS.length) return;
     this.level += 1;
     this.cfg = LEVELS[this.level - 1];
     localStorage.setItem(SAVE_KEYS.level, String(this.level));
@@ -252,21 +305,32 @@ export class Flow {
   }
 
   endLevel(): void {
+    this.phase = 'results';
     const stars = this.starsNow();
+    const turnRate = calcTurnRate(this.served, this.seats);
+    const pass = this.served >= this.cfg.targetGuests && this.satisfaction >= ECON.tipMinSatisfaction;
     const res: Results = {
       stars,
       money: this.money,
-      target: this.cfg.target,
+      entryFee: BIZ.entryFee,
+      entryRevenue: this.entryRevenue,
+      tips: this.tips,
+      target: this.cfg.targetGuests,
+      targetGuests: this.cfg.targetGuests,
+      seats: this.seats,
       served: this.served,
+      turnRate,
+      satisfaction: this.satisfaction,
+      earlyLeaves: this.earlyLeaves,
       angry: this.angry,
       waste: this.waste,
-      pass: this.money >= this.cfg.target,
+      pass,
       level: this.level,
       hasNext: this.level < LEVELS.length,
     };
-    this.phase = 'results';
     const best = Number(localStorage.getItem(SAVE_KEYS.best) ?? '0');
-    if (this.money > best) localStorage.setItem(SAVE_KEYS.best, String(this.money));
+    if (this.served > best) localStorage.setItem(SAVE_KEYS.best, String(this.served));
+    this.syncEcon();
     this.ev.onPhase('results');
     this.ev.onResults(res);
   }
@@ -283,6 +347,77 @@ export class Flow {
     ).length;
   }
 
+  private cleanupCustomerItems(c: Customer): void {
+    this.removePassByCustomer(c.id);
+    if (this.player.carrying?.customerId === c.id) {
+      disposeTree(this.player.carrying.item.obj);
+      this.player.setCarrying(null);
+    }
+    const table = this.tableById(c.table);
+    if (table && table.grill.customerId === c.id) {
+      this.clearTableGrill(table);
+    }
+  }
+
+  private releaseTableForCustomer(c: Customer): void {
+    const table = this.tableById(c.table);
+    if (!table) return;
+    if (table.guest === c.id) {
+      table.guest = null;
+      table.cooldown = COOK.cleanTime; // 2.0s table cleanup before re-seating
+    }
+    const holder = c as unknown as { _plate?: THREE.Object3D };
+    if (holder._plate) {
+      this.scene.remove(holder._plate);
+      disposeTree(holder._plate);
+      holder._plate = undefined;
+    }
+  }
+
+  /** Dissatisfied guest leaves early (frees table into 2.0s cleanup, no money deduction). */
+  private triggerEarlyLeave(c: Customer, reason = '不满提前离店'): boolean {
+    if (c.phase !== 'seated') return false;
+    this.cleanupCustomerItems(c);
+    c.earlyLeft = true;
+    c.phase = 'leaving-angry';
+    c.obj.position.y = 0;
+    this.earlyLeaves += 1;
+    this.angry += 1;
+    this.releaseTableForCustomer(c);
+    this.ev.onPopup(c.obj.position.clone().add(new THREE.Vector3(0, 1.2, 0)), reason, 'warn');
+    this.syncEcon();
+    return true;
+  }
+
+  /** Apply satisfaction change and trigger early leave when falling below ECON.earlyLeaveThreshold. */
+  private applySatisfactionDelta(delta: number, targetGuest?: Customer, guestDelta = 0): void {
+    const wasAbove = this.satisfaction >= ECON.earlyLeaveThreshold;
+    this.satisfaction = clampSatisfaction(this.satisfaction + delta);
+    if (targetGuest && guestDelta !== 0) {
+      targetGuest.satisfaction = clampSatisfaction(targetGuest.satisfaction + guestDelta);
+    }
+
+    if (delta < 0) {
+      if (
+        targetGuest &&
+        targetGuest.phase === 'seated' &&
+        (targetGuest.satisfaction < ECON.earlyLeaveThreshold || this.satisfaction < ECON.earlyLeaveThreshold)
+      ) {
+        this.triggerEarlyLeave(targetGuest, '不满提前离店');
+      }
+      if (wasAbove && this.satisfaction < ECON.earlyLeaveThreshold) {
+        for (const other of [...this.customers]) {
+          if (other.phase === 'seated') {
+            this.triggerEarlyLeave(other, '口碑跌破阈值 · 提前离店');
+          }
+        }
+      }
+    }
+
+    this.syncEcon();
+    this.ev.onMoney(this.money);
+  }
+
   private trySpawn(dt: number): void {
     if (this.spawnsPaused) return;
     this.spawnT -= dt;
@@ -290,7 +425,7 @@ export class Flow {
     const free = this.freeTables();
     if (free.length && this.activeGuestCount() < this.cfg.maxDiners) {
       const t = free[Math.floor(Math.random() * free.length)];
-      this.customers.push(spawnCustomer(this.scene, t, this.doorPos));
+      this.customers.push(spawnCustomer(this.scene, t, this.doorPos, undefined, calcDineDuration(this.seats)));
       const [a, b] = this.cfg.spawnEvery;
       this.spawnT = a + Math.random() * (b - a);
       this.ev.onSync();
@@ -443,10 +578,10 @@ export class Flow {
     }
 
     this.grillFX.spawnBurnBurst(table.grillPos);
-    this.money -= COOK.burnPenalty;
+    // 自助制：焦糊作废不扣钱，只扣满意度与星级
     this.waste += 1;
-    this.ev.onMoney(this.money);
-    this.ev.onPopup(table.pos.clone().add(new THREE.Vector3(0, 0.48, 0)), `焦糊作废 -¥${COOK.burnPenalty}`, 'warn');
+    this.applySatisfactionDelta(-ECON.penaltyBurn, guest, -ECON.guestPenaltyBurn);
+    this.ev.onPopup(table.pos.clone().add(new THREE.Vector3(0, 0.48, 0)), `焦糊作废 · 满意度-${ECON.penaltyBurn}`, 'warn');
     this.ev.onSync();
     return true;
   }
@@ -495,7 +630,7 @@ export class Flow {
     if (table.grill.active && table.grill.customerId === guest.id && table.grill.item) {
       const win = cookWindowFor(table.grill.grillT);
 
-      // Early (< 5.0s) → undercooked: unhappy customer, reset heat bar to 0
+      // Early (< 5.0s) → undercooked: unhappy customer, reset heat bar to 0 (no money deduction)
       if (win === 'raw') {
         if (table.grill.grillT + COOK_EPS < COOK.rawLockSec) return false;
         table.grill.grillT = 0;
@@ -505,7 +640,10 @@ export class Flow {
         const drop = Math.max(4, Math.round(guest.patienceMax * COOK.rawPatienceDrop));
         guest.patience = Math.max(1, guest.patience - drop);
         this.player.walkTo(table.usePos, table.pos);
-        this.ev.onPopup(table.pos.clone().add(new THREE.Vector3(0, 0.45, 0)), '夹生！重新烤制', 'warn');
+        this.applySatisfactionDelta(-ECON.penaltyRaw, guest, -ECON.guestPenaltyRaw);
+        if (guest.phase === 'seated') {
+          this.ev.onPopup(table.pos.clone().add(new THREE.Vector3(0, 0.45, 0)), `夹生重烤 · 满意度-${ECON.penaltyRaw}`, 'warn');
+        }
         this.ev.onSync();
         return true;
       }
@@ -530,23 +668,27 @@ export class Flow {
       guest.paid = true;
       guest.orderState = 'done';
       guest.phase = 'eating';
-      guest.eatT = COOK.eatTime;
+      guest.eatT = calcEatDuration(guest.dineDuration, guest.dineT);
       this.clickCount += 1;
       guest.clicksUsed += 1;
 
-      const rawFrac = guest.patienceMax > 0
-        ? Math.max(0, Math.min(1, guest.patience / guest.patienceMax))
-        : 1;
-      const patienceFactor = rawFrac >= COOK.fullTipPatience ? 1 : rawFrac;
-      const tipMult = win === 'over' ? COOK.overTipMult : 1;
-      const tip = Math.round(DISHES[guest.dish].price * COOK.tipRate * patienceFactor * tipMult);
-      const total = DISHES[guest.dish].price + tip;
-
-      this.money += total;
+      const cookWin = win === 'over' ? 'over' : 'perfect';
+      if (cookWin === 'perfect') {
+        this.satisfaction = clampSatisfaction(this.satisfaction + ECON.bonusPerfect);
+      }
+      // 自助制所有菜价为 ¥0；整局收入由入场费 + 满意度小费构成，绝不因菜品价格变化
+      const tip = calcServiceTip(this.satisfaction, cookWin);
+      this.tips = roundMoney(this.tips + tip);
+      this.money = roundMoney(this.entryRevenue + this.tips);
       this.served += 1;
       this.player.walkTo(table.usePos, table.pos);
+      this.syncEcon();
       this.ev.onMoney(this.money);
-      this.ev.onPopup(table.pos.clone().add(new THREE.Vector3(0, 0.48, 0)), `+¥${total}`, 'money');
+      this.ev.onPopup(
+        table.pos.clone().add(new THREE.Vector3(0, 0.48, 0)),
+        tip > 0 ? `上菜成功 +¥${tip}小费` : '上菜成功',
+        tip > 0 ? 'money' : 'ok',
+      );
       this.ev.onSync();
       return true;
     }
@@ -630,7 +772,7 @@ export class Flow {
             btnText = '快盛盘';
             disabled = false;
           } else {
-            statusText = `烤焦作废 · -¥${COOK.burnPenalty}`;
+            statusText = `烤焦作废 · 满意度-${ECON.penaltyBurn}`;
             btnText = '已作废';
             disabled = true;
           }
@@ -638,7 +780,7 @@ export class Flow {
         }
         case 'done': {
           statusText = '已盛盘 · 用餐中';
-          btnText = '已结账';
+          btnText = '用餐中';
           disabled = true;
           break;
         }
@@ -646,7 +788,7 @@ export class Flow {
           cookWindow = 'burnt';
           cookT = COOK.burnTime;
           cookPct = 100;
-          statusText = `烤焦作废 · -¥${COOK.burnPenalty}`;
+          statusText = `烤焦作废 · 满意度-${ECON.penaltyBurn}`;
           btnText = '已作废';
           disabled = true;
           break;
@@ -767,33 +909,28 @@ export class Flow {
         doorPos: this.doorPos,
         tablePos: table.pos,
         scene: this.scene,
+        onLongWait: (cc) => {
+          this.applySatisfactionDelta(-ECON.penaltyLongWait, cc, -ECON.guestPenaltyLongWait);
+          if (cc.phase === 'seated') {
+            this.ev.onPopup(cc.obj.position.clone().add(new THREE.Vector3(0, 1.2, 0)), `久等了 · 满意度-${ECON.penaltyLongWait}`, 'warn');
+          }
+          stateChanged = true;
+        },
+        onLeaveTable: (cc) => {
+          this.releaseTableForCustomer(cc);
+          stateChanged = true;
+        },
         onAngry: (cc) => {
           // Clean up any dish in Pass, player hand, or tabletop grill so no softlock occurs
-          this.removePassByCustomer(cc.id);
-          if (this.player.carrying?.customerId === cc.id) {
-            disposeTree(this.player.carrying.item.obj);
-            this.player.setCarrying(null);
-          }
-          if (table.grill.customerId === cc.id) {
-            this.clearTableGrill(table);
-          }
+          this.cleanupCustomerItems(cc);
           this.angry += 1;
-          this.ev.onPopup(cc.obj.position.clone().add(new THREE.Vector3(0, 1.2, 0)), '耐心耗尽离店', 'warn');
+          this.applySatisfactionDelta(-ECON.penaltyTimeout);
+          this.ev.onPopup(cc.obj.position.clone().add(new THREE.Vector3(0, 1.2, 0)), `久等离店 · 满意度-${ECON.penaltyTimeout}`, 'warn');
           stateChanged = true;
         },
         onGone: (cc) => {
-          this.removePassByCustomer(cc.id);
-          if (this.player.carrying?.customerId === cc.id) {
-            disposeTree(this.player.carrying.item.obj);
-            this.player.setCarrying(null);
-          }
-          if (table.grill.customerId === cc.id) {
-            this.clearTableGrill(table);
-          }
-          table.guest = null;
-          table.cooldown = COOK.cleanTime; // 2.0s table cleanup before re-seating
-          const plate = (cc as unknown as { _plate?: THREE.Object3D })._plate;
-          if (plate) { this.scene.remove(plate); disposeTree(plate); }
+          this.cleanupCustomerItems(cc);
+          this.releaseTableForCustomer(cc);
           const i = this.customers.indexOf(cc);
           if (i >= 0) this.customers.splice(i, 1);
           stateChanged = true;

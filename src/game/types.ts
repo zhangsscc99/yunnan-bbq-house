@@ -90,6 +90,11 @@ export interface Customer {
   prepT: number;             // 0..COOK.prepTime background prep progress
   patience: number;          // seconds left
   patienceMax: number;
+  satisfaction: number;      // per-guest satisfaction 0..100
+  dineT: number;             // elapsed dining occupancy seconds since seated
+  dineDuration: number;      // max occupancy seconds under 90-min compression (sessionSeconds / seats)
+  longWaitPenalized: boolean;// single-shot guard for long-wait satisfaction drop
+  earlyLeft: boolean;        // true when guest left early due to low satisfaction
   target: THREE.Vector3;     // current walk target
   eatT: number;              // eating countdown
   burntLinger: number;       // brief red-card linger before guest leaves

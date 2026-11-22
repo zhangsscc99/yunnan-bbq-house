@@ -2,12 +2,13 @@
 // tick down patience, eat when served, or leave after burnt/angry.
 
 import * as THREE from 'three';
-import { DISHES } from '../config.ts';
+import { DISHES, ECON, LEVELS } from '../config.ts';
 import type { DishId } from '../config.ts';
 import type { Customer } from './types.ts';
 import type { TableRuntime } from '../world/dining.ts';
 import { buildChibi } from './player.ts';
 import { disposeTree } from '../core/dispose.ts';
+import { calcDineDuration } from './economy.ts';
 
 const WALK_SPEED = 1.9;
 
@@ -35,6 +36,7 @@ export function spawnCustomer(
   table: TableRuntime,
   doorPos: THREE.Vector3,
   dish?: DishId,
+  dineDuration = calcDineDuration(LEVELS[0].maxDiners),
 ): Customer {
   const o = OUTFITS[nextCustomerId % OUTFITS.length];
   const obj = buildChibi({
@@ -57,6 +59,11 @@ export function spawnCustomer(
     prepT: 0,
     patience: DISHES[d].patience,
     patienceMax: DISHES[d].patience,
+    satisfaction: ECON.satisfactionInit,
+    dineT: 0,
+    dineDuration,
+    longWaitPenalized: false,
+    earlyLeft: false,
     target: table.seatPos.clone(),
     eatT: 0,
     burntLinger: 0,
@@ -93,6 +100,8 @@ export function updateCustomer(
     doorPos: THREE.Vector3;
     tablePos: THREE.Vector3;
     scene: THREE.Scene;
+    onLongWait?: (c: Customer) => void;
+    onLeaveTable?: (c: Customer) => void;
     onAngry: (c: Customer) => void;
     onGone: (c: Customer) => void;
   },
@@ -109,6 +118,7 @@ export function updateCustomer(
         c.phase = 'seated';
         c.orderState = 'ordering';
         c.prepT = 0;
+        c.dineT = 0;
         const tp = ctx.tablePos;
         c.obj.rotation.y = Math.atan2(tp.x - p.x, tp.z - p.z);
       } else {
@@ -118,12 +128,20 @@ export function updateCustomer(
     }
     case 'seated': {
       c.patience -= dt;
+      c.dineT += dt;
       p.y = 0.32;
-      if (c.patience <= 0) {
-        c.patience = 0;
+      if (!c.longWaitPenalized && c.patienceMax > 0 && c.patience / c.patienceMax <= ECON.longWaitFrac) {
+        c.longWaitPenalized = true;
+        ctx.onLongWait?.(c);
+        // Long-wait penalty may drop satisfaction below threshold and trigger early departure immediately
+        if (c.phase !== 'seated') break;
+      }
+      if (c.patience <= 0 || c.dineT >= c.dineDuration) {
+        c.patience = Math.max(0, c.patience);
         c.phase = 'leaving-angry';
         c.obj.position.y = 0;
         ctx.onAngry(c);
+        ctx.onLeaveTable?.(c);
       }
       break;
     }
@@ -135,15 +153,19 @@ export function updateCustomer(
         c.burntLinger = 0;
         c.phase = 'leaving-angry';
         c.obj.position.y = 0;
+        ctx.onLeaveTable?.(c);
       }
       break;
     }
     case 'eating': {
+      c.dineT += dt;
       c.eatT -= dt;
       p.y = 0.32 + Math.abs(Math.sin(performance.now() / 200)) * 0.02;
-      if (c.eatT <= 0) {
+      if (c.eatT <= 0 || c.dineT >= c.dineDuration) {
+        c.eatT = 0;
         c.phase = 'leaving-happy';
         c.obj.position.y = 0;
+        ctx.onLeaveTable?.(c);
       }
       break;
     }

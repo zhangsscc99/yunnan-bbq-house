@@ -17,9 +17,10 @@ import type { GamePhase } from './game/types.ts';
 import { Hud } from './ui/hud.ts';
 import type { CardStateSnapshot } from './ui/hud.ts';
 import { Panels } from './ui/panels.ts';
-import { COOK } from './config.ts';
+import { BIZ, COOK, DISHES, ECON } from './config.ts';
 import type { DishId } from './config.ts';
 import { spawnCustomer } from './game/customers.ts';
+import { calcDineDuration, calcEntryRevenue } from './game/economy.ts';
 
 console.info('[bbq] build', __BUILD__);
 (window as unknown as Record<string, unknown>).__build = __BUILD__;
@@ -56,14 +57,96 @@ const lights = buildLighting(
 const hud = new Hud(uiRoot, rig.cam);
 const panels = new Panels(uiRoot);
 
+// Non-invasive buffet economy status strip & panel adapter (leaves src/ui/* untouched for lane/ui)
+const econStyle = document.createElement('style');
+econStyle.textContent = `
+#bbq-econ-strip {
+  position: absolute; top: calc(max(8px, env(safe-area-inset-top)) + 40px); left: 50%; z-index: 6;
+  transform: translateX(-50%); display: none; gap: 8px; align-items: center;
+  background: rgba(24,16,12,.82); backdrop-filter: blur(8px);
+  border: 1px solid rgba(232,180,90,.42); border-radius: 10px;
+  padding: 3px 10px; white-space: nowrap; max-width: calc(100vw - 16px); box-sizing: border-box;
+  font-size: 11px; color: rgba(245,232,216,.88); font-weight: 600; pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+#bbq-econ-strip b { color: #f0c060; font-weight: 700; }
+#bbq-econ-strip b.low { color: #ff7a66; }
+#bbq-econ-strip .sep { color: rgba(240,192,96,.38); }
+`;
+document.head.appendChild(econStyle);
+
+const econStrip = document.createElement('div');
+econStrip.id = 'bbq-econ-strip';
+uiRoot.appendChild(econStrip);
+
+function syncEconStrip(): void {
+  const e = flow.econSnapshot();
+  econStrip.style.display = e.phase === 'playing' ? 'flex' : 'none';
+  if (e.phase !== 'playing') return;
+  const satCls = e.satisfaction < ECON.earlyLeaveThreshold ? 'low' : '';
+  econStrip.innerHTML =
+    `<span>自助 <b>¥${e.entryFee}×${e.seats}位</b></span>` +
+    `<span class="sep">·</span>` +
+    `<span>客数 <b>${e.served}/${e.targetGuests}</b></span>` +
+    `<span class="sep">·</span>` +
+    `<span>翻台 <b>${e.turnRate.toFixed(2)}×</b></span>` +
+    `<span class="sep">·</span>` +
+    `<span>满意 <b class="${satCls}">${e.satisfaction}%</b></span>`;
+}
+
+function patchStartPanel(): void {
+  const targetEl = uiRoot.querySelector('.bbq-panel .target');
+  if (!targetEl) return;
+  const seats = flow.cfg.maxDiners;
+  const entryRev = calcEntryRevenue(seats, BIZ.entryFee);
+  const mins = Math.round(flow.cfg.duration / 60);
+  targetEl.textContent =
+    `第 ${flow.level} 关 · 限时 ${mins} 分钟（模拟 ${BIZ.realMinutes} 分钟）· 入场 ¥${BIZ.entryFee}×${seats}位 = ¥${entryRev} · 目标 ${flow.cfg.targetGuests} 位`;
+}
+
+function patchResultsPanel(r: Results): void {
+  const card = uiRoot.querySelector('.bbq-panel .card');
+  if (!card) return;
+  const verdictEl = card.querySelector('.verdict');
+  if (verdictEl) {
+    const nextN = r.level + 1;
+    verdictEl.textContent = !r.pass
+      ? (r.served < r.targetGuests
+        ? `客数差 ${r.targetGuests - r.served} 位（目标 ${r.targetGuests} 位）`
+        : `满意度 ${r.satisfaction}%（需 ≥${ECON.tipMinSatisfaction}%）`)
+      : (r.hasNext ? `达标！进入第 ${nextN} 关` : '全部关卡通关！');
+  }
+  const oldRows = card.querySelectorAll('.row');
+  oldRows.forEach((n) => n.remove());
+  const anchor = card.querySelector('button');
+  const tipSuffix = r.tips > 0 ? ` + 小费¥${r.tips}` : '';
+  const rows: { label: string; value: string; neg?: boolean; key: string }[] = [
+    { key: 'revenue', label: '营业额（入场费）', value: `¥${r.money}（¥${r.entryFee}×${r.seats}${tipSuffix}）` },
+    { key: 'served', label: '服务客数', value: `${r.served} / ${r.targetGuests} 位` },
+    { key: 'turnRate', label: '翻台率', value: `${r.turnRate.toFixed(2)}×（${r.seats} 座）` },
+    { key: 'satisfaction', label: '满意度', value: `${r.satisfaction}%`, neg: r.satisfaction < ECON.tipMinSatisfaction },
+    { key: 'earlyLeaves', label: '提前离店 / 焦糊', value: `${r.earlyLeaves} 位 / ${r.waste} 份`, neg: r.earlyLeaves > 0 || r.waste > 0 },
+  ];
+  for (const row of rows) {
+    const div = document.createElement('div');
+    div.className = `row${row.neg ? ' neg' : ''}`;
+    div.dataset.econRow = row.key;
+    div.innerHTML = `<span>${row.label}</span><b>${row.value}</b>`;
+    card.insertBefore(div, anchor);
+  }
+}
+
 // ---- game ----
 function syncPhase(phase: GamePhase): void {
   const playing = phase === 'playing';
   hud.setPlayHudVisible(playing);
   if (playing) panels.hide();
+  syncEconStrip();
 }
 
 function syncHud(): void {
+  flow.syncEcon();
+  syncEconStrip();
   if (flow.phase !== 'playing') return;
   hud.syncState(
     flow.passSlotViews(),
@@ -102,6 +185,8 @@ const flow = new Flow(
     },
     onResults(r: Results) {
       panels.showResults(r, restart, nextLevel);
+      patchResultsPanel(r);
+      syncEconStrip();
     },
   },
 );
@@ -158,6 +243,7 @@ function restart(): void {
 function nextLevel(): void {
   flow.nextLevel();
   if (flow.phase !== 'playing') return;
+  acc = 0;
   hud.setLevel(flow.level, flow.cfg.target);
   rig.snapTo(flow.player.obj.position);
   syncHud();
@@ -166,6 +252,7 @@ function nextLevel(): void {
 hud.setLevel(flow.level, flow.cfg.target);
 syncPhase(flow.phase);
 panels.showStart(flow.cfg.target, flow.cfg.duration, restart, flow.level);
+patchStartPanel();
 
 // ---- resize ----
 window.addEventListener('resize', () => {
@@ -254,7 +341,7 @@ const hooks: TestHooks = {
   spawnNow(dish) {
     const free = dining.tables.filter((tb) => !tb.guest && tb.cooldown <= 0);
     if (!free.length) return false;
-    const c = spawnCustomer(scene, free[0], dining.doorPos, dish);
+    const c = spawnCustomer(scene, free[0], dining.doorPos, dish, calcDineDuration(flow.seats));
     flow.customers.push(c);
     syncHud();
     return free[0].id;
@@ -305,8 +392,16 @@ const hooks: TestHooks = {
     return {
       phase: flow.phase,
       level: flow.level,
-      levelTarget: flow.cfg.target,
+      levelTarget: flow.cfg.targetGuests,
       money: flow.money,
+      entryRevenue: flow.entryRevenue,
+      tips: flow.tips,
+      seats: flow.seats,
+      satisfaction: flow.satisfaction,
+      earlyLeaves: flow.earlyLeaves,
+      econ: flow.econSnapshot(),
+      dishes: DISHES,
+      biz: BIZ,
       timeLeft: Number(flow.timeLeft.toFixed(3)),
       served: flow.served,
       angry: flow.angry,
@@ -363,6 +458,12 @@ const hooks: TestHooks = {
         prepT: Number(c.prepT.toFixed(3)),
         patience: Number(c.patience.toFixed(2)),
         patienceMax: c.patienceMax,
+        satisfaction: c.satisfaction,
+        dineT: Number(c.dineT.toFixed(2)),
+        dineDuration: c.dineDuration,
+        eatT: Number(c.eatT.toFixed(2)),
+        earlyLeft: c.earlyLeft,
+        longWaitPenalized: c.longWaitPenalized,
         table: c.table,
         clicksUsed: c.clicksUsed,
         burntHandled: c.burntHandled,

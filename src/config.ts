@@ -1,5 +1,5 @@
-// All tunable numbers for the game live here. See docs/GAME-DESIGN.md and
-// docs/ART-DIRECTION.md — those docs are the authority, this file is the knob.
+// All tunable numbers for the game live here. See docs/GAME-DESIGN.md §0/§1 v2
+// and docs/ART-DIRECTION.md — those docs are the authority, this file is the knob.
 
 export const GRID = {
   cols: 12,          // x: 0..11
@@ -10,21 +10,19 @@ export const GRID = {
 export const CAMERA = {
   pitchDeg: 50,                    // tilt down from horizontal
   followLerp: 0.12,                // per-frame at 60fps
-  lookAheadZ: -1.2,                // player sits lower-third: aim ahead(-z)
+  lookAheadZ: -1.2,                // default look-ahead
   dist: 12,                        // camera distance along view dir
-  // framing (ART-DIRECTION §1): visible ground never leaves the GRID.cols x GRID.rows world
   worldHalfW: GRID.cols / 2,       // 6m: max visible half-width on the ground
   worldHalfD: GRID.rows / 2,       // 4.5m: half depth of the world
-  portraitHalfH: 9,                // portrait: fixed half-height (old clamp ceiling), x-clamped to the world
-  // landscape lens (ART-DIRECTION §1, B-072): from the spawn row on, the counter row (cell z=7) must sit
-  // above the bottom HUD band. lookAheadZ is solved from halfH (see CameraRig.landscapeLookAhead).
+  portraitHalfH: 9.0,              // portrait: fits all 4 tables + pass window horizontally
+  portraitLookZ: 2.0,              // portrait: frames dining room + pass window cleanly in upper half above thumb dock
   landscapeAspect: 1.5,            // aspect >= this uses the landscape look-ahead below
-  landscapeLookAheadZ: 0.4,        // floor of the landscape look-ahead (+z = toward the counters)
-  benchZ: 3.0,                     // world z of the station row (cell z=7)
+  landscapeLookAheadZ: 0.4,        // floor of the landscape look-ahead (+z = toward the pass counter)
+  benchZ: 3.0,                     // world z of the counter row (cell z=7)
   benchTopY: 0.72,                 // counter top height (world/kitchen.ts COUNTER_H)
-  benchFromZ: 0,                   // player z >= this (spawn row z=0) => counter row fully visible
-  hudBottomPx: 96,                 // bottom HUD band (joystick / action button) the counters must clear
-  hudMarginPx: 2,                  // extra clearance above the band (leaves headroom for dining rings @t2)
+  benchFromZ: 0,                   // player z >= this => counter row fully visible
+  hudBottomPx: 140,                // bottom HUD dock clearance on landscape
+  hudMarginPx: 4,
 };
 
 export const COLORS = {
@@ -49,35 +47,42 @@ export const RENDER = {
   shadowMapSize: 1024,
 };
 
-// ---- gameplay numbers (M1) ----
+// ---- gameplay numbers (v2: GAME-DESIGN §0/§1) ----
 
 export type DishId = 'pork' | 'mushroom' | 'mixian';
 
 export interface Dish {
   id: DishId;
   name: string;
+  shortName: string;
   price: number;
   patience: number;   // seconds
   hue: number;        // main ingredient colour
 }
 
 export const DISHES: Record<DishId, Dish> = {
-  pork:     { id: 'pork',     name: '烤五花肉拼盘', price: 48, patience: 75,  hue: 0xe8907c },
-  mushroom: { id: 'mushroom', name: '烤菌子',       price: 32, patience: 90,  hue: 0xa97b4f },
-  mixian:   { id: 'mixian',   name: '豆泥米线',     price: 26, patience: 100, hue: 0xe8c96a },
+  pork:     { id: 'pork',     name: '烤五花肉拼盘', shortName: '五花肉', price: 48, patience: 75,  hue: 0xe8907c },
+  mushroom: { id: 'mushroom', name: '烤菌子',       shortName: '烤菌子', price: 32, patience: 90,  hue: 0xa97b4f },
+  mixian:   { id: 'mixian',   name: '豆泥米线',     shortName: '米线',   price: 26, patience: 100, hue: 0xe8c96a },
 };
 
 export const COOK = {
-  chopTaps: 3,          // presses to finish chopping
-  grillTime: 6,         // seconds → done (golden, legacy chain)
-  burnTime: 12,         // seconds → burnt waste
-  tipRate: 0.3,         // tip = price * tipRate * patienceFrac (full when >= fullTipPatience)
-  fullTipPatience: 0.8, // patience fraction >= this earns full tip (GAME-DESIGN §2)
-  // one-click order-card cooking windows (GAME-DESIGN §1)
-  perfectStart: 4,      // [0, 4) raw (undercooked)
-  overStart: 9,         // [4, 9) perfect, [9, 12) overcooked, >= 12 burnt
-  overTipMult: 0.5,     // tip multiplier when lifted in overcooked window
-  burntLinger: 1.0,     // seconds burnt card stays visible in red before removal
+  prepTime: 3.0,          // 后台自动备菜时长 (s)
+  passCapacity: 3,        // 出菜窗口容量（满则暂停后台备菜）
+  grillTotal: 8.0,        // 火候总时长 / 焦糊线 (s)
+  perfectStart: 5.0,      // [0, 5.0) 夹生窗，[5.0, 7.0) 完美窗
+  perfectEnd: 7.0,        // [7.0, 8.0) 快焦预警窗，>= 8.0 焦糊
+  burnTime: 8.0,          // 焦糊线 (s)
+  cleanTime: 2.0,         // 吃完离桌后桌面清理时长 (s)
+  eatTime: 2.0,           // 顾客用餐时长 (s)
+  rawLockSec: 0.35,       // 刚上桌烤防误双击保护窗 (s)
+  rawPatienceDrop: 0.1,   // 夹生重烤时顾客耐心损耗比例
+  burnPenalty: 15,        // 焦糊单次扣款 (¥)
+  burnPatienceDrop: 0.4,  // 焦糊时顾客耐心大降比例
+  burntLinger: 1.4,       // 焦糊作废卡片红态停留时长 (s)
+  tipRate: 0.3,           // tip = round(price * tipRate * patienceFactor)
+  fullTipPatience: 0.8,   // 剩余耐心 >= 80% 拿满小费
+  overTipMult: 0.5,       // 快焦预警窗盛盘小费减半
 };
 
 export interface Level {
@@ -85,24 +90,23 @@ export interface Level {
   target: number;       // ¥
   maxDiners: number;    // simultaneous seated customers
   spawnEvery: readonly [number, number]; // seconds between arrivals (min,max) while free table
-  tableCooldown: number; // seconds before a freed table can re-seat
+  tableCooldown: number; // seconds before a freed table can re-seat (= COOK.cleanTime)
 }
 
 export const LEVELS: Level[] = [
-  { duration: 180, target: 180, maxDiners: 3, spawnEvery: [12, 20], tableCooldown: 4 },
-  { duration: 180, target: 260, maxDiners: 3, spawnEvery: [9, 15],  tableCooldown: 4 },
+  { duration: 180, target: 180, maxDiners: 3, spawnEvery: [10, 16], tableCooldown: COOK.cleanTime },
+  { duration: 180, target: 260, maxDiners: 4, spawnEvery: [8, 13],  tableCooldown: COOK.cleanTime },
 ];
 
 export const LEVEL = LEVELS[0];
 
 export const PLAYER = {
-  speed: 3.2,           // m/s
+  speed: 4.2,           // m/s (crisp auto-walk between Pass window and tables)
   radius: 0.32,         // collision circle
-  interactRange: 1.15,  // metres from station centre
+  interactRange: 1.15,  // metres
 };
 
 export const STARS = {
-  // see GAME-DESIGN §4
   threeWasteMax: 1,
 };
 

@@ -200,120 +200,22 @@ export function menuBoardTex(): THREE.CanvasTexture {
   return toTex(c, 1);
 }
 
-// 9. crate front-edge ingredient signs (3-tile inline canvas atlas: pork / mushroom / mixian)
-export function crateSignTex(): THREE.CanvasTexture {
+// 9. pass window overhead signboard ("出菜窗口")
+export function passSignTex(): THREE.CanvasTexture {
   const c = document.createElement('canvas');
-  c.width = 768;
-  c.height = 256;
+  c.width = 512;
+  c.height = 128;
   const g = c.getContext('2d')!;
-
-  const tiles: { label: string; accent: string; kind: 'pork' | 'mushroom' | 'mixian' }[] = [
-    { label: '五花肉', accent: '#e8907c', kind: 'pork' },
-    { label: '菌子', accent: '#a97b4f', kind: 'mushroom' },
-    { label: '米线', accent: '#e8c96a', kind: 'mixian' },
-  ];
-
-  tiles.forEach((tile, idx) => {
-    const x0 = idx * 256;
-    const cx = x0 + 128;
-
-    // dark warm board + dish-coloured accent header + gold frame
-    g.fillStyle = '#1b130e';
-    g.fillRect(x0, 0, 256, 256);
-    g.fillStyle = tile.accent;
-    g.fillRect(x0 + 10, 10, 236, 22);
-    g.strokeStyle = '#f0c060';
-    g.lineWidth = 10;
-    g.strokeRect(x0 + 9, 9, 238, 238);
-
-    // dish icon in upper-centre
-    g.save();
-    g.translate(cx, 108);
-    g.strokeStyle = '#f0c060';
-    g.lineCap = 'round';
-    g.lineJoin = 'round';
-    if (tile.kind === 'pork') {
-      // diagonal skewer with layered lean (#e8907c) + fat (#f5d0b8) slices
-      g.lineWidth = 8;
-      g.beginPath();
-      g.moveTo(-64, 46);
-      g.lineTo(64, -46);
-      g.stroke();
-      g.rotate(-0.62);
-      const cols = ['#e8907c', '#f5d0b8', '#e8907c'];
-      cols.forEach((col, j) => {
-        g.fillStyle = col;
-        g.strokeStyle = '#f0c060';
-        g.lineWidth = 5;
-        g.beginPath();
-        g.roundRect(-52 + j * 36, -22, 30, 44, 7);
-        g.fill();
-        g.stroke();
-      });
-    } else if (tile.kind === 'mushroom') {
-      // stout cream-white stem + plump brown dome cap
-      g.fillStyle = '#f2ead6';
-      g.lineWidth = 6;
-      g.beginPath();
-      g.moveTo(-22, 2);
-      g.lineTo(22, 2);
-      g.lineTo(28, 52);
-      g.quadraticCurveTo(28, 60, 18, 60);
-      g.lineTo(-18, 60);
-      g.quadraticCurveTo(-28, 60, -28, 52);
-      g.closePath();
-      g.fill();
-      g.stroke();
-
-      g.fillStyle = '#a97b4f';
-      g.beginPath();
-      g.ellipse(0, 6, 62, 46, 0, Math.PI, Math.PI * 2);
-      g.quadraticCurveTo(62, 18, 48, 18);
-      g.lineTo(-48, 18);
-      g.quadraticCurveTo(-62, 18, -62, 6);
-      g.closePath();
-      g.fill();
-      g.stroke();
-
-      g.fillStyle = '#f2ead6';
-      g.beginPath();
-      g.arc(-20, -14, 7, 0, Math.PI * 2);
-      g.arc(22, -6, 5.5, 0, Math.PI * 2);
-      g.fill();
-    } else {
-      // coiled golden rice-noodle nest
-      g.fillStyle = '#e8c96a';
-      g.lineWidth = 7;
-      g.beginPath();
-      g.ellipse(0, 8, 66, 46, 0, 0, Math.PI * 2);
-      g.fill();
-      g.stroke();
-
-      g.strokeStyle = '#6b4b18';
-      g.lineWidth = 6;
-      g.beginPath();
-      g.ellipse(0, 8, 46, 30, 0, 0.2, Math.PI * 1.85);
-      g.stroke();
-      g.beginPath();
-      g.ellipse(0, 8, 25, 16, 0, 0.6, Math.PI * 2.1);
-      g.stroke();
-
-      g.strokeStyle = '#f0c060';
-      g.lineWidth = 6;
-      g.beginPath();
-      g.arc(0, 2, 54, Math.PI * 1.15, Math.PI * 1.88);
-      g.stroke();
-    }
-    g.restore();
-
-    // bold ingredient label at bottom
-    g.fillStyle = '#f5e8d8';
-    g.font = '700 48px "PingFang SC", "Noto Sans SC", sans-serif';
-    g.textAlign = 'center';
-    g.textBaseline = 'middle';
-    g.fillText(tile.label, cx, 212);
-  });
-
+  g.fillStyle = '#24170f';
+  g.fillRect(0, 0, 512, 128);
+  g.strokeStyle = '#f0c060';
+  g.lineWidth = 8;
+  g.strokeRect(8, 8, 496, 112);
+  g.fillStyle = '#f0c060';
+  g.font = '700 56px "PingFang SC", "Noto Sans SC", sans-serif';
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.fillText('出 菜 窗 口', 256, 68);
   const t = toTex(c, 1);
   t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping;
   return t;

@@ -1,6 +1,5 @@
-// Customers: walk in the door, take a free table, order one dish, tick down
-// patience, eat when served, leave happy (pay) or angry (patience 0).
-// Movement is a simple two-leg path (along the back wall, then down to seat).
+// Customers: walk in the door, take a free table, self-order one dish,
+// tick down patience, eat when served, or leave after burnt/angry.
 
 import * as THREE from 'three';
 import { DISHES } from '../config.ts';
@@ -10,7 +9,7 @@ import type { TableRuntime } from '../world/dining.ts';
 import { buildChibi } from './player.ts';
 import { disposeTree } from '../core/dispose.ts';
 
-const WALK_SPEED = 1.6;
+const WALK_SPEED = 1.9;
 
 const OUTFITS = [
   { shirt: 0x7a8a6a, hair: 0x2a2018 },
@@ -54,10 +53,15 @@ export function spawnCustomer(
     obj,
     table: table.id,
     phase: 'walking-in',
+    orderState: 'ordering',
+    prepT: 0,
     patience: DISHES[d].patience,
     patienceMax: DISHES[d].patience,
     target: table.seatPos.clone(),
     eatT: 0,
+    burntLinger: 0,
+    burntHandled: false,
+    clicksUsed: 0,
     leaveStep: 0,
     bubble: null,
   };
@@ -65,7 +69,6 @@ export function spawnCustomer(
   return c;
 }
 
-// two-leg walk: first along x at z≈door.z+0.4 aisle, then to target
 function stepToward(c: Customer, target: THREE.Vector3, dt: number): boolean {
   const p = c.obj.position;
   const dx = target.x - p.x;
@@ -97,8 +100,6 @@ export function updateCustomer(
   const p = c.obj.position;
   switch (c.phase) {
     case 'walking-in': {
-      // leg 1: slide along the door-line until x matches the seat
-      // (keeps guests off the tables), leg 2: straight to the seat.
       const aisleZ = ctx.doorPos.z + 0.6;
       if (p.z < aisleZ && Math.abs(p.x - c.target.x) > 0.08) {
         stepToward(c, new THREE.Vector3(c.target.x, 0, p.z), dt);
@@ -106,6 +107,8 @@ export function updateCustomer(
       }
       if (stepToward(c, c.target, dt)) {
         c.phase = 'seated';
+        c.orderState = 'ordering';
+        c.prepT = 0;
         const tp = ctx.tablePos;
         c.obj.rotation.y = Math.atan2(tp.x - p.x, tp.z - p.z);
       } else {
@@ -115,12 +118,23 @@ export function updateCustomer(
     }
     case 'seated': {
       c.patience -= dt;
-      p.y = 0.32; // perched on stool
+      p.y = 0.32;
       if (c.patience <= 0) {
         c.patience = 0;
         c.phase = 'leaving-angry';
         c.obj.position.y = 0;
         ctx.onAngry(c);
+      }
+      break;
+    }
+    case 'burnt': {
+      // Order voided by burn: linger briefly in red state without draining patience or double-penalizing angry
+      p.y = 0.32;
+      c.burntLinger -= dt;
+      if (c.burntLinger <= 0) {
+        c.burntLinger = 0;
+        c.phase = 'leaving-angry';
+        c.obj.position.y = 0;
       }
       break;
     }
@@ -135,7 +149,6 @@ export function updateCustomer(
     }
     case 'leaving-happy':
     case 'leaving-angry': {
-      // deterministic waypoints: rise to aisle → slide to door-x → out.
       const door = ctx.doorPos;
       const aisleZ = door.z + 0.6;
       if (c.leaveStep === 0) {

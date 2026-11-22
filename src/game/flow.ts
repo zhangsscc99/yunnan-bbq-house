@@ -539,14 +539,17 @@ export class Flow {
         : 1;
       const patienceFactor = rawFrac >= COOK.fullTipPatience ? 1 : rawFrac;
       const tipMult = win === 'over' ? COOK.overTipMult : 1;
-      const tip = Math.round(DISHES[guest.dish].price * COOK.tipRate * patienceFactor * tipMult);
-      const total = DISHES[guest.dish].price + tip;
+      const dishPrice = DISHES[guest.dish].price;
+      const tip = Math.round(dishPrice * COOK.tipRate * patienceFactor * tipMult);
+      const total = dishPrice + tip;
 
       this.money += total;
       this.served += 1;
       this.player.walkTo(table.usePos, table.pos);
       this.ev.onMoney(this.money);
-      this.ev.onPopup(table.pos.clone().add(new THREE.Vector3(0, 0.48, 0)), `+¥${total}`, 'money');
+      // 自助制菜价恒为 0：按服务客数口径反馈，避免出现 "+¥0"
+      const servePopup = total > 0 ? `+¥${total}` : `上菜完成 · 服务 ${this.served} 位`;
+      this.ev.onPopup(table.pos.clone().add(new THREE.Vector3(0, 0.48, 0)), servePopup, total > 0 ? 'money' : 'ok');
       this.ev.onSync();
       return true;
     }
@@ -638,7 +641,7 @@ export class Flow {
         }
         case 'done': {
           statusText = '已盛盘 · 用餐中';
-          btnText = '已结账';
+          btnText = '已上菜';
           disabled = true;
           break;
         }

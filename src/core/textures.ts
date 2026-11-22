@@ -196,7 +196,7 @@ export function menuBoardTex(): THREE.CanvasTexture {
   featured.forEach((d, i) => {
     const y = 176 + i * 76;
     g.textAlign = 'left'; g.fillText(d.name, 52, y);
-    g.textAlign = 'right'; g.fillStyle = '#f0c060'; g.fillText(`¥${d.price}`, 460, y);
+    g.textAlign = 'right'; g.fillStyle = '#f0c060'; g.fillText(d.price > 0 ? `¥${d.price}` : '自助', 460, y);
     g.fillStyle = '#e8d9b8';
     g.strokeStyle = 'rgba(230,217,184,0.35)';
     g.lineWidth = 2;

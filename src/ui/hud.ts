@@ -914,7 +914,8 @@ export class Hud {
         const dish = DISHES[st.dish];
         view.nm.innerHTML = `${FOOD_ICONS[st.dish]}<span>${dish.name}</span>`;
         const newHtml = dish.isNew ? `<span class="new-badge">NEW</span>` : '';
-        view.metaEl.innerHTML = `<span class="cat-tag">${dish.category}</span>${newHtml}<span class="c-price">¥${dish.price}</span>`;
+        const priceLabel = dish.price > 0 ? `¥${dish.price}` : '自助 ¥0';
+        view.metaEl.innerHTML = `<span class="cat-tag">${dish.category}</span>${newHtml}<span class="c-price">${priceLabel}</span>`;
         if (dish.note) {
           view.noteEl.innerHTML = `<span class="note-tag">提示</span><span>${dish.note}</span>`;
           view.noteEl.style.display = 'flex';

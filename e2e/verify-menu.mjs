@@ -1,9 +1,9 @@
 // E2E verification for Real Store Menu (柳真真·云贵山岭烤肉 · 390x844 mobile portrait):
-//  1) window.__menu.length === 17 and all 17 names match the real store menu verbatim
+//  1) window.__menu.length === 17 and all 17 names match the real store menu verbatim (with shortName, price===0)
 //  2) Zero legacy dish keywords ("米线|mixian|豆泥|五花肉拼盘") in src/ (and public/ if present)
 //  3) Categories readable in menu data & UI with exact counts (真真牛 8 / 云贵风味鸡 2 / 云贵菌类 4 / 特色时蔬 3)
-//  4) Full gameplay v2 loop for a sampled real dish: order -> prep to Pass -> take -> grill -> serve,
-//     settling exact price + tip based on the dish price
+//  4) Full gameplay v2 3-click loop for a sampled real dish: order -> prep to Pass -> take -> grill -> serve
+//     with real dish name, table number, price=0 buffet mode, and served-guest count increment
 //  5) 0 console errors, 0 page errors, 0 failed network requests
 //  + Captures 3 screenshots into e2e/shots/:
 //      - e2e/shots/menu-list.png  (menu sheet showing 4 categories, 17 dishes, prices, NEW & notes)
@@ -208,7 +208,7 @@ async function runSuite(BASE) {
     await raf2(page);
 
     // =========================================================================
-    // ASSERTION 1: window.__menu.length === 17 and exact verbatim names
+    // ASSERTION 1: window.__menu.length === 17 and exact verbatim names & fields
     // =========================================================================
     const menu = await page.evaluate(() => window.__menu);
     assert.ok(Array.isArray(menu), 'window.__menu must be an array');
@@ -216,11 +216,14 @@ async function runSuite(BASE) {
     const actualNames = menu.map((d) => d.name);
     assert.deepEqual(actualNames, EXPECTED_NAMES, 'window.__menu dish names do not match real store list verbatim');
 
-    // Verify English IDs, NEW flags, and safety/dietary notes
+    // Verify complete schema (id/name/shortName/category/price/isNew/note), price === 0 (buffet), NEW flags, and notes
     for (const d of menu) {
       assert.match(d.id, /^[a-z0-9-]+$/, `dish id must be ASCII kebab-case, got "${d.id}"`);
-      assert.equal(typeof d.price, 'number', `price must be number for ${d.id}`);
-      assert.ok(d.price > 0, `price must be positive for ${d.id}`);
+      assert.equal(typeof d.shortName, 'string', `shortName must be string for ${d.id}`);
+      assert.ok(d.shortName.length > 0 && d.shortName.length <= 4, `shortName must be 1..4 chars for ${d.id}, got "${d.shortName}"`);
+      assert.equal(d.price, 0, `buffet dish price must be 0 for ${d.id}, got ${d.price}`);
+      assert.equal(typeof d.isNew, 'boolean', `isNew must be boolean for ${d.id}`);
+      assert.ok(d.note === null || typeof d.note === 'string', `note must be string|null for ${d.id}`);
     }
     const newDishes = menu.filter((d) => d.isNew).map((d) => d.name);
     assert.deepEqual(newDishes, ['真真秘制牛小肠', '西南翠凤尾'], `unexpected NEW dishes: ${JSON.stringify(newDishes)}`);
@@ -228,7 +231,7 @@ async function runSuite(BASE) {
     const cordyceps = menu.find((d) => d.name === '虫草花');
     assert.equal(porcini?.note, '不可和啤酒同食');
     assert.equal(cordyceps?.note, '婴幼儿、儿童、孕妇、食用菌过敏者不宜食用');
-    console.log(`ASSERT 1 PASS: window.__menu.length=${menu.length}, 17/17 names match verbatim, NEW=[${newDishes.join(', ')}], notes verified`);
+    console.log(`ASSERT 1 PASS: window.__menu.length=${menu.length}, 17/17 names match verbatim, all price=0, shortName ok, NEW=[${newDishes.join(', ')}], notes verified`);
 
     // =========================================================================
     // ASSERTION 3: Menu categories readable with exact counts (8 / 2 / 4 / 3)
@@ -262,6 +265,8 @@ async function runSuite(BASE) {
     assert.deepEqual(domCounts, EXPECTED_COUNTS, `DOM category counts mismatch: ${JSON.stringify(domCounts)}`);
     const domNames = domMenu.sections.flatMap((s) => s.items.map((i) => i.name));
     assert.deepEqual(domNames, EXPECTED_NAMES, 'DOM menu names mismatch');
+    const domPrices = domMenu.sections.flatMap((s) => s.items.map((i) => i.price));
+    assert.ok(domPrices.every((p) => p === '¥0'), `all DOM menu prices must be ¥0, got ${JSON.stringify(domPrices)}`);
     await capture(page, 'e2e/shots/menu-list.png');
     console.log(`ASSERT 3 PASS: categories=${JSON.stringify(domCounts)} | SHOT e2e/shots/menu-list.png`);
 
@@ -326,27 +331,38 @@ async function runSuite(BASE) {
     console.log(`SHOT e2e/shots/menu-note.png (both 云南牛肝菌 & 虫草花 notes visible, dockTop=${noteSnap.dockTop.toFixed(1)})`);
 
     // =========================================================================
-    // ASSERTION 4: Full v2 flow on a sampled real dish -> exact price settlement
-    //   Dish: 真真秘制牛小肠 (secret-beef-intestine, price = ¥48, patience = 75s)
-    //   Order -> 3.0s auto-prep into Pass -> Click 1 Take -> Click 2 Grill ->
-    //   5.6s perfect window -> Click 3 Plate & Serve -> exact price + tip!
+    // ASSERTION 4: Full v2 3-click flow on a sampled real dish (buffet price=0)
+    //   Dish: 真真秘制牛小肠 (secret-beef-intestine, price = 0, patience = 75s)
+    //   Order -> 3.0s auto-prep into Pass (real dish + table#) -> Click 1 Take ->
+    //   Click 2 Grill -> 5.6s perfect window -> Click 3 Plate & Serve -> served=1!
     // =========================================================================
     const sampleDish = menu.find((d) => d.id === 'secret-beef-intestine');
     assert.ok(sampleDish, 'sample dish secret-beef-intestine missing');
+    assert.equal(sampleDish.price, 0, 'sample dish price must be 0');
     await seatDishes(page, [sampleDish.id]);
 
-    // Step 1: auto-prep 3.0s -> lands in Pass window
+    // Step 1: auto-prep 3.0s -> lands in Pass window with real dish shortName & table number
     await tickSec(page, 3.0);
     await raf2(page);
-    const passCheck = await page.evaluate(() => window.__test.state());
-    assert.equal(passCheck.pass.length, 1, 'sample dish did not reach Pass window after 3.0s');
-    assert.equal(passCheck.pass[0].dishId, sampleDish.id);
+    const passCheck = await page.evaluate(() => ({
+      st: window.__test.state(),
+      slotText: document.querySelector('#bbq-pass .pass-slot[data-table="t1"]')?.textContent?.replace(/\s+/g, ' ').trim() ?? '',
+    }));
+    assert.equal(passCheck.st.pass.length, 1, 'sample dish did not reach Pass window after 3.0s');
+    assert.equal(passCheck.st.pass[0].dishId, sampleDish.id);
+    assert.match(passCheck.slotText, /1号桌/, `Pass slot missing table num: "${passCheck.slotText}"`);
+    assert.ok(passCheck.slotText.includes(sampleDish.shortName), `Pass slot missing dish shortName "${sampleDish.shortName}": "${passCheck.slotText}"`);
 
-    // Step 2: Click 1 — Take from Pass window
+    // Step 2: Click 1 — Take from Pass window -> hand strip shows real dish name & table number
     await tapCenter(page, '#bbq-pass .pass-slot[data-table="t1"]');
     await raf2(page);
-    const carryCheck = await page.evaluate(() => window.__test.state());
-    assert.equal(carryCheck.carrying?.dishId, sampleDish.id, 'carrying dish mismatch after Pass click');
+    const carryCheck = await page.evaluate(() => ({
+      st: window.__test.state(),
+      handText: document.querySelector('#bbq-hand')?.textContent?.replace(/\s+/g, ' ').trim() ?? '',
+    }));
+    assert.equal(carryCheck.st.carrying?.dishId, sampleDish.id, 'carrying dish mismatch after Pass click');
+    assert.ok(carryCheck.handText.includes(sampleDish.name), `Hand strip missing dish name "${sampleDish.name}": "${carryCheck.handText}"`);
+    assert.match(carryCheck.handText, /1\s*号桌/, `Hand strip missing table num: "${carryCheck.handText}"`);
 
     // Step 3: Click 2 — Place onto tabletop grill
     await tapCenter(page, '#bbq-orders .card[data-table="t1"] .card-btn');
@@ -360,35 +376,28 @@ async function runSuite(BASE) {
     const beforeServe = await page.evaluate(() => {
       const st = window.__test.state();
       const c = st.customers.find((x) => x.table === 't1');
-      return { money: st.money, patience: c.patience, patienceMax: c.patienceMax, cookWindow: st.tables.t1.grill.cookWindow };
+      return { money: st.money, served: st.served, patience: c.patience, patienceMax: c.patienceMax, cookWindow: st.tables.t1.grill.cookWindow };
     });
     assert.equal(beforeServe.cookWindow, 'perfect', `expected perfect cookWindow at 5.6s, got ${beforeServe.cookWindow}`);
 
-    // Step 4: Click 3 — Plate & serve
+    // Step 4: Click 3 — Plate & serve (buffet served-guest counter, price=0 without error)
     await tapCenter(page, '#bbq-orders .card[data-table="t1"] .card-btn');
     await raf2(page);
     const afterServe = await page.evaluate(() => {
       const st = window.__test.state();
       const c = st.customers.find((x) => x.table === 't1');
-      return { money: st.money, served: st.served, orderState: c.orderState, clicksUsed: c.clicksUsed };
+      const popups = [...document.querySelectorAll('#bbq-popups .popup')].map((p) => p.textContent?.trim() ?? '');
+      return { money: st.money, served: st.served, orderState: c.orderState, clicksUsed: c.clicksUsed, popups };
     });
 
-    const rawFrac = Math.max(0, Math.min(1, beforeServe.patience / beforeServe.patienceMax));
-    const patienceFactor = rawFrac >= 0.8 ? 1 : rawFrac;
-    const expectedTip = Math.round(sampleDish.price * 0.3 * patienceFactor);
-    const expectedTotal = sampleDish.price + expectedTip;
-
     assert.equal(afterServe.orderState, 'done', `expected done, got ${afterServe.orderState}`);
-    assert.equal(afterServe.served, 1, `expected served=1, got ${afterServe.served}`);
+    assert.equal(afterServe.served, beforeServe.served + 1, `expected served=${beforeServe.served + 1}, got ${afterServe.served}`);
     assert.equal(afterServe.clicksUsed, 3, `expected exact 3 clicks, got ${afterServe.clicksUsed}`);
-    assert.equal(
-      afterServe.money - beforeServe.money,
-      expectedTotal,
-      `settled money mismatch: got ¥${afterServe.money - beforeServe.money}, expected ¥${expectedTotal} (price ¥${sampleDish.price} + tip ¥${expectedTip})`,
-    );
+    assert.equal(afterServe.money, beforeServe.money, `buffet dish price=0 should not add per-dish money (${beforeServe.money} -> ${afterServe.money})`);
+    assert.ok(afterServe.popups.some((t) => /服务\s*1\s*位/.test(t)), `expected served-count popup, got ${JSON.stringify(afterServe.popups)}`);
     console.log(
-      `ASSERT 4 PASS: ${sampleDish.name} (${sampleDish.id}) full 3-click flow ok | ` +
-      `price=¥${sampleDish.price} + tip=¥${expectedTip} (patience ${beforeServe.patience.toFixed(1)}/${beforeServe.patienceMax}s) => settled=¥${afterServe.money}`,
+      `ASSERT 4 PASS: ${sampleDish.name} (${sampleDish.id}) full 3-click flow ok (1号桌) | ` +
+      `price=¥${sampleDish.price}, served=${afterServe.served}, clicks=${afterServe.clicksUsed}, popup=${JSON.stringify(afterServe.popups)}`,
     );
 
     // =========================================================================

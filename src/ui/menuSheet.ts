@@ -126,7 +126,7 @@ const CSS = `
   background: rgba(36, 25, 19, .9);
   border: 1px solid rgba(232, 180, 90, .24);
   border-radius: 9px;
-  padding: 5px 7px;
+  padding: 5px 6px;
   display: flex; flex-direction: column; gap: 3px;
   min-width: 0;
 }
@@ -136,11 +136,11 @@ const CSS = `
   background: rgba(44, 30, 20, .94);
 }
 #bbq-menu-sheet .ms-row {
-  display: flex; align-items: center; gap: 4px; min-width: 0;
+  display: flex; align-items: center; gap: 3px; min-width: 0;
 }
 #bbq-menu-sheet .ms-row svg.food-ico { width: 14px; height: 14px; flex: none; }
 #bbq-menu-sheet .ms-name {
-  font-size: 11.5px; font-weight: 700; color: #f5e8d8; line-height: 1.2;
+  font-size: 11px; font-weight: 700; color: #f5e8d8; line-height: 1.2;
   flex: 1 1 auto; min-width: 0;
 }
 #bbq-menu-sheet .menu-new {
@@ -198,7 +198,7 @@ export class MenuSheet {
         <div class="ms-head">
           <div>
             <div class="ms-title">柳真真·云贵山岭烤肉</div>
-            <div class="ms-sub">真实门店菜单 · 4 大类目 · 共 ${DISH_LIST.length} 道菜品</div>
+            <div class="ms-sub">真实门店菜单 · 自助制（菜品 ¥0/份）· 4 大类目 共 ${DISH_LIST.length} 道</div>
           </div>
           <button type="button" class="ms-close" data-btn="close-menu">关闭</button>
         </div>

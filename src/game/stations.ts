@@ -18,6 +18,7 @@ export interface Interaction {
   glyph: string;              // world-space single-char marker
   guide?: boolean;            // nothing in reach: button shows a "where to go" hint instead of a dead key
   goto?: boolean;             // label is a「去 X」direction (target = nextTarget); drives the HUD off-screen edge hint
+  warn?: boolean;             // warning-styled action (e.g. clearing a burnt skewer from the grill)
 }
 
 const CRATE_NAME: Record<DishId, string> = {
@@ -174,8 +175,14 @@ export function resolveInteraction(
     case 'grill': {
       if (carrying?.stage === 'chopped' && grill.freeSlot())
         return mk('put-grill', '上烤炉', nearStation);
-      if (!carrying && grill.readySlot())
+      const ready = !carrying ? grill.readySlot() : null;
+      if (ready) {
+        const burnt = ready.item?.stage === 'waste' || (ready.item?.grillT ?? 0) >= COOK.burnTime;
+        if (burnt) {
+          return { ...mk('take-grill', '取焦串', nearStation), icon: 'warn', glyph: '焦', warn: true };
+        }
         return mk('take-grill', '取烤串', nearStation);
+      }
       if (!carrying && grill.slots.some((s) => s.item)) return mk('none', '烤制中…', nearStation);
       return go(nearStation);
     }
@@ -192,31 +199,32 @@ export function resolveInteraction(
 
 // ---- highlight FX: pulsing gold glow sheet + floating action glyph ----
 
-function glowTexture(): THREE.CanvasTexture {
+function glowTexture(warn = false): THREE.CanvasTexture {
   const c = document.createElement('canvas');
   c.width = c.height = 128;
   const g = c.getContext('2d')!;
   const grad = g.createRadialGradient(64, 64, 18, 64, 64, 62);
-  grad.addColorStop(0, 'rgba(240,192,96,0.55)');
-  grad.addColorStop(0.75, 'rgba(240,192,96,0.18)');
-  grad.addColorStop(1, 'rgba(240,192,96,0)');
+  const rgb = warn ? '224,90,58' : '240,192,96';
+  grad.addColorStop(0, `rgba(${rgb},0.55)`);
+  grad.addColorStop(0.75, `rgba(${rgb},0.18)`);
+  grad.addColorStop(1, `rgba(${rgb},0)`);
   g.fillStyle = grad;
   g.fillRect(0, 0, 128, 128);
   return new THREE.CanvasTexture(c);
 }
 
-function glyphSprite(char: string): THREE.Sprite {
+function glyphSprite(char: string, warn = false): THREE.Sprite {
   const c = document.createElement('canvas');
   c.width = c.height = 96;
   const g = c.getContext('2d')!;
   g.beginPath();
   g.arc(48, 48, 42, 0, Math.PI * 2);
-  g.fillStyle = 'rgba(24,16,12,0.85)';
+  g.fillStyle = warn ? 'rgba(92,24,16,0.92)' : 'rgba(24,16,12,0.85)';
   g.fill();
-  g.lineWidth = 4;
-  g.strokeStyle = '#f0c060';
+  g.lineWidth = warn ? 5 : 4;
+  g.strokeStyle = warn ? '#e05a3a' : '#f0c060';
   g.stroke();
-  g.fillStyle = '#f5e8d8';
+  g.fillStyle = warn ? '#ffd6cc' : '#f5e8d8';
   g.font = '600 44px "PingFang SC", "Noto Sans SC", sans-serif';
   g.textAlign = 'center';
   g.textBaseline = 'middle';
@@ -228,23 +236,30 @@ function glyphSprite(char: string): THREE.Sprite {
   }));
   s.scale.setScalar(0.34);
   s.renderOrder = 8;
+  s.userData = { char, warn };
   return s;
 }
 
 export class Highlighter {
   private glow: THREE.Mesh;
+  private glowTexNormal: THREE.CanvasTexture;
+  private glowTexWarn: THREE.CanvasTexture;
+  private glowWarn = false;
   private glyph: THREE.Sprite | null = null;
   private glyphChar = '';
+  private glyphWarn = false;
   private t = 0;
   private scene: THREE.Scene;
   private anchor = new THREE.Vector3();
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
+    this.glowTexNormal = glowTexture(false);
+    this.glowTexWarn = glowTexture(true);
     this.glow = new THREE.Mesh(
       new THREE.PlaneGeometry(1.15, 0.95),
       new THREE.MeshBasicMaterial({
-        map: glowTexture(), transparent: true, opacity: 0,
+        map: this.glowTexNormal, transparent: true, opacity: 0,
         blending: THREE.AdditiveBlending, depthWrite: false,
       }),
     );
@@ -254,20 +269,40 @@ export class Highlighter {
     scene.add(this.glow);
   }
 
+  get state(): { visible: boolean; char: string; warn: boolean } {
+    return { visible: !!this.glyph, char: this.glyphChar, warn: this.glyphWarn };
+  }
+
+  private clearGlyph(): void {
+    if (this.glyph) {
+      this.scene.remove(this.glyph);
+      const mat = this.glyph.material as THREE.SpriteMaterial;
+      mat.map?.dispose();
+      mat.dispose();
+      this.glyph = null;
+    }
+    this.glyphChar = '';
+    this.glyphWarn = false;
+  }
+
   /** show over an interaction anchor (counter top or table centre) */
-  show(pos: THREE.Vector3, width: number, glyphChar: string): void {
+  show(pos: THREE.Vector3, width: number, glyphChar: string, warn = false): void {
     this.anchor.copy(pos);
     this.glow.visible = true;
     this.glow.position.set(pos.x, pos.y + 0.045, pos.z);
     this.glow.scale.set(width, 1, 1);
-    if (glyphChar !== this.glyphChar) {
+    if (warn !== this.glowWarn) {
+      this.glowWarn = warn;
+      const m = this.glow.material as THREE.MeshBasicMaterial;
+      m.map = warn ? this.glowTexWarn : this.glowTexNormal;
+      m.needsUpdate = true;
+    }
+    if (glyphChar !== this.glyphChar || warn !== this.glyphWarn) {
+      this.clearGlyph();
       this.glyphChar = glyphChar;
-      if (this.glyph) {
-        this.scene.remove(this.glyph);
-        this.glyph = null;
-      }
+      this.glyphWarn = warn;
       if (glyphChar) {
-        this.glyph = glyphSprite(glyphChar);
+        this.glyph = glyphSprite(glyphChar, warn);
         this.scene.add(this.glyph);
       }
     }
@@ -278,11 +313,7 @@ export class Highlighter {
 
   hide(): void {
     this.glow.visible = false;
-    if (this.glyph) {
-      this.scene.remove(this.glyph);
-      this.glyph = null;
-      this.glyphChar = '';
-    }
+    this.clearGlyph();
   }
 
   update(dt: number): void {

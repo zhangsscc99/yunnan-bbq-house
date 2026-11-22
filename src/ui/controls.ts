@@ -34,7 +34,7 @@ const CSS = `
   backdrop-filter: blur(8px); pointer-events: auto; touch-action: none;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 2px; color: #f5e8d8; cursor: pointer; text-align: center;
-  transition: transform .08s, border-color .15s;
+  transition: transform .08s;
 }
 #bbq-act:focus { outline: none; }
 #bbq-act:focus-visible { outline: 2px solid #f0c060; outline-offset: 2px; }
@@ -46,6 +46,15 @@ const CSS = `
 #bbq-act.on { border-color: #f0c060; }
 #bbq-act:active { transform: scale(.92); }
 #bbq-act.deny { border-color: #e05a3a; }
+#bbq-act[data-act-warn="true"],
+#bbq-act.on[data-act-warn="true"] {
+  border-color: #e05a3a;
+  background: rgba(52,18,14,.84);
+  box-shadow: 0 0 12px rgba(224,90,58,.45);
+}
+#bbq-act[data-act-warn="true"] .cap {
+  color: #ffd6cc;
+}
 @media (min-width: 900px) {
   #bbq-stick { left: 34px; bottom: 34px; }
   #bbq-act { right: 40px; bottom: 40px; }
@@ -107,6 +116,11 @@ const ICONS: Record<string, string> = {
   </svg>`,
   bin: `<svg viewBox="0 0 24 24" fill="none" stroke="#f0c060" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
     <path d="M5 7h14M10 7V5h4v2M7 7l1 13h8l1-13M10 11v5m4-5v5"/>
+  </svg>`,
+  warn: `<svg viewBox="0 0 24 24" data-icon="warn" fill="none" stroke="#ff7a5c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M10.3 3.8L2.2 18a2 2 0 0 0 1.7 3h16.2a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0z" fill="rgba(224,90,58,0.22)"/>
+    <path d="M12 9.2v4.6"/>
+    <circle cx="12" cy="17.2" r="1" fill="#ff7a5c" stroke="none"/>
   </svg>`,
   none: `<svg viewBox="0 0 24 24" fill="none" stroke="rgba(245,232,216,.35)" stroke-width="1.9" stroke-linecap="round">
     <circle cx="12" cy="12" r="7" stroke-dasharray="3 3"/>
@@ -216,7 +230,7 @@ export class Controls {
     });
   }
 
-  setAction(icon: string, caption: string, enabled: boolean, deny: boolean, guide = false): void {
+  setAction(icon: string, caption: string, enabled: boolean, deny: boolean, guide = false, warn = false): void {
     const iconKey = icon in ICONS ? icon : 'none';
     if (iconKey !== this.lastIcon) {
       this.lastIcon = iconKey;
@@ -239,6 +253,13 @@ export class Controls {
     }
     if (this.act.classList.contains('deny') !== deny) {
       this.act.classList.toggle('deny', deny);
+    }
+    if (warn) {
+      if (this.act.getAttribute('data-act-warn') !== 'true') {
+        this.act.setAttribute('data-act-warn', 'true');
+      }
+    } else if (this.act.hasAttribute('data-act-warn')) {
+      this.act.removeAttribute('data-act-warn');
     }
   }
 

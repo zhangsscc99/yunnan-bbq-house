@@ -348,6 +348,20 @@ export class Flow {
     }
   }
 
+  get highlightState(): { visible: boolean; char: string; warn: boolean } {
+    return this.highlighter.state;
+  }
+
+  syncHighlight(it: Interaction): void {
+    if (it.station || it.table) {
+      const anchor = it.station?.pos ?? it.table!.pos;
+      const w = it.station?.id === 'grill' ? 3 : 1.1;
+      this.highlighter.show(anchor, w, it.glyph, !!it.warn);
+    } else {
+      this.highlighter.hide();
+    }
+  }
+
   // ---------------- per-frame ----------------
 
   update(dt: number, move: THREE.Vector2, actionPressed: boolean): void {
@@ -375,13 +389,7 @@ export class Flow {
       this.player.obj.position, this.player.carrying,
       this.stations, this.tables, this.customers, this.grill,
     );
-    if (this.current.station || this.current.table) {
-      const anchor = this.current.station?.pos ?? this.current.table!.pos;
-      const w = this.current.station?.id === 'grill' ? 3 : 1.1;
-      this.highlighter.show(anchor, w, this.current.glyph);
-    } else {
-      this.highlighter.hide();
-    }
+    this.syncHighlight(this.current);
     this.marker.set(this.current.action === 'none' ? this.hint : null);
     this.marker.update(dt);
     this.ev.onAction(this.current);

@@ -86,11 +86,17 @@ export class Grill {
     return this.slots.find((s) => !s.item) ?? null;
   }
 
-  /** slot holding a cooked or burnt skewer, preferring the most-done */
+  /** slot holding a cooked or burnt skewer, always preferring cooked (most-done first) over burnt */
   readySlot(): GrillSlot | null {
-    const ready = this.slots.filter((s) => s.item && s.item.grillT >= COOK.grillTime);
+    const ready = this.slots.filter(
+      (s) => s.item && (s.item.stage === 'cooked' || s.item.stage === 'waste' || s.item.grillT >= COOK.grillTime),
+    );
     if (!ready.length) return null;
-    return ready.sort((a, b) => (a.item!.grillT - b.item!.grillT))[0];
+    const cooked = ready.filter(
+      (s) => s.item!.stage === 'cooked' || (s.item!.stage !== 'waste' && s.item!.grillT < COOK.burnTime),
+    );
+    if (cooked.length) return cooked.sort((a, b) => b.item!.grillT - a.item!.grillT)[0];
+    return ready.sort((a, b) => b.item!.grillT - a.item!.grillT)[0];
   }
 
   place(slot: GrillSlot, item: Item): void {

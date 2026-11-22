@@ -87,6 +87,7 @@ function syncAction(): void {
     enabled,
     flow.denyActive(),
     !!currentAction.guide,
+    !!currentAction.warn,
   );
 }
 
@@ -101,6 +102,7 @@ function refreshAction(): void {
     flow.grill,
   );
   flow.current = currentAction;
+  flow.syncHighlight(currentAction);
   syncAction();
 }
 

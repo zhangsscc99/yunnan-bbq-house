@@ -1555,3 +1555,17 @@ vision 复核：竖屏放大后独立读出「三个筐＝红肉串 / 褐圆帽�
 需求：① 修订 `docs/ART-DIRECTION.md §5` 订单卡皮肤与布局定稿为底部单手停靠区规范（竖屏底部 2×2 停靠、占屏高 `<=25%`、距底 `>=max(16px, env(safe-area-inset-bottom))`、按钮 `>=48×48px`；横屏底部单排、占屏高 `<=20%`、距底 `>=10px`），并将 `§1` 中废弃的摇杆/动作键条款标明已移除，消除文档债；② 调整横屏（`aspect >= 1.5`）下 `[data-onboard-tip]` 锚点位置：将气泡上移至厨房台面上沿之上的中区走道，或改为贴紧 1 号卡上缘偏右且避开 `crate-pork/mush/mix` 台面投影区，避免遮挡料箱实物与斗方挂牌。
 验收：(a) 检查 `docs/ART-DIRECTION.md §5` 不再包含 `top:150px`、`右上竖排`、`动作键` 等过期表述，新增底部停靠区占比与底距参数与实测（竖屏 `23.2% / 24px`、横屏 `17.4% / 10px`）一致；(b) e2e 在横屏 `844×390` 就座与上炉态下读取 `[data-onboard-tip]` 与三个料箱屏幕投影矩形，断言交叠面积 `=== 0` 且气泡不越出视口；(c) 竖屏 `390×844` 下 `[data-onboard-tip]` 仍紧贴 1 号卡上方、与 `.topbar` 及 `#bbq-orders .card` 交叠 `=== 0`；(d) 双端连跑 3 次 `0` JS error。
 参考：《胡闹厨房 2》/《烹饪日记》移动端底部停靠规范与不压关键布景的引导锚点；`ART-DIRECTION.md §1`、`§5`、`GAME-DESIGN.md §0`。
+
+## 2026-11-22 09:5xZ 第 33 轮开发：B-152 生串防误双击 + 夹生计废料（DONE `5ca06ad`，merge `de55a6c`）
+
+- **本轮只做一件事**：让「点了一下没反应 / 手滑双击把刚上的串撤掉」这种死路消失。
+- 实现（`src/game/flow.ts` / `src/ui/hud.ts`）：
+  1. 新增 `RAW_LOCK_SEC = 0.6`，`isRawLocked()` 用 `grillT`（模拟时钟）判定；0.6s 内 `handleOrderCardAction` 直接 `return true` 不改任何状态（不撤串、不弹字、不计数）。
+  2. `OrderCardState.rawLocked` + `.card[data-lock-raw]`；锁定态按钮文案 `上炉中`（稳态、不 disabled）；`0.6–4.0s` 按钮文案 `未熟`（`#9aa0a6` 弱化），label 改为 `未熟 · 离熟 Ns`（回应 `B-150` 的方向语义）。
+  3. 该窗口内主动提前撤回 → `waste += 1`、释放烤位、营业额不变、飘字 `夹生丢弃 · 废料 +1`（口径与 §4 结算「废料」统一）。
+  4. `eating/disabled` 连点继续完全忽略（原有正确行为未动）。
+- 新增 `e2e/rawlock.mjs`（双视口 ×3 连跑，含 10×40ms 连点、锁窗、提前撤回、eating 连点、热区/字号/溢出）；`e2e/oneclick.mjs` 断言同步新文案。
+- 验收（部署后由调度方亲跑 `E2E_BASE=http://127.0.0.1/bbq/`）：`rawlock.mjs` 竖屏+横屏 `RAWLOCK OK`（rc=0）；`oneclick.mjs` 双端 `ONECLICK OK`（rc=0）；`tsc --noEmit` PASS、`npm run build` PASS、`ci-deploy.sh` DEPLOY OK、`127.0.0.1:3035` 与 `/bbq/` 均 200。
+- 实测：连点 10 次（累计 0.45s）烤位恒 1、`waste=0`、按钮 `上炉中`；`t=1.2s` 按钮 `未熟`、状态 `未熟 · 离熟 3s`；提前撤回 `waste=1` 飘字 `夹生丢弃 · 废料 +1`；完美窗起锅 `served=1 / +¥62`（48 + 满耐心小费 14）。
+- 一单点击数：2 次不变（本轮减少的是**误触代价**：双击不再静默丢串）。
+- 下一条建议：`B-156`（焦糊后烤位释放/驻留死路）与 `B-157`（over/burnt 整卡色阶 + 消除「焦糊 焦糊」），二者都是「玩家以为自己点了没用」的同类死路。

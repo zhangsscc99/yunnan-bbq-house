@@ -1267,3 +1267,17 @@ vision 复核：竖屏放大后独立读出「三个筐＝红肉串 / 褐圆帽�
 ---
 
 本轮（第 26 轮）新开 4 条，均为 P2：`B-129` 切配进度环+跳切动效、`B-130` 动作键 `.cap` 12px→13px 与 6 字防触边、`B-131` 烤位序号与目标槽高亮、`B-132` 装盘台成品暂存。本轮已确认仍存在、沿用既有编号（不重复开单）：`B-081`（公网旧包 `2290acb`，唯一 P0）、`B-045`（烤串本体 3px 看不见熟/焦）、`B-064`（`t>6s` 后 `.gb-fill` 恒满，无焦糊倒计时）、`B-066`（声音通道整条缺失，`AudioContext` 命中 0）、`B-065`/`B-116`（小费与星级归因）、`B-125`（顶栏缺目标额）、`B-103`（竖屏摇杆/动作键底距差 8px）、`B-093`（横屏摇杆压料箱）、`B-107`（愤怒离店无飘字）、`B-111`（烤炉世界空间与屏幕空间两套进度指示重复）。本轮实测确认已修复、无需再开单：`B-121`（焦糊态 `取焦串` + `data-act-warn="true"`，双端一致）、`B-117`（动作键 `84×84`）。
+
+### B-126 状态：DONE（`7116bbf`，部署包 `assets/index-CDf6asvG.js`，2026-11-22 02:2xZ，第 26 轮开发）
+实现：
+1. `src/ui/hud.ts` 新增 `setPlayHudVisible(v)` 作为局内 HUD 的唯一显隐入口：`v=false` 时 `#bbq-orders` 置 `display:none/opacity:0` 并清空 `innerHTML`，清空 `#bbq-bubbles`（含 `bubbleMap` 与桌位光圈 `ringMap` 节点）、`#bbq-popups`、`#bbq-grillbars`/`#bbq-chop`、guide toast 与 `#bbq-offscreen`；`v=true` 时全部恢复原 display 与可交互（顶栏 `#bbq-hud .topbar` 全程保留）。`updateOffscreen()` 增加 `playHudVisible` 守卫，`showGuide()` 在非局内直接 return。
+2. `src/ui/controls.ts` `setVisible()` 收敛为唯一开关：记录 `visible`，`pointerdown` 守卫（隐藏态不响应摇杆/动作键），新增 `resetStickFn` 在隐藏时回中，构造期默认隐藏。
+3. `src/main.ts` 新增 `syncPhase(phase)`（`controls.setVisible` + `hud.setPlayHudVisible` + `panels.hide`），`Flow` 的 `onPhase` 与启动时各调一次；`step()`/`__test.tick()` 只在 `phase==='playing'` 时刷新动作键/气泡/烤位/砧板/离屏指示（不再在结算态投影），消除弹窗后面的幽灵 UI。
+验收（本轮调度方亲跑，非 agy 自述）：
+- `npx tsc --noEmit` 0 错；`npm run build` OK（`assets/index-CDf6asvG.js`）。
+- 新增 `e2e/modal-hud.mjs`（`E2E_RUNS=3` × 竖屏 390×844 / 横屏 844×390 = 6/6 PASS，末行 `MODAL-HUD OK`）：menu 态 stick/act/orders 三者 `display:none`、`opacity:0`，顶栏 `313/313` 不截断；点「开 店」后 2×rAF 恢复（stick `block`、act `84×84` + `去料箱取料` + cap 12px、orders `flex` opacity 1）；`results` 态三者同样隐、`.bbq-panel` 内按钮 `elementFromPoint` 命中（pass→`进入第 2 关`、fail→`再 开 一 局` 均可点）；点按钮后恢复（`lv=2`）；0 JS error（横屏 run2 一次 swiftshader `Target closed`，按环境崩溃重试 1 次后 PASS，非断言失败）。
+- 回归亲跑：`e2e/act-ui.mjs` 双端 2 轮 `ACT-UI OK`（84×84、cap 12px、交叠 0）；`e2e/orders.mjs` `ORDERS OK`（a–f 全 PASS，竖屏间隙 16px、横屏 106px）。
+- 部署：`ci-deploy.sh` DEPLOY OK；`127.0.0.1:3035/` 200、`127.0.0.1/bbq/` 200，index 引用 `assets/index-CDf6asvG.js`。
+- vision 复核（独立，部署后 `:3035` 截图 `e2e/shots/b126-port-01-menu.png`）：菜单卡片四周「看不到摇杆圈或动作按键圈」，开店按钮金底可读；`b126-port-03-results.png`：「四周完全看不到摇杆、动作按键或订单卡残影」；`b126-port-02-playing.png` 开局恢复后顶栏/订单卡/摇杆/动作键「全部正常显示且清晰、无互相遮挡或截字」。
+遗留：vision 两轮都提到「竖屏底部一条纯黑带」（沿用手感问题 `B-060`/`B-103`，非本轮引入）；结算 fail 态只有 `再 开 一 局` 一个按钮，模型误读为「缺按钮」，实际是 `r.money >= target` 才出 `进入第 2 关`，属既有设计。
+下一轮建议：修 `B-127`（竖屏 t3 气泡与 `(3)` 整块出画，是移动端第一可玩性问题；本轮隐藏改动已让离屏指示层成为唯一兜底，越早补越省事）。

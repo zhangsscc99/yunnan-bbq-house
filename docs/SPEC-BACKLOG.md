@@ -1176,3 +1176,13 @@ vision 复核：竖屏放大后独立读出「三个筐＝红肉串 / 褐圆帽�
 参考：`ART-DIRECTION.md §5`（主色 `#f0c060` 警示 `#e05a3a` ok `#9ecb6a` 三态语义分明）与胡闹厨房/沙威玛传奇（已交付订单即时转绿降噪，视线聚焦待做急单）。
 
 本轮新单 4 条：P1 两条（`B-121` 焦糊态动作键仍金色「取烤串」、`B-122` 横屏桌位气泡被 `(1)` 圆牌与离屏指引叠压截字），P2 两条（`B-123` 飘字驻留 2.2s 长于 §7 的 0.8s、`B-124` 用餐中满环与等待新客不可区分）。沿用未修项：`B-081`、`B-078`/`B-114`（横屏摇杆压料箱 / 竖屏后墙越界）、`B-098`/`B-113`（世界浮标压角色）、`B-111`/`B-092`/`B-097`（烤串过小、无烟）、`B-065`/`B-112`（小费不拆解）、`B-100`（顶栏缺废料）、`B-066`（无音效）、`B-117`（动作键 76×76）。
+
+### B-117 状态：DONE（`bc14d0d`，部署包 `assets/index-YjesMXwn.js`，2026-11-21 23:5xZ）
+实现：`#bbq-act` 由裸 `div` 改为原生 `<button type="button">`（CSS 重置，`84×84`，保留 `pointerdown → input.pressAction()` 与 `.on/.deny`）；`.cap` 字号 `10px→12px`、`font-weight:700`、`rgba(245,232,216,.95)`，去掉 ellipsis，6 字文案完整显示；`aria-label` 实时等于 `state().actionLabel`（空态「当前无可执行动作」）、`aria-disabled` 与 `enabled` 一致（不用真 `disabled` 以免吞 pointerdown）；`#bbq-stick` 补 `role="application" aria-label="移动摇杆" aria-roledescription="虚拟摇杆"`；`src/main.ts` 新增 `syncAction()/refreshAction()`，在 `restart/nextLevel/onAction/每步仿真末尾/__test.tick()` 同帧刷新 DOM，消除跨帧滞留。
+验收（本轮亲跑，非 agy 自述）：
+- `npx tsc --noEmit` 0 错误；`npm run build` OK；
+- 新增 `e2e/act-ui.mjs`（`E2E_RUNS=3` 双端 6/6 PASS，末行 `ACT-UI OK`，0 JS error）：`<button>` 命中且实测 `84×84`；`.cap` 12px / w700 / 对比度 `14.09:1`（最坏白底合成 `5.86:1`）/ `scrollWidth=clientWidth=72`（6 字「去垃圾桶丢掉」不截断）；`aria-label === state().actionLabel`，`aria-disabled` 出生点 true、料箱旁 false；`#bbq-stick` 具备 application+aria-label；取串后 2×rAF 文案与 aria 均同步为 `手上有东西→去切配台`；双端与 stick / order 卡交叠 0、全在视口内。
+- 回归亲跑：`e2e/plated-hint.mjs` `PLATED-HINT OK`、`e2e/landscape.mjs` `LANDSCAPE OK`。
+- 部署：`ci-deploy.sh` DEPLOY OK；`127.0.0.1:3035/` 200 与 `127.0.0.1/bbq/` 200，index 均引用 `assets/index-YjesMXwn.js`。
+- vision 复核（独立）：`e2e/shots/b117-port-crate.png` 读出「取 五花肉」、`b117-port-picked.png` 读出「手上有东西」，均完整清晰无省略号；但两次都判「动作键相对常见手游主操作键偏小、文案在圆内偏挤」，建议下轮把直径提到 88–92px 并给按压态加缩放/高光。
+注意：本轮 `agy-dev.sh` 兜底的 `chore(agy): auto-checkpoint`（`fbb8aec`）把并发走查轮未提交的 `docs/PRODUCT-REVIEW.md`/`SPEC-BACKLOG.md` 一起提交了（内容完好，第 24 轮章节在），下次写任务书要显式禁止 `git add -A`。

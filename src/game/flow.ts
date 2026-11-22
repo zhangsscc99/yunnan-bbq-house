@@ -1,21 +1,35 @@
-// Game orchestration: owns the phase machine, timer, money, customers,
-// station interactions and scoring. One update(dt) drives everything —
-// no setTimeout anywhere (see TECH-STACK boundaries).
+// Game orchestration (Gameplay v2):
+// ① Customer seats → order card appears (ordering, 3.0s auto-prep ring, non-interactive)
+// ② Prep completes → dish appears in Pass window (capacity 3; full pauses prep)
+// ③ Click Pass tray (Click 1) → player auto-walks to Pass, carries { dishId, tableId } (blocks taking other trays)
+// ④ Click Table order card / tabletop grill (Click 2) → player auto-walks to table, meat goes on tabletop grill (8.0s heat bar)
+// ⑤ Click Table order card / tabletop grill in perfect/over window (Click 3) → plate & serve → done + money
+//    Early click (<5.0s) = undercooked (reset heat bar); >8.0s = burnt (deduct money + big patience drop, order voided, ONCE)
+// ⑥ Customer eats → leaves → 2.0s table cleaning → free table
+// One update(dt) drives everything — zero setTimeout in simulation logic.
 
 import * as THREE from 'three';
-import { COOK, DISHES, LEVELS, PLAYER, SAVE_KEYS } from '../config.ts';
+import { COOK, DISHES, LEVELS, SAVE_KEYS } from '../config.ts';
 import type { DishId, Level } from '../config.ts';
-import type { StationRuntime, Customer, Item, GamePhase, CookWindow } from './types.ts';
-import { createItem, setItemStage } from './items.ts';
-import { resolveInteraction, Highlighter, setFootprint, nextTarget, registerNavPoints } from './stations.ts';
-import type { Interaction, NextTarget } from './stations.ts';
-import { NextMarker } from './nextMarker.ts';
-import { Grill } from './grill.ts';
+import type {
+  StationRuntime,
+  Customer,
+  GamePhase,
+  OrderState,
+  CookWindow,
+  PassItem,
+  CarryingState,
+} from './types.ts';
+import { buildPassTray, createItem, setItemStage } from './items.ts';
+import { Highlighter, nextTarget, registerNavPoints } from './stations.ts';
+import type { NextTarget } from './stations.ts';
+import { TableGrillFX } from './grill.ts';
 import { Player } from './player.ts';
 import { disposeTree } from '../core/dispose.ts';
 import { spawnCustomer, updateCustomer } from './customers.ts';
 import type { TableRuntime } from '../world/dining.ts';
-import { STATIONS, PLAYER_SPAWN, cellToWorld } from '../world/layout.ts';
+import { createEmptyTableGrill } from '../world/dining.ts';
+import { PLAYER_SPAWN, cellToWorld } from '../world/layout.ts';
 import { calcStars } from './stars.ts';
 import type { StarRating } from './stars.ts';
 
@@ -23,10 +37,8 @@ export interface FlowEvents {
   onPhase(phase: GamePhase): void;
   onMoney(money: number): void;
   onTimeLeft(sec: number): void;
-  onOrders(customers: Customer[], tables: TableRuntime[]): void;
+  onSync(): void;
   onPopup(worldPos: THREE.Vector3, text: string, kind: 'money' | 'warn' | 'ok'): void;
-  onAction(action: Interaction): void;      // current button semantics
-  onGuide(text: string): void;              // action pressed with nothing in reach
   onResults(r: Results): void;
 }
 
@@ -43,49 +55,52 @@ export interface Results {
 }
 
 export const COOK_EPS = 1e-6;
-export const RAW_LOCK_SEC = 0.6;
 
-export function cookWindowFor(t: number): 'raw' | 'perfect' | 'over' | 'burnt' {
+export function cookWindowFor(t: number): Exclude<CookWindow, 'none'> {
   if (t + COOK_EPS >= COOK.burnTime) return 'burnt';
-  if (t + COOK_EPS >= COOK.overStart) return 'over';
+  if (t + COOK_EPS >= COOK.perfectEnd) return 'over';
   if (t + COOK_EPS >= COOK.perfectStart) return 'perfect';
   return 'raw';
 }
 
-function isRawLocked(win: CookWindow, grillT: number): boolean {
-  return win === 'raw' && grillT + COOK_EPS < RAW_LOCK_SEC;
-}
-
 export interface OrderCardState {
   tableId: string;
+  tableNum: number;
   customerId: number;
   dish: DishId;
-  phase: 'seated' | 'eating' | 'burnt';
+  orderState: OrderState;
+  cookWindow: CookWindow;
   patience: number;
   patienceMax: number;
-  cookWindow: CookWindow;
+  prepT: number;
+  prepPct: number;
   cookT: number;
-  progressPct: number;
-  disabled: boolean;
+  cookPct: number;
+  passPaused: boolean;
   rawLocked: boolean;
-  burntRetry: boolean;
-  label: string;
+  disabled: boolean;
   statusText: string;
-  slotIndex: number;
+  btnText: string;
+  clicksUsed: number;
 }
 
-interface BurntCardEntry {
-  tableId: string;
-  customerId: number;
-  dish: DishId;
-  cookT: number;
-  lingerLeft: number;
+export interface PassSlotView {
+  slotIndex: number;
+  item: {
+    id: number;
+    dishId: DishId;
+    tableId: string;
+    tableNum: number;
+    customerId: number;
+  } | null;
 }
 
 function savedLevel(): number {
   const n = Math.floor(Number(localStorage.getItem(SAVE_KEYS.level) || 1));
   return Number.isFinite(n) && n >= 1 ? Math.min(n, LEVELS.length) : 1;
 }
+
+let nextPassItemId = 1;
 
 export class Flow {
   phase: GamePhase = 'menu';
@@ -96,67 +111,42 @@ export class Flow {
   served = 0;
   angry = 0;
   waste = 0;
+  clickCount = 0;
 
   readonly player = new Player();
   readonly customers: Customer[] = [];
-  readonly grill: Grill;
-  private stations: StationRuntime[];
+  readonly pass: PassItem[] = [];
+  readonly grillFX = new TableGrillFX();
+
+  private passStation: StationRuntime;
+  private passSlots: THREE.Vector3[];
   private tables: TableRuntime[];
   private doorPos: THREE.Vector3;
   private scene: THREE.Scene;
   private ev: FlowEvents;
   private highlighter: Highlighter;
-  private cuts: THREE.Mesh[] = [];
-  private marker: NextMarker;
-  private spawnT = 2.5;                  // first guest soon after open
-  private ordersT = 0;                  // throttle for periodic onOrders refresh
-  private chopFlash = 0;
-  private denyT = 0;
-  private burntCards = new Map<string, BurntCardEntry>();
-  private burntRetry = new Set<string>();
-  current: Interaction = { action: 'none', label: '', icon: 'none', glyph: '' };
+  private spawnT = 1.6;
+  private hudSyncT = 0;
+
+  spawnsPaused = false; // e2e hook for deterministic guests
 
   constructor(
     scene: THREE.Scene,
-    stations: StationRuntime[],
+    passStation: StationRuntime,
+    passSlots: THREE.Vector3[],
     tables: TableRuntime[],
-    grillSlots: THREE.Vector3[],
     doorPos: THREE.Vector3,
     ev: FlowEvents,
   ) {
     this.scene = scene;
-    this.stations = stations;
+    this.passStation = passStation;
+    this.passSlots = passSlots;
     this.tables = tables;
     this.doorPos = doorPos;
     this.ev = ev;
-    this.grill = new Grill(grillSlots);
-    this.grill.attachTo(scene);
+    this.grillFX.attachTo(scene);
     this.highlighter = new Highlighter(scene);
-    this.marker = new NextMarker(scene);
-    registerNavPoints(stations, tables);
-    const chop = stations.find((st) => st.id === 'chop')!;
-    const cutGeo = new THREE.PlaneGeometry(0.012, 0.34);
-    const cutMat = new THREE.MeshBasicMaterial({ color: 0x2a1a10 });
-    for (let i = 0; i < COOK.chopTaps; i++) {
-      const m = new THREE.Mesh(cutGeo, cutMat);
-      m.rotation.set(-Math.PI / 2, 0, 0.12);
-      m.position.set(chop.pos.x - 0.4 + (i - 1) * 0.13, chop.topY + 0.032, chop.pos.z);
-      m.visible = false;
-      scene.add(m);
-      this.cuts.push(m);
-    }
-    // register station footprints for range checks
-    for (const def of STATIONS) {
-      const xs = def.cells.map((c) => c[0]);
-      const zs = def.cells.map((c) => c[1]);
-      setFootprint(
-        def.id,
-        Math.min(...xs) - 6 + 0.0,   // cellToWorld(x,·) of the left edge
-        Math.max(...xs) - 6 + 1.0,
-        Math.min(...zs) - 4.5 + 0.0,
-        Math.max(...zs) - 4.5 + 1.0,
-      );
-    }
+    registerNavPoints([passStation], tables);
   }
 
   placePlayer(): void {
@@ -167,18 +157,26 @@ export class Flow {
   private spawnPlayer(): void {
     const s = cellToWorld(PLAYER_SPAWN[0], PLAYER_SPAWN[1]);
     this.player.obj.position.set(s.x, 0, s.z);
-    this.player.obj.rotation.y = 0;   // face +z: the crate row
+    this.player.obj.rotation.y = 0;
+    this.player.cancelNav();
   }
 
-  /** where the player should head next; null outside the playing phase */
+  get passPaused(): boolean {
+    return this.pass.length >= COOK.passCapacity;
+  }
+
+  get carrying(): CarryingState | null {
+    return this.player.carrying;
+  }
+
   get hint(): NextTarget | null {
     return this.phase === 'playing'
-      ? nextTarget(this.player.carrying, this.grill, this.tables, this.customers)
+      ? nextTarget(this.player.carrying, this.pass, this.tables, this.customers)
       : null;
   }
 
-  get stationById(): Map<string, StationRuntime> {
-    return new Map(this.stations.map((s) => [s.id, s]));
+  private tableById(tableId: string): TableRuntime | undefined {
+    return this.tables.find((t) => t.id === tableId);
   }
 
   // ---------------- phase control ----------------
@@ -190,26 +188,49 @@ export class Flow {
     this.served = 0;
     this.angry = 0;
     this.waste = 0;
-    this.spawnT = 2.0;
-    this.ordersT = 0;
-    this.burntCards.clear();
-    this.burntRetry.clear();
-    // clear leftovers
-    for (const c of this.customers) { this.scene.remove(c.obj); disposeTree(c.obj); }
-    this.customers.length = 0;
-    for (const t of this.tables) { t.guest = null; t.cooldown = 0; }
-    this.grill.reset();
-    if (this.player.carrying) this.player.setCarrying(null);
-    for (const s of this.stations) {
-      if (s.held) { this.scene.remove(s.held.obj); s.held = null; }
-      s.chopLeft = 0;
+    this.clickCount = 0;
+    this.spawnT = 1.4;
+    this.hudSyncT = 0;
+
+    // Clear customers & served plates
+    for (const c of this.customers) {
+      const plate = (c as unknown as { _plate?: THREE.Object3D })._plate;
+      if (plate) { this.scene.remove(plate); disposeTree(plate); }
+      this.scene.remove(c.obj);
+      disposeTree(c.obj);
     }
-    this.cuts.forEach((m) => { m.visible = false; });
+    this.customers.length = 0;
+
+    // Clear Pass window
+    for (const p of this.pass) {
+      this.scene.remove(p.obj);
+      disposeTree(p.obj);
+    }
+    this.pass.length = 0;
+
+    // Clear tabletop grills & cooldowns
+    for (const t of this.tables) {
+      if (t.grill.item) {
+        this.scene.remove(t.grill.item.obj);
+        disposeTree(t.grill.item.obj);
+      }
+      t.grill = createEmptyTableGrill();
+      t.guest = null;
+      t.cooldown = 0;
+    }
+    this.grillFX.reset();
+
+    // Clear player hand
+    if (this.player.carrying) {
+      disposeTree(this.player.carrying.item.obj);
+      this.player.setCarrying(null);
+    }
     this.spawnPlayer();
+
     this.ev.onPhase('playing');
     this.ev.onMoney(0);
     this.ev.onTimeLeft(this.timeLeft);
-    this.ev.onOrders(this.customers, this.tables);
+    this.ev.onSync();
   }
 
   starsNow(): StarRating {
@@ -222,7 +243,6 @@ export class Flow {
     });
   }
 
-  /** advance only after a passed level that has a successor; otherwise no-op */
   nextLevel(): void {
     if (this.phase !== 'results' || this.money < this.cfg.target || this.level >= LEVELS.length) return;
     this.level += 1;
@@ -234,15 +254,17 @@ export class Flow {
   endLevel(): void {
     const stars = this.starsNow();
     const res: Results = {
-      stars, money: this.money, target: this.cfg.target,
-      served: this.served, angry: this.angry, waste: this.waste,
+      stars,
+      money: this.money,
+      target: this.cfg.target,
+      served: this.served,
+      angry: this.angry,
+      waste: this.waste,
       pass: this.money >= this.cfg.target,
       level: this.level,
       hasNext: this.level < LEVELS.length,
     };
     this.phase = 'results';
-    this.burntCards.clear();
-    this.burntRetry.clear();
     const best = Number(localStorage.getItem(SAVE_KEYS.best) ?? '0');
     if (this.money > best) localStorage.setItem(SAVE_KEYS.best, String(this.money));
     this.ev.onPhase('results');
@@ -255,411 +277,418 @@ export class Flow {
     return this.tables.filter((t) => !t.guest && t.cooldown <= 0);
   }
 
-  private seatedCount(): number {
+  private activeGuestCount(): number {
     return this.customers.filter(
-      (c) => c.phase === 'seated' || c.phase === 'walking-in' || c.phase === 'eating',
+      (c) => c.phase === 'walking-in' || c.phase === 'seated' || c.phase === 'eating' || c.phase === 'burnt',
     ).length;
   }
-
-  spawnsPaused = false;                  // e2e hook: deterministic guests
 
   private trySpawn(dt: number): void {
     if (this.spawnsPaused) return;
     this.spawnT -= dt;
     if (this.spawnT > 0) return;
     const free = this.freeTables();
-    if (free.length && this.seatedCount() < this.cfg.maxDiners) {
+    if (free.length && this.activeGuestCount() < this.cfg.maxDiners) {
       const t = free[Math.floor(Math.random() * free.length)];
       this.customers.push(spawnCustomer(this.scene, t, this.doorPos));
       const [a, b] = this.cfg.spawnEvery;
       this.spawnT = a + Math.random() * (b - a);
-      this.ev.onOrders(this.customers, this.tables);
+      this.ev.onSync();
     } else {
-      this.spawnT = 3; // poll again soon
+      this.spawnT = 2.0;
     }
   }
 
-  // ---------------- actions ----------------
+  // ---------------- Pass window (出菜窗口) ----------------
 
-  private station(id: string): StationRuntime {
-    return this.stations.find((s) => s.id === id)!;
-  }
+  private pushToPass(guest: Customer): boolean {
+    if (this.pass.length >= COOK.passCapacity) return false;
+    const usedSlots = new Set(this.pass.map((p) => p.slotIndex));
+    let slotIndex = 0;
+    while (usedSlots.has(slotIndex) && slotIndex < COOK.passCapacity) slotIndex++;
+    if (slotIndex >= COOK.passCapacity) return false;
 
-  private act(it: Interaction): void {
-    const p = this.player;
-    switch (it.action) {
-      case 'take-raw': {
-        const item = createItem(it.station!.dish!, 'raw');
-        p.setCarrying(item);
-        break;
-      }
-      case 'chop': {
-        const s = it.station!;
-        if (!p.carrying && s.held && s.chopLeft > 0) {
-          // a chop tap
-          s.chopLeft -= 1;
-          this.chopFlash = 0.22;
-          const k = s.held;
-          k.obj.position.y = s.topY + 0.06;
-          if (s.chopLeft === 0) setItemStage(k, 'chopped');
-        } else if (!p.carrying && s.held && s.chopLeft <= 0) {
-          // pick the chopped skewer back up
-          const item = s.held;
-          s.held = null;
-          this.scene.remove(item.obj);
-          p.setCarrying(item);
-        } else if (p.carrying?.stage === 'raw' && !s.held) {
-          // place raw skewer on the board
-          const item = p.carrying;
-          p.setCarrying(null);
-          s.held = item;
-          s.chopLeft = COOK.chopTaps;
-          item.obj.position.set(s.pos.x - 0.4, s.topY + 0.04, s.pos.z);
-          item.obj.rotation.set(0, 0.2, 0);
-          this.scene.add(item.obj);
-        }
-        break;
-      }
-      case 'put-grill': {
-        const slot = this.grill.freeSlot();
-        if (slot && p.carrying) {
-          const item = p.carrying;
-          p.setCarrying(null);
-          item.grillT = 0;
-          this.grill.place(slot, item);
-        }
-        break;
-      }
-      case 'take-grill': {
-        const slot = this.grill.readySlot();
-        if (slot && !p.carrying) {
-          const item = this.grill.take(slot);
-          if (item.stage === 'waste') {
-            // burnt — straight to hand as waste, count it when binned
-          }
-          p.setCarrying(item);
-        }
-        break;
-      }
-      case 'plate': {
-        if (p.carrying) setItemStage(p.carrying, 'plated');
-        break;
-      }
-      case 'serve': {
-        const t = it.table!;
-        const guest = this.customers.find((c) => c.table === t.id && c.phase === 'seated' && !c.paid);
-        if (guest && p.carrying) {
-          const dish = p.carrying;
-          p.setCarrying(null);
-          this.settleServe(guest, t, dish, 1);
-        }
-        break;
-      }
-      case 'discard': {
-        if (p.carrying) {
-          const countsWaste = p.carrying.stage === 'waste' || p.carrying.stage === 'plated';
-          disposeTree(p.carrying.obj);
-          p.setCarrying(null);
-          if (countsWaste) this.waste += 1;
-          this.ev.onPopup(it.station!.pos.clone(), '丢弃', 'warn');
-        }
-        break;
-      }
-      case 'none':
-        if (!it.guide) this.denyT = 0.25;
-        break;
-    }
-  }
+    const id = nextPassItemId++;
+    const obj = buildPassTray(guest.dish);
+    const anchor = this.passSlots[slotIndex] ?? this.passStation.pos;
+    obj.position.copy(anchor);
+    obj.userData.passItemId = id;
+    this.scene.add(obj);
 
-  // ---------------- shared settlement & one-click order cycle ----------------
-
-  private releaseGuestGrillSlot(customerId: number): boolean {
-    const slot = this.grill.slots.find((s) => s.item?.orderCustomerId === customerId);
-    if (!slot) return false;
-    const item = this.grill.take(slot);
-    disposeTree(item.obj);
+    this.pass.push({
+      id,
+      dishId: guest.dish,
+      tableId: guest.table,
+      customerId: guest.id,
+      slotIndex,
+      obj,
+    });
+    guest.orderState = 'ready';
     return true;
   }
 
-  /** Shared payment & serving logic used by both one-click order cards and the legacy carry-to-table chain. */
-  private settleServe(guest: Customer, table: TableRuntime, dish: Item, tipMult = 1): boolean {
-    if (guest.phase !== 'seated' || guest.paid) return false;
-    guest.paid = true;
-    this.releaseGuestGrillSlot(guest.id);
-    this.burntCards.delete(guest.table);
-    this.burntRetry.delete(guest.table);
-
-    // plate lands on the table, guest eats
-    dish.obj.position.set(table.pos.x - 0.15, table.pos.y + 0.03, table.pos.z + 0.1);
-    this.scene.add(dish.obj);
-    guest.phase = 'eating';
-    guest.eatT = 3;
-    (guest as unknown as { _plate?: THREE.Object3D })._plate = dish.obj;
-
-    // pay: price + tip scaled by patience (GAME-DESIGN §2: >=0.8 earns full tip; over window scales tip by 0.5)
-    const rawFrac = guest.patienceMax > 0
-      ? Math.max(0, Math.min(1, guest.patience / guest.patienceMax))
-      : 1;
-    const patienceFactor = rawFrac >= COOK.fullTipPatience ? 1 : rawFrac;
-    const tip = Math.round(DISHES[guest.dish].price * COOK.tipRate * patienceFactor * tipMult);
-    const total = DISHES[guest.dish].price + tip;
-    this.money += total;
-    this.served += 1;
-    this.ev.onMoney(this.money);
-    this.ev.onPopup(table.pos.clone(), `+¥${total}`, 'money');
-    this.ev.onOrders(this.customers, this.tables);
-    return true;
+  private removePassByCustomer(customerId: number): void {
+    const idx = this.pass.findIndex((p) => p.customerId === customerId);
+    if (idx < 0) return;
+    const [removed] = this.pass.splice(idx, 1);
+    this.scene.remove(removed.obj);
+    disposeTree(removed.obj);
   }
 
-  private triggerAutoBurn(slotIndex: number): void {
-    const slot = this.grill.slots[slotIndex];
-    if (!slot?.item || slot.item.orderCustomerId == null) return;
-    const customerId = slot.item.orderCustomerId;
-    const item = this.grill.take(slot);
-    const cookT = item.grillT;
-    const dish = item.dish;
-    const tableId = item.orderTableId ?? '';
-    disposeTree(item.obj);
-
-    this.waste += 1;
-    const guest = this.customers.find((c) => c.id === customerId && c.phase === 'seated');
-    if (guest) {
-      const table = this.tables.find((t) => t.id === guest.table);
-      const popPos = table
-        ? table.pos.clone().add(new THREE.Vector3(0, 0.5, 0))
-        : guest.obj.position.clone().add(new THREE.Vector3(0, 1.2, 0));
-      this.ev.onPopup(popPos, '焦糊 · 废料 +1', 'warn');
-      this.burntCards.set(guest.table, {
-        tableId: guest.table,
-        customerId: guest.id,
-        dish: guest.dish,
-        cookT,
-        lingerLeft: COOK.burntLinger,
-      });
-      this.burntRetry.add(guest.table);
-    } else if (tableId) {
-      this.burntCards.set(tableId, {
-        tableId,
-        customerId,
-        dish,
-        cookT,
-        lingerLeft: COOK.burntLinger,
-      });
-      this.burntRetry.add(tableId);
-    }
-    this.ev.onOrders(this.customers, this.tables);
-  }
-
-  /** One-click order card primary button: click 1 puts raw skewer on free grill slot; click 2 lifts & resolves by window. */
-  handleOrderCardAction(tableId: string): boolean {
+  /** Click 1: take a ready dish from a Pass window tray slot (0..2). Invalid while already carrying! */
+  takeFromPass(slotIndex?: number): boolean {
     if (this.phase !== 'playing') return false;
-    const guest = this.customers.find((c) => c.table === tableId && c.phase === 'seated' && !c.paid);
-    if (!guest) return false;
-    const table = this.tables.find((t) => t.id === tableId);
-    if (!table) return false;
-
-    const slotIndex = this.grill.slots.findIndex((s) => s.item?.orderCustomerId === guest.id);
-    if (slotIndex < 0) {
-      const burnt = this.burntCards.get(tableId);
-      if (burnt && burnt.lingerLeft > 0) return false;
-      const slot = this.grill.freeSlot();
-      if (!slot) return false;
-      const item = createItem(guest.dish, 'raw');
-      item.grillT = 0;
-      item.orderCustomerId = guest.id;
-      item.orderTableId = guest.table;
-      this.grill.place(slot, item);
-      this.burntCards.delete(tableId);
-      this.ev.onOrders(this.customers, this.tables);
-      return true;
+    if (this.player.carrying) {
+      // Holding a dish blocks taking any other tray from the Pass window
+      const targetNum = this.tableById(this.player.carrying.tableId)?.tableNum ?? 1;
+      this.ev.onPopup(this.passStation.pos.clone().add(new THREE.Vector3(0, 0.55, 0)), `先送去 ${targetNum} 号桌`, 'warn');
+      return false;
     }
 
-    const slot = this.grill.slots[slotIndex];
-    const item = slot.item!;
-    const win = cookWindowFor(item.grillT);
-    if (win === 'raw') {
-      if (isRawLocked(win, item.grillT)) return true;
-      const rawItem = this.grill.take(slot);
-      disposeTree(rawItem.obj);
-      this.waste += 1;
-      this.ev.onPopup(table.pos.clone(), '夹生丢弃 · 废料 +1', 'warn');
-      this.ev.onOrders(this.customers, this.tables);
-      return true;
+    const idx = slotIndex !== undefined
+      ? this.pass.findIndex((p) => p.slotIndex === slotIndex)
+      : 0;
+    if (idx < 0 || idx >= this.pass.length) return false;
+
+    const entry = this.pass[idx];
+    const guest = this.customers.find((c) => c.id === entry.customerId && c.phase === 'seated');
+    if (!guest) {
+      this.removePassByCustomer(entry.customerId);
+      this.ev.onSync();
+      return false;
     }
-    if (win === 'burnt') {
-      this.triggerAutoBurn(slotIndex);
-      return true;
-    }
-    const tipMult = win === 'over' ? COOK.overTipMult : 1;
-    const lifted = this.grill.take(slot);
-    lifted.obj.position.set(0, 0, 0);
-    setItemStage(lifted, 'plated');
-    this.settleServe(guest, table, lifted, tipMult);
+
+    // Remove from Pass queue & place carried tray in player's hands
+    this.pass.splice(idx, 1);
+    this.scene.remove(entry.obj);
+    disposeTree(entry.obj);
+
+    const carriedItem = createItem(entry.dishId, 'raw', true);
+    this.player.setCarrying({
+      dishId: entry.dishId,
+      tableId: entry.tableId,
+      customerId: entry.customerId,
+      item: carriedItem,
+    });
+    guest.orderState = 'carrying';
+    this.clickCount += 1;
+    guest.clicksUsed += 1;
+
+    // Auto-walk toward the Pass window
+    this.player.walkTo(this.passStation.usePos, this.passStation.pos);
+    this.ev.onSync();
     return true;
   }
 
-  /** Current per-card cooking/UI snapshot for all seated, eating, and briefly lingering burnt orders. */
-  orderCardStates(): OrderCardState[] {
-    const out: OrderCardState[] = [];
-    const activeTables = new Set<string>();
-    const grillFull = !this.grill.freeSlot();
-
-    for (const c of this.customers) {
-      if (c.phase !== 'seated' && c.phase !== 'eating') continue;
-      activeTables.add(c.table);
-      const price = DISHES[c.dish].price;
-      if (c.phase === 'eating') {
-        out.push({
-          tableId: c.table,
-          customerId: c.id,
-          dish: c.dish,
-          phase: 'eating',
-          patience: c.patienceMax,
-          patienceMax: c.patienceMax,
-          cookWindow: 'eating',
-          cookT: 0,
-          progressPct: 0,
-          disabled: true,
-          rawLocked: false,
-          burntRetry: false,
-          label: '用餐中',
-          statusText: `¥${price} · 用餐中`,
-          slotIndex: -1,
-        });
-        continue;
-      }
-
-      const slotIndex = this.grill.slots.findIndex((s) => s.item?.orderCustomerId === c.id);
-      if (slotIndex >= 0) {
-        const rawT = this.grill.slots[slotIndex].item!.grillT;
-        const win = cookWindowFor(rawT);
-        const cookT = Number(rawT.toFixed(4));
-        const progressPct = Number(Math.min(100, Math.max(0, (rawT / COOK.burnTime) * 100)).toFixed(4));
-        let label: string;
-        if (win === 'raw') {
-          const rem = Math.max(1, Math.ceil(COOK.perfectStart - (rawT + COOK_EPS)));
-          label = `未熟 · 离熟 ${rem}s`;
-        } else if (win === 'perfect') {
-          const rem = Math.max(1, Math.ceil(COOK.overStart - (rawT + COOK_EPS)));
-          label = `完美 ${rem}s`;
-        } else if (win === 'over') {
-          const rem = Math.max(1, Math.ceil(COOK.burnTime - (rawT + COOK_EPS)));
-          label = `偏老 ${rem}s`;
-        } else {
-          label = '已焦';
-        }
-        const rawLocked = isRawLocked(win, rawT);
-        out.push({
-          tableId: c.table,
-          customerId: c.id,
-          dish: c.dish,
-          phase: 'seated',
-          patience: c.patience,
-          patienceMax: c.patienceMax,
-          cookWindow: win,
-          cookT,
-          progressPct,
-          disabled: win === 'burnt',
-          rawLocked,
-          burntRetry: false,
-          label,
-          statusText: win === 'raw' ? label : win === 'burnt' ? `¥${price} · 已焦糊 · 废料 +1` : `¥${price} · ${label}`,
-          slotIndex,
-        });
-      } else {
-        const burnt = this.burntCards.get(c.table);
-        if (burnt && burnt.lingerLeft > 0) {
-          activeTables.add(c.table);
-          out.push({
-            tableId: c.table,
-            customerId: c.id,
-            dish: c.dish,
-            phase: 'seated',
-            patience: c.patience,
-            patienceMax: c.patienceMax,
-            cookWindow: 'burnt',
-            cookT: Number(burnt.cookT.toFixed(4)),
-            progressPct: 100,
-            disabled: true,
-            rawLocked: false,
-            burntRetry: false,
-            label: '已焦',
-            statusText: `¥${price} · 已焦糊 · 废料 +1`,
-            slotIndex: -1,
-          });
-        } else {
-          const isRetry = this.burntRetry.has(c.table);
-          const label = grillFull ? '烤位满了' : isRetry ? '重烤' : '上炉';
-          const statusText = grillFull
-            ? `¥${price} · 烤位满了`
-            : isRetry
-              ? `¥${price} · 重烤可上炉`
-              : `¥${price} · 等待`;
-          out.push({
-            tableId: c.table,
-            customerId: c.id,
-            dish: c.dish,
-            phase: 'seated',
-            patience: c.patience,
-            patienceMax: c.patienceMax,
-            cookWindow: 'idle',
-            cookT: 0,
-            progressPct: 0,
-            disabled: grillFull,
-            rawLocked: false,
-            burntRetry: isRetry,
-            label,
-            statusText,
-            slotIndex: -1,
-          });
-        }
-      }
-    }
-
-    for (const entry of this.burntCards.values()) {
-      if (activeTables.has(entry.tableId)) continue;
-      const price = DISHES[entry.dish].price;
+  /** Pass slots snapshot (always length = COOK.passCapacity = 3). */
+  passSlotViews(): PassSlotView[] {
+    const out: PassSlotView[] = [];
+    for (let i = 0; i < COOK.passCapacity; i++) {
+      const p = this.pass.find((x) => x.slotIndex === i) ?? null;
+      const tb = p ? this.tableById(p.tableId) : undefined;
       out.push({
-        tableId: entry.tableId,
-        customerId: entry.customerId,
-        dish: entry.dish,
-        phase: 'burnt',
-        patience: 0,
-        patienceMax: 1,
-        cookWindow: 'burnt',
-        cookT: Number(entry.cookT.toFixed(4)),
-        progressPct: 100,
-        disabled: true,
-        rawLocked: false,
-        burntRetry: false,
-        label: '已焦',
-        statusText: `¥${price} · 已焦糊 · 废料 +1`,
-        slotIndex: -1,
+        slotIndex: i,
+        item: p
+          ? {
+            id: p.id,
+            dishId: p.dishId,
+            tableId: p.tableId,
+            tableNum: tb?.tableNum ?? 1,
+            customerId: p.customerId,
+          }
+          : null,
       });
     }
-
     return out;
   }
 
-  get highlightState(): { visible: boolean; char: string; warn: boolean } {
-    return this.highlighter.state;
+  // ---------------- Tabletop Grill & Serving (Clicks 2 & 3) ----------------
+
+  private clearTableGrill(table: TableRuntime): void {
+    const g = table.grill;
+    if (g.item) {
+      this.scene.remove(g.item.obj);
+      disposeTree(g.item.obj);
+    }
+    table.grill = createEmptyTableGrill();
   }
 
-  syncHighlight(_it: Interaction): void {
-    // Legacy five-step station glow & floating glyph hidden per GAME-DESIGN §0/§1.
-    this.highlighter.hide();
+  /** Trigger burn penalty strictly ONCE for a tabletop grill exceeding burnTime (>8.0s). */
+  private triggerTableBurn(table: TableRuntime): boolean {
+    const g = table.grill;
+    if (!g.active || g.burntHandled) return false;
+    g.burntHandled = true;
+
+    const customerId = g.customerId;
+    const item = g.item;
+    g.active = false;
+    g.item = null;
+    g.dishId = null;
+    g.customerId = null;
+    g.cookWindow = 'none';
+    if (item) {
+      this.scene.remove(item.obj);
+      disposeTree(item.obj);
+    }
+
+    const guest = this.customers.find((c) => c.id === customerId);
+    if (guest) {
+      if (guest.burntHandled) return false;
+      guest.burntHandled = true;
+      guest.orderState = 'burnt';
+      guest.phase = 'burnt';
+      guest.burntLinger = COOK.burntLinger;
+      const drop = Math.max(10, Math.round(guest.patienceMax * COOK.burnPatienceDrop));
+      guest.patience = Math.max(0, guest.patience - drop);
+    }
+
+    this.grillFX.spawnBurnBurst(table.grillPos);
+    this.money -= COOK.burnPenalty;
+    this.waste += 1;
+    this.ev.onMoney(this.money);
+    this.ev.onPopup(table.pos.clone().add(new THREE.Vector3(0, 0.48, 0)), `焦糊作废 -¥${COOK.burnPenalty}`, 'warn');
+    this.ev.onSync();
+    return true;
   }
 
-  // ---------------- per-frame ----------------
+  /** Click 2 (put carried raw meat onto tabletop grill) & Click 3 (plate cooked meat to customer). */
+  handleTableAction(tableId: string): boolean {
+    if (this.phase !== 'playing') return false;
+    const table = this.tableById(tableId);
+    if (!table) return false;
+    const guest = this.customers.find((c) => c.table === tableId && c.phase === 'seated' && !c.paid);
+    if (!guest) return false;
 
-  update(dt: number, move: THREE.Vector2, actionPressed: boolean): void {
+    // ---- Click 2: carrying this table's dish → place onto this table's built-in grill ----
+    const hand = this.player.carrying;
+    if (hand && hand.tableId === tableId && hand.customerId === guest.id && guest.orderState === 'carrying' && !table.grill.active) {
+      disposeTree(hand.item.obj);
+      this.player.setCarrying(null);
+
+      const grillItem = createItem(guest.dish, 'raw', false);
+      grillItem.grillT = 0;
+      grillItem.obj.scale.setScalar(1.25);
+      grillItem.obj.position.copy(table.grillPos);
+      grillItem.obj.rotation.set(0, 0.22, 0);
+      this.scene.add(grillItem.obj);
+
+      table.grill = {
+        active: true,
+        dishId: guest.dish,
+        customerId: guest.id,
+        grillT: 0,
+        cookWindow: 'raw',
+        item: grillItem,
+        burntHandled: false,
+        smokeT: 0.18,
+      };
+      guest.orderState = 'grilling';
+      this.clickCount += 1;
+      guest.clicksUsed += 1;
+
+      this.player.walkTo(table.usePos, table.pos);
+      this.ev.onSync();
+      return true;
+    }
+
+    // ---- Click 3 (or early raw tap): tabletop grill is active ----
+    if (table.grill.active && table.grill.customerId === guest.id && table.grill.item) {
+      const win = cookWindowFor(table.grill.grillT);
+
+      // Early (< 5.0s) → undercooked: unhappy customer, reset heat bar to 0
+      if (win === 'raw') {
+        if (table.grill.grillT + COOK_EPS < COOK.rawLockSec) return false;
+        table.grill.grillT = 0;
+        table.grill.cookWindow = 'raw';
+        table.grill.item.grillT = 0;
+        guest.orderState = 'grilling';
+        const drop = Math.max(4, Math.round(guest.patienceMax * COOK.rawPatienceDrop));
+        guest.patience = Math.max(1, guest.patience - drop);
+        this.player.walkTo(table.usePos, table.pos);
+        this.ev.onPopup(table.pos.clone().add(new THREE.Vector3(0, 0.45, 0)), '夹生！重新烤制', 'warn');
+        this.ev.onSync();
+        return true;
+      }
+
+      if (win === 'burnt') {
+        this.triggerTableBurn(table);
+        return false;
+      }
+
+      // Perfect (5.0–7.0s) or Over (7.0–8.0s) → Plate & serve to customer!
+      const lifted = table.grill.item;
+      this.scene.remove(lifted.obj);
+      table.grill = createEmptyTableGrill();
+
+      lifted.obj.scale.setScalar(1);
+      lifted.obj.position.set(0, 0, 0);
+      setItemStage(lifted, 'plated');
+      lifted.obj.position.copy(table.platePos);
+      this.scene.add(lifted.obj);
+      (guest as unknown as { _plate?: THREE.Object3D })._plate = lifted.obj;
+
+      guest.paid = true;
+      guest.orderState = 'done';
+      guest.phase = 'eating';
+      guest.eatT = COOK.eatTime;
+      this.clickCount += 1;
+      guest.clicksUsed += 1;
+
+      const rawFrac = guest.patienceMax > 0
+        ? Math.max(0, Math.min(1, guest.patience / guest.patienceMax))
+        : 1;
+      const patienceFactor = rawFrac >= COOK.fullTipPatience ? 1 : rawFrac;
+      const tipMult = win === 'over' ? COOK.overTipMult : 1;
+      const tip = Math.round(DISHES[guest.dish].price * COOK.tipRate * patienceFactor * tipMult);
+      const total = DISHES[guest.dish].price + tip;
+
+      this.money += total;
+      this.served += 1;
+      this.player.walkTo(table.usePos, table.pos);
+      this.ev.onMoney(this.money);
+      this.ev.onPopup(table.pos.clone().add(new THREE.Vector3(0, 0.48, 0)), `+¥${total}`, 'money');
+      this.ev.onSync();
+      return true;
+    }
+
+    // Helpful guidance if tapping wrong table while carrying, or tapping a 'ready' table before picking up
+    if (hand && hand.tableId !== tableId) {
+      const targetNum = this.tableById(hand.tableId)?.tableNum ?? 1;
+      this.ev.onPopup(table.pos.clone().add(new THREE.Vector3(0, 0.45, 0)), `请送往 ${targetNum} 号桌`, 'warn');
+      return false;
+    }
+    if (!hand && guest.orderState === 'ready') {
+      this.ev.onPopup(this.passStation.pos.clone().add(new THREE.Vector3(0, 0.55, 0)), '先点出菜窗口取菜', 'ok');
+      return false;
+    }
+    return false;
+  }
+
+  // ---------------- HUD Snapshot ----------------
+
+  orderCardStates(): OrderCardState[] {
+    const out: OrderCardState[] = [];
+    const paused = this.passPaused;
+
+    for (const c of this.customers) {
+      if (c.phase !== 'seated' && c.phase !== 'eating' && c.phase !== 'burnt') continue;
+      const tb = this.tableById(c.table);
+      const tableNum = tb?.tableNum ?? 1;
+      const grill = tb?.grill;
+
+      let cookWindow: CookWindow = 'none';
+      let cookT = 0;
+      let cookPct = 0;
+      let rawLocked = false;
+      let disabled = true;
+      let statusText = '';
+      let btnText = '';
+
+      const prepT = Number(Math.min(COOK.prepTime, c.prepT).toFixed(3));
+      const prepPct = Number(Math.min(100, Math.max(0, (c.prepT / COOK.prepTime) * 100)).toFixed(2));
+
+      switch (c.orderState) {
+        case 'ordering': {
+          const rem = Math.max(1, Math.ceil(COOK.prepTime - (c.prepT + COOK_EPS)));
+          statusText = paused ? '窗口满 · 暂停备菜' : `后台备菜 · ${rem}s`;
+          btnText = paused ? '等取菜' : '备菜中';
+          disabled = true;
+          break;
+        }
+        case 'ready': {
+          statusText = '已出窗 · 去窗口取';
+          btnText = '在窗口';
+          disabled = true;
+          break;
+        }
+        case 'carrying': {
+          statusText = '已端在手 · 可上桌';
+          btnText = '上桌烤';
+          disabled = false;
+          break;
+        }
+        case 'grilling':
+        case 'serving': {
+          const rawT = grill?.active ? grill.grillT : 0;
+          const win = cookWindowFor(rawT);
+          cookWindow = win;
+          cookT = Number(rawT.toFixed(4));
+          cookPct = Number(Math.min(100, Math.max(0, (rawT / COOK.grillTotal) * 100)).toFixed(2));
+          rawLocked = win === 'raw' && rawT + COOK_EPS < COOK.rawLockSec;
+          if (win === 'raw') {
+            const rem = Math.max(1, Math.ceil(COOK.perfectStart - (rawT + COOK_EPS)));
+            statusText = `桌边烤 · 离熟 ${rem}s`;
+            btnText = rawLocked ? '铺肉中' : '烤制中';
+            disabled = false;
+          } else if (win === 'perfect') {
+            const rem = Math.max(1, Math.ceil(COOK.perfectEnd - (rawT + COOK_EPS)));
+            statusText = `火候正好 · ${rem}s`;
+            btnText = '盛盘';
+            disabled = false;
+          } else if (win === 'over') {
+            statusText = '快焦了 · 立刻起';
+            btnText = '快盛盘';
+            disabled = false;
+          } else {
+            statusText = `烤焦作废 · -¥${COOK.burnPenalty}`;
+            btnText = '已作废';
+            disabled = true;
+          }
+          break;
+        }
+        case 'done': {
+          statusText = '已盛盘 · 用餐中';
+          btnText = '已结账';
+          disabled = true;
+          break;
+        }
+        case 'burnt': {
+          cookWindow = 'burnt';
+          cookT = COOK.burnTime;
+          cookPct = 100;
+          statusText = `烤焦作废 · -¥${COOK.burnPenalty}`;
+          btnText = '已作废';
+          disabled = true;
+          break;
+        }
+      }
+
+      out.push({
+        tableId: c.table,
+        tableNum,
+        customerId: c.id,
+        dish: c.dish,
+        orderState: c.orderState,
+        cookWindow,
+        patience: c.patience,
+        patienceMax: c.patienceMax,
+        prepT,
+        prepPct,
+        cookT,
+        cookPct,
+        passPaused: paused && c.orderState === 'ordering',
+        rawLocked,
+        disabled,
+        statusText,
+        btnText,
+        clicksUsed: c.clicksUsed,
+      });
+    }
+
+    out.sort((a, b) => a.tableNum - b.tableNum || a.customerId - b.customerId);
+    return out;
+  }
+
+  // ---------------- per-frame simulation ----------------
+
+  update(dt: number, debugMove?: THREE.Vector2): void {
     this.highlighter.update(dt);
     if (this.phase !== 'playing') {
-      this.marker.set(null);
+      this.highlighter.hide();
       return;
     }
 
-    // timer
+    // Level timer
     this.timeLeft -= dt;
     this.ev.onTimeLeft(this.timeLeft);
     if (this.timeLeft <= 0) {
@@ -668,95 +697,125 @@ export class Flow {
       return;
     }
 
-    // player
-    this.player.move(move, dt);
+    // Player auto-navigation (no joystick; keyboard WASD only for optional desktop debug)
+    if (debugMove && debugMove.lengthSq() > 0.0001) {
+      this.player.cancelNav();
+      this.player.move(debugMove, dt);
+    } else {
+      this.player.stepAutoNav(dt);
+    }
     this.player.update(dt);
 
-    // interaction (kept for test hooks; legacy world arrow & station highlight stay hidden per §0/§1)
-    this.current = resolveInteraction(
-      this.player.obj.position, this.player.carrying,
-      this.stations, this.tables, this.customers, this.grill,
-    );
-    this.highlighter.hide();
-    this.marker.set(null);
-    this.ev.onAction(this.current);
-    if (actionPressed) this.act(this.current);
-
-    // chop board: item settles back after a tap
-    if (this.chopFlash > 0) {
-      this.chopFlash -= dt;
-      if (this.chopFlash <= 0) {
-        const s = this.station('chop');
-        if (s.held) s.held.obj.position.y = s.topY + 0.04;
-      }
+    // Subtle world highlight on next target (Pass window or active target Table)
+    const hint = this.hint;
+    if (hint?.kind === 'pass') {
+      this.highlighter.show(this.passStation.pos, 2.8);
+    } else if (hint?.kind === 'table') {
+      const tb = this.tableById(hint.id);
+      if (tb) this.highlighter.show(tb.pos, 1.35);
+      else this.highlighter.hide();
+    } else {
+      this.highlighter.hide();
     }
-    if (this.denyT > 0) this.denyT -= dt;
-    const board = this.station('chop');
-    const done = board.held ? COOK.chopTaps - board.chopLeft : 0;
-    this.cuts.forEach((m, i) => { m.visible = i < done; });
 
-    // grill
-    this.grill.update(dt);
-    for (let i = 0; i < this.grill.slots.length; i++) {
-      const it = this.grill.slots[i].item;
-      if (it && it.orderCustomerId != null && it.grillT + COOK_EPS >= COOK.burnTime) {
-        this.triggerAutoBurn(i);
-      }
-    }
-    let burntChanged = false;
-    for (const [tid, entry] of this.burntCards) {
-      entry.cookT += dt;
-      entry.lingerLeft -= dt;
-      if (entry.lingerLeft <= 0) {
-        this.burntCards.delete(tid);
-        burntChanged = true;
+    let stateChanged = false;
+
+    // 1) Background NPC automatic prep (pauses when Pass window has 3 dishes)
+    if (!this.passPaused) {
+      const ordering = this.customers
+        .filter((c) => c.phase === 'seated' && c.orderState === 'ordering')
+        .sort((a, b) => a.id - b.id);
+      for (const c of ordering) {
+        if (this.passPaused) break;
+        c.prepT += dt;
+        if (c.prepT + COOK_EPS >= COOK.prepTime) {
+          c.prepT = COOK.prepTime;
+          if (this.pushToPass(c)) stateChanged = true;
+        }
       }
     }
 
-    // customers
-    let justSeated = false;
+    // 2) Per-table built-in grills
+    for (const tb of this.tables) {
+      const g = tb.grill;
+      if (!g.active || !g.item) continue;
+      g.grillT += dt;
+      g.item.grillT = g.grillT;
+      const win = cookWindowFor(g.grillT);
+      const prevWin = g.cookWindow;
+      g.cookWindow = win;
+
+      if (win === 'burnt') {
+        if (this.triggerTableBurn(tb)) stateChanged = true;
+      } else if (win === 'perfect' || win === 'over') {
+        const guest = this.customers.find((c) => c.id === g.customerId && c.phase === 'seated');
+        if (guest && guest.orderState !== 'serving') {
+          guest.orderState = 'serving';
+          stateChanged = true;
+        } else if (prevWin !== win) {
+          stateChanged = true;
+        }
+      }
+    }
+    this.grillFX.update(dt, this.tables);
+
+    // 3) Customers (walking-in, seated, eating, burnt linger, leaving)
     for (const c of [...this.customers]) {
-      const table = this.tables.find((t) => t.id === c.table)!;
+      const table = this.tableById(c.table)!;
       const was = c.phase;
       updateCustomer(c, dt, {
         doorPos: this.doorPos,
         tablePos: table.pos,
         scene: this.scene,
         onAngry: (cc) => {
-          this.releaseGuestGrillSlot(cc.id);
+          // Clean up any dish in Pass, player hand, or tabletop grill so no softlock occurs
+          this.removePassByCustomer(cc.id);
+          if (this.player.carrying?.customerId === cc.id) {
+            disposeTree(this.player.carrying.item.obj);
+            this.player.setCarrying(null);
+          }
+          if (table.grill.customerId === cc.id) {
+            this.clearTableGrill(table);
+          }
           this.angry += 1;
-          this.ev.onPopup(cc.obj.position.clone().add(new THREE.Vector3(0, 1.2, 0)), '愤怒离店', 'warn');
-          this.ev.onOrders(this.customers, this.tables);
+          this.ev.onPopup(cc.obj.position.clone().add(new THREE.Vector3(0, 1.2, 0)), '耐心耗尽离店', 'warn');
+          stateChanged = true;
         },
         onGone: (cc) => {
+          this.removePassByCustomer(cc.id);
+          if (this.player.carrying?.customerId === cc.id) {
+            disposeTree(this.player.carrying.item.obj);
+            this.player.setCarrying(null);
+          }
+          if (table.grill.customerId === cc.id) {
+            this.clearTableGrill(table);
+          }
           table.guest = null;
-          table.cooldown = this.cfg.tableCooldown;
-          this.burntRetry.delete(cc.table);
+          table.cooldown = COOK.cleanTime; // 2.0s table cleanup before re-seating
           const plate = (cc as unknown as { _plate?: THREE.Object3D })._plate;
           if (plate) { this.scene.remove(plate); disposeTree(plate); }
           const i = this.customers.indexOf(cc);
           if (i >= 0) this.customers.splice(i, 1);
-          this.ev.onOrders(this.customers, this.tables);
+          stateChanged = true;
         },
       });
-      if (was === 'walking-in' && c.phase === 'seated') {
-        this.burntCards.delete(c.table);
-        this.burntRetry.delete(c.table);
-        justSeated = true;
+      if (was !== c.phase) stateChanged = true;
+    }
+
+    // 4) Table cleaning countdown (2.0s)
+    for (const t of this.tables) {
+      if (t.cooldown > 0) {
+        t.cooldown = Math.max(0, t.cooldown - dt);
+        if (t.cooldown === 0) stateChanged = true;
       }
     }
-    for (const t of this.tables) if (t.cooldown > 0) t.cooldown -= dt;
 
-    this.ordersT += dt;
-    if (justSeated || burntChanged || this.ordersT >= 0.25) {
-      this.ordersT = 0;
-      this.ev.onOrders(this.customers, this.tables);
+    this.hudSyncT += dt;
+    if (stateChanged || this.hudSyncT >= 0.12) {
+      this.hudSyncT = 0;
+      this.ev.onSync();
     }
 
     this.trySpawn(dt);
-  }
-
-  denyActive(): boolean {
-    return this.denyT > 0;
   }
 }

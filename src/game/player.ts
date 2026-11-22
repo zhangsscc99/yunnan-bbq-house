@@ -1,11 +1,11 @@
-// Chibi rig: head:body ≈ 1:1.6, cylinder arms, apron colour coding.
-// Shared by the player (chef hat + red apron) and customers (plain clothes).
+// Chibi rig + Player controller with v2 auto-navigation (Pass window ↔ Dining tables).
+// No virtual joystick — movement is driven automatically by player clicks on Pass trays / order cards.
 
 import * as THREE from 'three';
 import { COLORS, PLAYER } from '../config.ts';
 import { isWalkable } from '../world/layout.ts';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import type { Item } from './types.ts';
+import type { CarryingState } from './types.ts';
 
 export interface ChibiOpts {
   skin?: number;
@@ -15,7 +15,6 @@ export interface ChibiOpts {
   shirt?: number;
 }
 
-// shared blob shadow (replaces shadow-map casting on characters — cheap)
 const blobGeo = new THREE.CircleGeometry(0.3, 14);
 const blobMat = new THREE.MeshBasicMaterial({
   color: 0x000000, transparent: true, opacity: 0.32, depthWrite: false,
@@ -23,7 +22,6 @@ const blobMat = new THREE.MeshBasicMaterial({
 blobGeo.userData.shared = true;
 blobMat.userData.shared = true;
 
-// merge every same-material part in place → ~7 draws per character
 function collapse(parts: THREE.Group): void {
   parts.updateMatrixWorld(true);
   const byMat = new Map<THREE.Material, THREE.BufferGeometry[]>();
@@ -60,7 +58,6 @@ export function buildChibi(opts: ChibiOpts = {}): THREE.Group {
   const skinMat = new THREE.MeshStandardMaterial({ color: skin, roughness: 0.6 });
   const shirtMat = new THREE.MeshStandardMaterial({ color: shirt, roughness: 0.8 });
 
-  // body: rounded capsule torso (~0.42m)
   const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.17, 0.22, 6, 12), shirtMat);
   body.position.y = 0.42;
   g.add(body);
@@ -75,7 +72,6 @@ export function buildChibi(opts: ChibiOpts = {}): THREE.Group {
     g.add(skirt);
   }
 
-  // head: big sphere (≈0.42 diam → head:body ≈ 1:1.6 at total ~1.1m)
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.21, 18, 14), skinMat);
   head.position.y = 0.82;
   g.add(head);
@@ -111,7 +107,6 @@ export function buildChibi(opts: ChibiOpts = {}): THREE.Group {
     g.add(hair);
   }
 
-  // arms: stubby cylinders on the sides, slight outward angle
   const armGeo = new THREE.CapsuleGeometry(0.045, 0.16, 4, 8);
   for (const s of [-1, 1]) {
     const arm = new THREE.Mesh(armGeo, skinMat);
@@ -120,7 +115,6 @@ export function buildChibi(opts: ChibiOpts = {}): THREE.Group {
     g.add(arm);
   }
 
-  // legs: two stubs
   const legGeo = new THREE.CapsuleGeometry(0.05, 0.1, 4, 8);
   const legMat = new THREE.MeshStandardMaterial({ color: 0x3a3430, roughness: 0.8 });
   for (const s of [-1, 1]) {
@@ -134,7 +128,6 @@ export function buildChibi(opts: ChibiOpts = {}): THREE.Group {
     for (const m of g.children) if (m instanceof THREE.Mesh) m.castShadow = false;
   }
 
-  // blob shadow — grounds the character without touching the shadow map
   const blob = new THREE.Mesh(blobGeo, blobMat);
   blob.rotation.x = -Math.PI / 2;
   blob.position.y = 0.012;
@@ -144,39 +137,133 @@ export function buildChibi(opts: ChibiOpts = {}): THREE.Group {
   return g;
 }
 
+const TMP_DIR = new THREE.Vector2();
+
+function segmentClear(ax: number, az: number, bx: number, bz: number): boolean {
+  const steps = Math.max(4, Math.ceil(Math.hypot(bx - ax, bz - az) / 0.25));
+  for (let i = 1; i < steps; i++) {
+    const k = i / steps;
+    if (!isWalkable(ax + (bx - ax) * k, az + (bz - az) * k, PLAYER.radius + 0.04)) return false;
+  }
+  return true;
+}
+
 export class Player {
   readonly obj: THREE.Group;
   readonly carryAnchor: THREE.Group;
-  carrying: Item | null = null;
+  carrying: CarryingState | null = null;
   private bob = 0;
+  private popT = 1;
   private moving = false;
-  facing = new THREE.Vector2(0, -1);
+  private waypoints: THREE.Vector3[] = [];
+  private facePos: THREE.Vector3 | null = null;
+  facing = new THREE.Vector2(0, 1);
 
   constructor() {
     this.obj = buildChibi();
     this.carryAnchor = new THREE.Group();
-    this.carryAnchor.position.set(0, 0.58, 0.3);
+    this.carryAnchor.position.set(0, 0.56, 0.34);
     this.obj.add(this.carryAnchor);
   }
 
-  setCarrying(item: Item | null): void {
-    this.carrying = item;
+  get navTarget(): THREE.Vector3 | null {
+    return this.waypoints.length ? this.waypoints[this.waypoints.length - 1] : null;
+  }
+
+  setCarrying(state: CarryingState | null): void {
+    this.carrying = state;
     this.carryAnchor.clear();
-    if (item) {
-      this.carryAnchor.add(item.obj);
-      item.obj.position.set(0, 0, 0);
-      item.obj.rotation.set(0, 0, 0);
-      item.obj.scale.setScalar(1);
-      // little pop so the pickup reads
-      item.obj.scale.setScalar(0.01);
-      const t0 = performance.now();
-      const grow = (): void => {
-        const k = Math.min(1, (performance.now() - t0) / 120);
-        item.obj.scale.setScalar(0.6 + 0.4 * k);
-        if (k < 1) requestAnimationFrame(grow);
-      };
-      grow();
+    if (state) {
+      this.carryAnchor.add(state.item.obj);
+      state.item.obj.position.set(0, 0, 0);
+      state.item.obj.rotation.set(0, 0, 0);
+      state.item.obj.scale.setScalar(0.6);
+      this.popT = 0;
     }
+  }
+
+  /** Command the chef to auto-walk smoothly between Pass window and dining tables. */
+  walkTo(target: THREE.Vector3, lookAt?: THREE.Vector3): void {
+    const px = this.obj.position.x;
+    const pz = this.obj.position.z;
+    this.waypoints.length = 0;
+    this.facePos = lookAt ? lookAt.clone() : null;
+
+    if (segmentClear(px, pz, target.x, target.z)) {
+      this.waypoints.push(new THREE.Vector3(target.x, 0, target.z));
+      return;
+    }
+
+    // Route cleanly around middle dining table (t4) via the open main aisle (z = 1.15) or central lane (x = 0.2)
+    const candidates: THREE.Vector3[] = [
+      new THREE.Vector3(target.x, 0, 1.15),
+      new THREE.Vector3(px, 0, 1.15),
+      new THREE.Vector3(0.2, 0, 1.15),
+      new THREE.Vector3(0.2, 0, target.z),
+    ];
+    for (const wp of candidates) {
+      if (
+        isWalkable(wp.x, wp.z, PLAYER.radius + 0.04) &&
+        segmentClear(px, pz, wp.x, wp.z) &&
+        segmentClear(wp.x, wp.z, target.x, target.z)
+      ) {
+        this.waypoints.push(wp, new THREE.Vector3(target.x, 0, target.z));
+        return;
+      }
+    }
+    // Two-leg fallback through open aisle z = 1.15
+    this.waypoints.push(
+      new THREE.Vector3(px, 0, 1.15),
+      new THREE.Vector3(target.x, 0, 1.15),
+      new THREE.Vector3(target.x, 0, target.z),
+    );
+  }
+
+  cancelNav(): void {
+    this.waypoints.length = 0;
+    this.facePos = null;
+    this.moving = false;
+  }
+
+  /** Advance auto-navigation by dt seconds. Returns true while walking. */
+  stepAutoNav(dt: number): boolean {
+    if (!this.waypoints.length) {
+      this.moving = false;
+      if (this.facePos) {
+        const dx = this.facePos.x - this.obj.position.x;
+        const dz = this.facePos.z - this.obj.position.z;
+        if (dx * dx + dz * dz > 0.001) {
+          this.lerpYaw(Math.atan2(dx, dz), dt);
+        }
+      }
+      return false;
+    }
+
+    const wp = this.waypoints[0];
+    const dx = wp.x - this.obj.position.x;
+    const dz = wp.z - this.obj.position.z;
+    const dist = Math.hypot(dx, dz);
+    const step = PLAYER.speed * dt;
+    if (dist <= Math.max(0.08, step)) {
+      if (isWalkable(wp.x, wp.z, PLAYER.radius)) {
+        this.obj.position.x = wp.x;
+        this.obj.position.z = wp.z;
+      }
+      this.waypoints.shift();
+      this.moving = this.waypoints.length > 0;
+      return this.moving;
+    }
+
+    TMP_DIR.set(dx / dist, dz / dist);
+    this.move(TMP_DIR, dt);
+    return true;
+  }
+
+  private lerpYaw(targetRot: number, dt: number): void {
+    let d = targetRot - this.obj.rotation.y;
+    while (d > Math.PI) d -= Math.PI * 2;
+    while (d < -Math.PI) d += Math.PI * 2;
+    this.obj.rotation.y += d * Math.min(1, dt * 14);
   }
 
   move(dir: THREE.Vector2, dt: number): void {
@@ -185,7 +272,6 @@ export class Player {
     const step = PLAYER.speed * dt;
     const nx = this.obj.position.x + dir.x * step;
     const nz = this.obj.position.z + dir.y * step;
-    // slide along walls: try full, then each axis
     if (isWalkable(nx, nz, PLAYER.radius)) {
       this.obj.position.set(nx, 0, nz);
     } else if (isWalkable(nx, this.obj.position.z, PLAYER.radius)) {
@@ -194,23 +280,21 @@ export class Player {
       this.obj.position.z = nz;
     }
     this.facing.copy(dir).normalize();
-    const targetRot = Math.atan2(dir.x, dir.y);
-    // shortest-arc lerp on yaw
-    let d = targetRot - this.obj.rotation.y;
-    while (d > Math.PI) d -= Math.PI * 2;
-    while (d < -Math.PI) d += Math.PI * 2;
-    this.obj.rotation.y += d * Math.min(1, dt * 14);
+    this.lerpYaw(Math.atan2(dir.x, dir.y), dt);
   }
 
   update(dt: number): void {
-    // walk bob + idle sway
+    if (this.carrying && this.popT < 1) {
+      this.popT = Math.min(1, this.popT + dt / 0.12);
+      this.carrying.item.obj.scale.setScalar(0.6 + 0.4 * this.popT);
+    }
     if (this.moving) {
-      this.bob += dt * 11;
-      this.obj.position.y = Math.abs(Math.sin(this.bob)) * 0.05;
+      this.bob += dt * 12;
+      this.obj.position.y = Math.abs(Math.sin(this.bob)) * 0.055;
       this.obj.rotation.z = Math.sin(this.bob) * 0.04;
     } else {
-      this.obj.position.y *= 0.85;
-      this.obj.rotation.z *= 0.85;
+      this.obj.position.y *= 0.82;
+      this.obj.rotation.z *= 0.82;
     }
   }
 }

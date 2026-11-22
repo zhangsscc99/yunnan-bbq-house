@@ -1,28 +1,32 @@
-// Start + results panels. Same skin as the HUD (see ART-DIRECTION §5).
+// Start + results panels. Same warm-timber & gold skin as the HUD.
 
 import type { Results } from '../game/flow.ts';
+
+function fmtMoney(v: number): string {
+  return v < 0 ? `-¥${Math.abs(v)}` : `¥${v}`;
+}
 
 const CSS = `
 .bbq-panel {
   position: absolute; inset: 0; display: flex; align-items: center;
-  justify-content: center; background: rgba(12,8,5,.45);
-  backdrop-filter: blur(3px); pointer-events: auto;
+  justify-content: center; background: rgba(12,8,5,.48);
+  backdrop-filter: blur(3px); pointer-events: auto; z-index: 20;
 }
 .bbq-panel .card {
-  background: rgba(24,16,12,.78); border: 1.5px solid rgba(232,180,90,.6);
-  border-radius: 16px; padding: 26px 30px; text-align: center;
-  backdrop-filter: blur(12px); max-width: min(320px, 86vw);
-  box-shadow: 0 12px 40px rgba(0,0,0,.5);
+  background: rgba(24,16,12,.84); border: 1.5px solid rgba(232,180,90,.65);
+  border-radius: 16px; padding: 24px 26px; text-align: center;
+  backdrop-filter: blur(12px); max-width: min(332px, 88vw);
+  box-shadow: 0 12px 40px rgba(0,0,0,.55);
 }
 .bbq-panel h1 {
-  margin: 0 0 4px; font-size: 26px; font-weight: 800; color: #f5e8d8;
+  margin: 0 0 6px; font-size: 25px; font-weight: 800; color: #f5e8d8;
   letter-spacing: 1px;
 }
-.bbq-panel .sub { font-size: 13px; color: rgba(245,232,216,.78); margin-bottom: 14px; line-height: 1.55; }
+.bbq-panel .sub { font-size: 13px; color: rgba(245,232,216,.82); margin-bottom: 14px; line-height: 1.6; }
 .bbq-panel .sub b { color: #f0c060; font-weight: 700; }
 .bbq-panel .target {
   font-size: 13px; color: #f0c060; font-weight: 700; margin-bottom: 18px;
-  border: 1px dashed rgba(240,192,96,.4); border-radius: 8px; padding: 6px 10px;
+  border: 1px dashed rgba(240,192,96,.45); border-radius: 8px; padding: 7px 10px;
 }
 .bbq-panel button {
   font: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
@@ -84,7 +88,7 @@ export class Panels {
     p.innerHTML = `
       <div class="card">
         <h1>柳真真云南烤肉</h1>
-        <div class="sub">点订单卡两步出餐：<b>上炉 → 起锅上菜</b><br/>金色完美窗起锅拿满小费 · 3 个烤位排队</div>
+        <div class="sub">顾客自助点单 · 三步出餐：<b>窗口取菜 → 桌边烤 → 盛盘</b><br/>火候进金色完美窗盛盘拿满小费 · 出菜窗口最多放 3 份</div>
         <div class="target">第 ${level} 关 · 目标：${Math.floor(duration / 60)} 分钟营业额 ¥${target}</div>
         <button data-btn="start">开店</button>
       </div>`;
@@ -98,7 +102,8 @@ export class Panels {
     p.className = 'bbq-panel';
     const stars = STAR(r.stars >= 1) + STAR(r.stars >= 2) + STAR(r.stars >= 3);
     const nextN = r.level + 1;
-    const verdict = !r.pass ? `离目标还差 ¥${r.target - r.money}`
+    const diff = Math.max(0, r.target - r.money);
+    const verdict = !r.pass ? `离目标还差 ¥${diff}`
       : r.hasNext ? `目标达成，进入第 ${nextN} 关` : '全部关卡通关！';
     const nextBtn = r.pass && r.hasNext ? `<button data-btn="next">进入第 ${nextN} 关</button><br/>` : '';
     p.innerHTML = `
@@ -106,10 +111,10 @@ export class Panels {
         <h1>打烊结算</h1>
         <div class="stars-big" data-stars="${r.stars}" aria-label="评级 ${r.stars}/3">${stars}</div>
         <div class="verdict ${r.pass ? 'pass' : 'fail'}">${verdict}</div>
-        <div class="row"><span>营业额</span><b>¥${r.money} / ¥${r.target}</b></div>
+        <div class="row"><span>营业额</span><b>${fmtMoney(r.money)} / ¥${r.target}</b></div>
         <div class="row"><span>服务顾客</span><b>${r.served} 位</b></div>
         <div class="row ${r.angry ? 'neg' : ''}"><span>愤怒离店</span><b>${r.angry} 位</b></div>
-        <div class="row ${r.waste ? 'neg' : ''}"><span>废料</span><b>${r.waste} 份</b></div>
+        <div class="row ${r.waste ? 'neg' : ''}"><span>焦糊废料</span><b>${r.waste} 份</b></div>
         ${nextBtn}
         <button class="ghost" data-btn="replay">再开一局</button>
       </div>`;

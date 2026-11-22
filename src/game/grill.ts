@@ -1,51 +1,23 @@
-// The charcoal grill: 3 slots, each timing a skewer raw-ish → done(6s) →
-// burnt(12s). Per-slot fill bar + rising smoke puffs. Pure visuals here;
-// game-state decisions live in flow.ts.
+// Visual effects for per-table tabletop charcoal grills:
+// live meat tinting, charcoal ember glow intensity, and rising savory/burn smoke puffs.
+// Game-state decisions live in flow.ts.
 
 import * as THREE from 'three';
 import { COOK } from '../config.ts';
-import type { Item } from './types.ts';
+import type { TableRuntime } from '../world/dining.ts';
 import { setItemStage, tintItem } from './items.ts';
 
-export interface GrillSlot {
-  item: Item | null;
-  pos: THREE.Vector3;
-  barBg: THREE.Sprite;
-  barFill: THREE.Sprite;
-  smokeT: number;
-  done: boolean;
-  /** read-only: current skewer meat colour as '#rrggbb' ('' when empty) */
-  readonly hex: string;
-}
-
-function makeBar(): [THREE.Sprite, THREE.Sprite] {
-  const mk = (color: number): THREE.Sprite => {
-    const s = new THREE.Sprite(new THREE.SpriteMaterial({
-      color, transparent: true, opacity: 0.92, depthWrite: false,
-    }));
-    s.scale.set(0.34, 0.045, 1);
-    return s;
-  };
-  const bg = mk(0x14100c);
-  const fill = mk(0xf0c060);
-  bg.renderOrder = 5;
-  fill.renderOrder = 6;
-  return [bg, fill];
-}
-
-// soft radial smoke sprite texture (shared)
 function smokeTexture(): THREE.CanvasTexture {
   const c = document.createElement('canvas');
   c.width = c.height = 64;
   const g = c.getContext('2d')!;
   const grad = g.createRadialGradient(32, 32, 2, 32, 32, 30);
-  grad.addColorStop(0, 'rgba(255,255,255,0.85)');
-  grad.addColorStop(0.6, 'rgba(255,255,255,0.25)');
+  grad.addColorStop(0, 'rgba(255,255,255,0.88)');
+  grad.addColorStop(0.55, 'rgba(255,255,255,0.32)');
   grad.addColorStop(1, 'rgba(255,255,255,0)');
   g.fillStyle = grad;
   g.fillRect(0, 0, 64, 64);
-  const t = new THREE.CanvasTexture(c);
-  return t;
+  return new THREE.CanvasTexture(c);
 }
 
 interface Puff {
@@ -53,142 +25,94 @@ interface Puff {
   t: number;
   life: number;
   base: number;
+  maxOpacity: number;
 }
 
-export class Grill {
-  readonly slots: GrillSlot[] = [];
+export class TableGrillFX {
   private puffs: Puff[] = [];
   private smokeTex = smokeTexture();
   private group = new THREE.Group();
-
-  constructor(slotPositions: THREE.Vector3[]) {
-    for (const pos of slotPositions) {
-      const [bg, fill] = makeBar();
-      bg.position.copy(pos).add(new THREE.Vector3(0, 0.42, 0));
-      fill.position.copy(bg.position);
-      bg.visible = fill.visible = false;
-      this.group.add(bg, fill);
-      this.slots.push({
-        item: null, pos, barBg: bg, barFill: fill, smokeT: 0, done: false,
-        get hex(): string {
-          const m = this.item?.obj.userData.meat as THREE.MeshStandardMaterial | undefined;
-          return m ? `#${m.color.getHexString()}` : '';
-        },
-      });
-    }
-  }
+  private clockT = 0;
 
   attachTo(scene: THREE.Scene): void {
     scene.add(this.group);
   }
 
-  freeSlot(): GrillSlot | null {
-    return this.slots.find((s) => !s.item) ?? null;
+  private emitPuff(pos: THREE.Vector3, color: number, base: number, maxOpacity: number): void {
+    const mat = new THREE.SpriteMaterial({
+      map: this.smokeTex,
+      color,
+      transparent: true,
+      opacity: maxOpacity,
+      depthWrite: false,
+    });
+    const sp = new THREE.Sprite(mat);
+    sp.position.copy(pos).add(new THREE.Vector3(
+      (Math.random() - 0.5) * 0.14,
+      0.1,
+      (Math.random() - 0.5) * 0.12,
+    ));
+    sp.scale.setScalar(base);
+    sp.renderOrder = 4;
+    this.group.add(sp);
+    this.puffs.push({ sprite: sp, t: 0, life: 1.35, base, maxOpacity });
   }
 
-  /** slot holding a cooked or burnt skewer (legacy chain only; skips card-bound one-click skewers), always preferring cooked (most-done first) over burnt */
-  readySlot(): GrillSlot | null {
-    const ready = this.slots.filter(
-      (s) => s.item && s.item.orderCustomerId == null
-        && (s.item.stage === 'cooked' || s.item.stage === 'waste' || s.item.grillT >= COOK.grillTime),
-    );
-    if (!ready.length) return null;
-    const cooked = ready.filter(
-      (s) => s.item!.stage === 'cooked' || (s.item!.stage !== 'waste' && s.item!.grillT < COOK.burnTime),
-    );
-    if (cooked.length) return cooked.sort((a, b) => b.item!.grillT - a.item!.grillT)[0];
-    return ready.sort((a, b) => b.item!.grillT - a.item!.grillT)[0];
+  /** Dark smoke burst when a tabletop grill burns. */
+  spawnBurnBurst(pos: THREE.Vector3): void {
+    for (let i = 0; i < 3; i++) {
+      this.emitPuff(pos, 0x3b3530, 0.34, 0.85);
+    }
   }
 
-  place(slot: GrillSlot, item: Item): void {
-    slot.item = item;
-    slot.done = false;
-    item.obj.position.copy(slot.pos).add(new THREE.Vector3(0, 0.02, 0));
-    item.obj.rotation.set(0, 0.3, 0);
-    this.group.add(item.obj);
-    // Keep legacy 6s 3D sprite bar hidden; order-card ring is the single cooking timer truth.
-    slot.barBg.visible = slot.barFill.visible = false;
-  }
+  update(dt: number, tables: TableRuntime[]): void {
+    this.clockT += dt;
+    for (const tb of tables) {
+      const g = tb.grill;
+      const pulse = 0.35 * Math.sin(this.clockT * 7.3 + tb.tableNum) + 0.15 * Math.sin(this.clockT * 16.5);
+      tb.emberMat.emissiveIntensity = g.active ? 3.5 + pulse : 1.5 + pulse * 0.4;
 
-  take(slot: GrillSlot): Item {
-    const item = slot.item!;
-    slot.item = null;
-    slot.done = false;
-    slot.barBg.visible = slot.barFill.visible = false;
-    this.group.remove(item.obj);
-    return item;
-  }
+      if (!g.active || !g.item) continue;
+      const t = g.grillT;
 
-  update(dt: number): void {
-    for (const s of this.slots) {
-      if (!s.item) continue;
-      s.item.grillT += dt;
-      const t = s.item.grillT;
-      // progress bar fill (gold while cooking, red past done)
-      const frac = Math.min(1, t / COOK.burnTime);
-      s.barFill.scale.x = 0.34 * frac;
-      s.barFill.position.x = s.barBg.position.x - 0.17 + (0.34 * frac) / 2;
-      (s.barFill.material as THREE.SpriteMaterial).color.setHex(
-        t >= COOK.grillTime ? 0xe05a3a : 0xf0c060,
-      );
-      // stage transitions
-      if (t >= COOK.burnTime && s.item.stage !== 'waste') {
-        setItemStage(s.item, 'waste');
-      } else if (s.item.orderCustomerId != null && t + 1e-6 >= COOK.perfectStart && s.item.stage === 'raw') {
-        setItemStage(s.item, 'cooked');
-        s.done = true;
-      } else if (s.item.orderCustomerId == null && t >= COOK.grillTime && s.item.stage === 'chopped') {
-        setItemStage(s.item, 'cooked');
-        s.done = true;
+      if (t >= COOK.perfectStart && g.item.stage === 'raw') {
+        setItemStage(g.item, 'cooked');
       }
-      tintItem(s.item);
-      // smoke puffs while cooking; darker + faster when burning
-      s.smokeT -= dt;
-      if (s.smokeT <= 0) {
-        s.smokeT = t >= COOK.grillTime ? 0.55 : 0.9;
-        const burnt = t >= COOK.burnTime;
-        const done = t >= COOK.grillTime;
-        const base = done ? 0.24 : 0.14;
-        const mat = new THREE.SpriteMaterial({
-          map: this.smokeTex,
-          color: burnt ? 0x4a4540 : done ? 0xd9a743 : t >= COOK.grillTime * 0.8 ? 0x8a8078 : 0xcfc8c0,
-          transparent: true,
-          opacity: done ? 0.7 : 0.5,
-          depthWrite: false,
-        });
-        const sp = new THREE.Sprite(mat);
-        sp.position.copy(s.pos).add(new THREE.Vector3(
-          (Math.random() - 0.5) * 0.12, 0.12, (Math.random() - 0.5) * 0.1,
-        ));
-        sp.scale.setScalar(base);
-        this.group.add(sp);
-        this.puffs.push({ sprite: sp, t: 0, life: 1.4, base });
+      tintItem(g.item);
+
+      g.smokeT -= dt;
+      if (g.smokeT <= 0) {
+        const isOver = t >= COOK.perfectEnd;
+        const isPerfect = t >= COOK.perfectStart && t < COOK.perfectEnd;
+        g.smokeT = isOver ? 0.35 : isPerfect ? 0.52 : 0.78;
+        const color = isOver ? 0x5c534c : isPerfect ? 0xf0be54 : 0xd6cfc6;
+        const base = isOver ? 0.28 : isPerfect ? 0.24 : 0.16;
+        const opacity = isOver ? 0.78 : isPerfect ? 0.68 : 0.45;
+        this.emitPuff(tb.grillPos, color, base, opacity);
       }
     }
-    // animate puffs
+
     for (let i = this.puffs.length - 1; i >= 0; i--) {
       const p = this.puffs[i];
       p.t += dt;
       const k = p.t / p.life;
-      p.sprite.position.y += dt * 0.35;
-      p.sprite.scale.setScalar(p.base + k * 0.3);
+      p.sprite.position.y += dt * 0.42;
+      p.sprite.scale.setScalar(p.base + k * 0.32);
       const mat = p.sprite.material as THREE.SpriteMaterial;
-      mat.opacity = (p.base > 0.14 ? 0.7 : 0.5) * (1 - k);
+      mat.opacity = p.maxOpacity * (1 - k);
       if (k >= 1) {
         this.group.remove(p.sprite);
-        (p.sprite.material as THREE.Material).dispose();
+        mat.dispose();
         this.puffs.splice(i, 1);
       }
     }
   }
 
   reset(): void {
-    for (const s of this.slots) {
-      if (s.item) this.group.remove(s.item.obj);
-      s.item = null;
-      s.barBg.visible = s.barFill.visible = false;
+    for (const p of this.puffs) {
+      this.group.remove(p.sprite);
+      (p.sprite.material as THREE.Material).dispose();
     }
-    for (const p of this.puffs) { this.group.remove(p.sprite); (p.sprite.material as THREE.Material).dispose(); }
     this.puffs = [];
   }
 }

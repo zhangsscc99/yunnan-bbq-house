@@ -91,16 +91,20 @@ export class CameraRig {
   }
 
   private updateCam(): void {
-    // lookAt = ground point at screen centre; keep the view rect inside the world,
-    // locking to the centre axis when the view is larger than the world.
+    // lookAt = ground point at screen centre.
+    // Portrait: shift lookZ forward (+CAMERA.portraitLookZ) so the dining tables + Pass window
+    // sit cleanly in the upper half of the screen above the bottom thumb-zone dock, while gently
+    // tracking player X so all 4 tables stay well-framed.
     const sinP = Math.sin(THREE.MathUtils.degToRad(CAMERA.pitchDeg));
     const limX = Math.max(0, CAMERA.worldHalfW - this.halfW);
     const limZ = Math.max(0, CAMERA.worldHalfD - this.halfH / sinP);
-    const look = new THREE.Vector3(
-      THREE.MathUtils.clamp(this.smooth.x, -limX, limX),
-      0,
-      THREE.MathUtils.clamp(this.smooth.z + this.lookAheadZ, -limZ, limZ),
-    );
+    const lookX = this.aspect < 1
+      ? THREE.MathUtils.clamp(0.3 + this.smooth.x * 0.22, -limX, limX)
+      : THREE.MathUtils.clamp(this.smooth.x, -limX, limX);
+    const lookZ = this.aspect < 1
+      ? CAMERA.portraitLookZ
+      : THREE.MathUtils.clamp(this.smooth.z + this.lookAheadZ, -limZ, limZ);
+    const look = new THREE.Vector3(lookX, 0, lookZ);
     this.cam.position.copy(look).add(this.offset);
     this.cam.lookAt(look);
   }

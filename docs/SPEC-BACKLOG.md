@@ -1221,3 +1221,17 @@ vision 复核：竖屏放大后独立读出「三个筐＝红肉串 / 褐圆帽�
 
 本轮新开 4 条（P1 三条：`B-125` 顶栏缺目标额、`B-126` 模态态未隐藏局内 HUD、`B-127` 竖屏 t3 订单标注整块出画；P2 一条：`B-128` 同时到店顾客在门口重叠）。
 本轮已确认仍存在、沿用既有编号（不重复开单）：`B-081`（公网旧包 `2290acb`，唯一 P0）、`B-116`（结算星级归因与小费拆解）、`B-070`（菜单态未隐藏触控层，与 `B-126` 联动）、`B-103`（竖屏摇杆/动作键底距差 8px）、`B-101`（竖屏气泡出画，已由 `B-127` 升级）、`B-093`（横屏气泡压顶栏 `92×10px`）、`B-122`（横屏气泡 1 被 `(1)` 压 `18.7×13.3px`）、`B-119`（撞台面零反馈）、`B-107`（愤怒离店无飘字/音效）、`B-120`（首屏缺品类视觉徽标）、`B-065`（小费不展示）。另实测确认 `B-117` 竖屏/横屏动作键 `84×84` 已达标，不再开单。
+
+### B-121 状态：DONE（`b4a7c46`，部署包 `assets/index-C9ue2hwv.js`，2026-11-22 01:0x Z，第 25 轮开发）
+实现：
+1. `src/game/grill.ts readySlot()` 改为**熟串优先**：先在 `cooked`（或 `grillT < burnTime` 的未焦）里挑最熟的，没有熟串才回落到焦糊（`waste`）；`readySlot` 判定加入 `stage === 'cooked' | 'waste'` 显式分支。
+2. `src/game/stations.ts resolveInteraction()` 的 `case 'grill'`：仅剩焦糊串可取时返回 `取焦串` + `icon:'warn'` + `glyph:'焦'` + `warn:true`；`Interaction` 新增 `warn?: boolean`。世界引导光圈 `glowTexture(warn)` 与浮标 `glyphSprite(char, warn)` 同步切警示红 `#e05a3a` / `焦`。
+3. `src/ui/controls.ts`：`#bbq-act[data-act-warn="true"]` 边框 `#e05a3a`（优先级压过 `.on` 的金色）、警示三角内联 SVG（非 emoji）；`src/main.ts` 在刷新动作键时同帧写/清 `data-act-warn`。
+验收（本轮调度方亲跑，非 agy 自述）：
+- `npx tsc --noEmit` 0 错；`npm run build` OK（`assets/index-C9ue2hwv.js`）。
+- 新增 `e2e/grill-warn.mjs`（双端 390×844 / 844×390 各连跑 3 次 = 6/6 PASS，0 JS error，末行 `GRILL-WARN OK`）：cooked `取烤串` / `warn=null` / border `rgba(232,180,90,.7)`；burnt `取焦串` / `warn=true` / border `rgb(224,90,58)`（`.on` 也被红色压住）/ svg=warn / 世界浮标 `焦`（warn=true）；一熟一焦时优先取到 cooked、焦串留槽；取走焦串后 2×rAF `data-act-warn` 已清、`cap=去垃圾桶丢掉`、`waste` 仍为 0→丢弃才 +1；动作键 84×84、cap 12px 不截断、与摇杆/订单卡交叠 0。
+- 回归亲跑：`e2e/grill.mjs` `GRILL OK`（A1–A7 全 PASS，draw calls 78）；`e2e/act-ui.mjs` 双端 `ACT-UI OK`。
+- 部署：`ci-deploy.sh` DEPLOY OK；`127.0.0.1:3035/` 200 与 `127.0.0.1/bbq/` 200，index 引用 `assets/index-C9ue2hwv.js`。
+- vision 复核（独立，部署后 `:3035` 截图）：`e2e/shots/b121-port-cooked.png` 金环 + 手掌图标 + `取烤串`；`e2e/shots/b121-port-burnt.png` 红环 + 警示三角 + `取焦串`，模型判「颜色 + 图标形状 + 文案三重编码，一眼可区分，色觉障碍也能靠形状/文字区分」；`e2e/shots/b121-land-burnt.png` 横屏同样红环警示。遗留观感：12px 三字在缩略图上偶被读成「取焦中」，实机可读但与「取烤串」字距偏密，可并入 B-117 后续的按钮字号微调。
+注意：本轮 `agy-dev.sh` 首模型 `claude-opus-5-5-medium` 429（`Individual quota reached`，重置 ~157h）→ 回落 `gemini-4-neon-xhigh`，一次跑完退出码 0；提交只含本轮 6 个文件（未卷走并发走查轮 round 25 的 docs）。
+下一轮建议：先修 `B-126`（结算/菜单模态未隐藏局内 HUD，弹窗外仍透触控层 → 会点穿到游戏造成误操作），再 `B-127`（竖屏第三位顾客气泡与 `(3)` 整块出画）。

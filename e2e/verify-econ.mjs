@@ -32,13 +32,24 @@ function getFreePort() {
   });
 }
 
+function stopPreviewServer(child) {
+  if (!child) return;
+  try { process.kill(-child.pid, 'SIGTERM'); } catch { /* already dead */ }
+  try { child.kill('SIGKILL'); } catch { /* already dead */ }
+  child.stdout?.destroy();
+  child.stderr?.destroy();
+  child.unref();
+}
+
 async function startPreviewServer() {
   if (process.env.E2E_BASE) return { child: null, base: process.env.E2E_BASE };
   const port = await getFreePort();
   const base = `http://127.0.0.1:${port}/bbq/`;
-  const child = spawn('npx', ['vite', 'preview', '--host', '127.0.0.1', '--port', String(port), '--strictPort'], {
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
+  const child = spawn(
+    process.execPath,
+    ['./node_modules/vite/bin/vite.js', 'preview', '--host', '127.0.0.1', '--port', String(port), '--strictPort'],
+    { stdio: ['ignore', 'pipe', 'pipe'], detached: true },
+  );
   let errOut = '';
   child.stderr.on('data', (d) => { errOut += d.toString(); });
   for (let i = 0; i < 60; i++) {
@@ -51,7 +62,7 @@ async function startPreviewServer() {
     } catch { /* waiting */ }
     await new Promise((r) => setTimeout(r, 250));
   }
-  child.kill('SIGTERM');
+  stopPreviewServer(child);
   throw new Error(`vite preview failed to start on ${base}: ${errOut}`);
 }
 
@@ -114,23 +125,18 @@ async function serveTableV2(page, tableId) {
     return false;
   }, tableId);
   assert.equal(ready, true, `${tableId} never reached ready in Pass`);
-  await raf2(page);
 
   // Click 1: Take from Pass
   await tapCenter(page, `#bbq-pass .pass-slot[data-table="${tableId}"]`);
-  await raf2(page);
 
   // Click 2: Place onto tabletop grill
   await tapCenter(page, `#bbq-orders .card[data-table="${tableId}"] .card-btn`);
-  await raf2(page);
 
   // Advance into perfect window (5.6s in [5.0, 7.0))
   await tickSec(page, 5.6);
-  await raf2(page);
 
   // Click 3: Plate & serve
   await tapCenter(page, `#bbq-orders .card[data-table="${tableId}"] .card-btn`);
-  await raf2(page);
 }
 
 /** Clear all active eating/leaving customers & table cooldowns cleanly via simulation ticks. */
@@ -306,16 +312,12 @@ async function runSuite(BASE) {
         window.__test.tick(0.05, 1);
       }
     }, tBurn);
-    await raf2(page);
     await tapCenter(page, `#bbq-pass .pass-slot[data-table="${tBurn}"]`);
-    await raf2(page);
     await tapCenter(page, `#bbq-orders .card[data-table="${tBurn}"] .card-btn`);
-    await raf2(page);
 
     const preBurnEcon = await page.evaluate(() => ({ ...window.__econ }));
     // Tick past 8.0s burn line (8.4s)
     await tickSec(page, 8.4);
-    await raf2(page);
     const postBurnEcon = await page.evaluate(() => ({
       econ: { ...window.__econ },
       waste: window.__test.state().waste,
@@ -378,7 +380,6 @@ async function runSuite(BASE) {
     // =========================================================================
     await page.locator('.bbq-panel [data-btn="replay"]').click({ timeout: TIMEOUT });
     await page.evaluate(() => window.__test.pauseSpawns(true));
-    await raf2(page);
 
     const replayEcon = await page.evaluate(() => ({ ...window.__econ }));
     assert.equal(replayEcon.money, expectedEntryRevenue, 'replay must reset opening money');
@@ -403,7 +404,6 @@ async function runSuite(BASE) {
         if (c.phase === 'seated') c.patience = c.patienceMax;
       }
     });
-    await raf2(page);
 
     // Put t1 and t3 on grill (both will burn at +8.2s -> -18 each = -36 -> sat=64)
     await tapCenter(page, `#bbq-pass .pass-slot[data-table="${t1}"]`);
@@ -412,13 +412,11 @@ async function runSuite(BASE) {
     await tapCenter(page, `#bbq-orders .card[data-table="${t3}"] .card-btn`);
     // Now pass has room for t4 to prep -> wait 3.1s so t4 enters Pass, then put t4 on grill too
     await tickSec(page, 3.2);
-    await raf2(page);
     await tapCenter(page, `#bbq-pass .pass-slot[data-table="${t4}"]`);
     await tapCenter(page, `#bbq-orders .card[data-table="${t4}"] .card-btn`);
     // Put t2 on grill right after t4 (so t1 & t3 burn at +5.2s, t4 burns at +8.3s)
     await tickSec(page, 5.5); // t1 & t3 burn (-36 -> sat=64), t4 at 5.5s
     await tickSec(page, 3.0); // t4 burns (-18 -> sat=46)
-    await raf2(page);
 
     // Keep t2 patience healthy before raw tap so we test exact threshold crossing via raw tap (-8 -> 38 < 40)
     const preThreshold = await page.evaluate((tid) => {
@@ -436,9 +434,7 @@ async function runSuite(BASE) {
     await tapCenter(page, `#bbq-pass .pass-slot[data-table="${t2}"]`);
     await tapCenter(page, `#bbq-orders .card[data-table="${t2}"] .card-btn`);
     await tickSec(page, 1.5);
-    await raf2(page);
     await tapCenter(page, `#bbq-orders .card[data-table="${t2}"] .card-btn`);
-    await raf2(page);
 
     const rightAfterEarlyLeave = await page.evaluate((tid) => {
       const st = window.__test.state();
@@ -523,5 +519,5 @@ try {
     }
   }
 } finally {
-  if (server.child) server.child.kill('SIGTERM');
+  stopPreviewServer(server.child);
 }

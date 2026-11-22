@@ -243,6 +243,7 @@ function restart(): void {
 function nextLevel(): void {
   flow.nextLevel();
   if (flow.phase !== 'playing') return;
+  acc = 0;
   hud.setLevel(flow.level, flow.cfg.target);
   rig.snapTo(flow.player.obj.position);
   syncHud();

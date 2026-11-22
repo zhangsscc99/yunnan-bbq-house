@@ -9,7 +9,7 @@
 // One update(dt) drives everything — zero setTimeout in simulation logic.
 
 import * as THREE from 'three';
-import { BIZ, COOK, DISHES, ECON, LEVELS, SAVE_KEYS } from '../config.ts';
+import { BIZ, COOK, ECON, LEVELS, SAVE_KEYS } from '../config.ts';
 import type { DishId, Level } from '../config.ts';
 import type {
   StationRuntime,
@@ -676,11 +676,10 @@ export class Flow {
       if (cookWin === 'perfect') {
         this.satisfaction = clampSatisfaction(this.satisfaction + ECON.bonusPerfect);
       }
-      // 自助制所有菜价为 ¥0；小费基数为入场费 BIZ.entryFee，只与满意度及火候窗相关
-      const dishPrice = DISHES[guest.dish].price;
+      // 自助制所有菜价为 ¥0；整局收入由入场费 + 满意度小费构成，绝不因菜品价格变化
       const tip = calcServiceTip(this.satisfaction, cookWin);
       this.tips = roundMoney(this.tips + tip);
-      this.money = roundMoney(this.entryRevenue + this.tips + dishPrice);
+      this.money = roundMoney(this.entryRevenue + this.tips);
       this.served += 1;
       this.player.walkTo(table.usePos, table.pos);
       this.syncEcon();

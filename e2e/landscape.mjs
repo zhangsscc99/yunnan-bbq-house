@@ -54,19 +54,13 @@ function checkStations(tag, pose, probe, vw, vh) {
 
 const HUD_PROBE = () => {
   const rect = (e) => { const r = e.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom }; };
-  const vis = (e) => e && getComputedStyle(e).display !== 'none';
-  const stick = document.querySelector('#bbq-stick');
-  const act = document.querySelector('#bbq-act');
   const cards = [...document.querySelectorAll('#bbq-orders .card')];
   const px = (e, sel) => parseFloat(getComputedStyle(e.querySelector(sel)).fontSize);
   return {
     vw: window.innerWidth, vh: window.innerHeight,
-    stickVis: vis(stick), actVis: vis(act),
-    boxes: [
-      { tag: '#bbq-stick', ...rect(stick) },
-      ...cards.map((c, i) => ({ tag: `.card[${i}:${c.dataset.table}]`, ...rect(c) })),
-      { tag: '#bbq-act', ...rect(act) },
-    ],
+    stickPresent: Boolean(document.querySelector('#bbq-stick')),
+    actPresent: Boolean(document.querySelector('#bbq-act')),
+    boxes: cards.map((c, i) => ({ tag: `.card[${i}:${c.dataset.table}]`, ...rect(c) })),
     topbar: rect(document.querySelector('#bbq-hud .topbar')),
     fonts: cards.map((c) => {
       const nm = c.querySelector('.nm');
@@ -78,9 +72,6 @@ const HUD_PROBE = () => {
         prClip: pr.scrollWidth > pr.clientWidth,
       };
     }),
-    stickSize: stick.getBoundingClientRect().width,
-    stickBottomGap: window.innerHeight - stick.getBoundingClientRect().bottom,
-    actBottomGap: window.innerHeight - act.getBoundingClientRect().bottom,
   };
 };
 const inter = (a, b) => Math.max(0, Math.min(a.r, b.r) - Math.max(a.l, b.l)) * Math.max(0, Math.min(a.b, b.b) - Math.max(a.t, b.t));
@@ -147,9 +138,10 @@ async function runViewport(tag, width, height, run) {
     console.log(`[run ${run}] ${tag} ${width}x${height} lens aspect=${lens.aspect.toFixed(3)} halfH=${lens.halfH.toFixed(3)} ` +
       `halfW=${lens.halfW.toFixed(3)} lookAheadZ=${lens.lookAheadZ.toFixed(3)}; 站点 y≤${height - HUD_BAND} / 台身在视口内: ${rows.join(' ')}`);
 
-    // b) HUD boxes
+    // b) HUD boxes (Round 32: legacy stick/act absent; order cards docked cleanly at bottom, equal width)
     const H = await page.evaluate(HUD_PROBE);
-    assert.ok(H.stickVis && H.actVis, `${tag}: stick/act hidden during play`);
+    assert.equal(H.stickPresent, false, `${tag}: legacy #bbq-stick still exists`);
+    assert.equal(H.actPresent, false, `${tag}: legacy #bbq-act still exists`);
     assert.equal(H.fonts.length, 3, `${tag}: expected 3 order cards, got ${H.fonts.length}`);
     for (const b of H.boxes) {
       assert.ok(b.l >= 0 && b.t >= 0 && b.r <= H.vw && b.b <= H.vh, `${tag}: ${b.tag} outside viewport ${JSON.stringify(b)}`);
@@ -160,35 +152,31 @@ async function runViewport(tag, width, height, run) {
         assert.equal(a, 0, `${tag}: ${H.boxes[i].tag} overlaps ${H.boxes[j].tag} (area ${a.toFixed(1)})`);
       }
     }
-    for (const b of H.boxes.filter((x) => x.tag.startsWith('.card'))) {
+    for (const b of H.boxes) {
       assert.equal(inter(b, H.topbar), 0, `${tag}: ${b.tag} overlaps the topbar`);
       assert.ok(b.r <= H.vw - 6, `${tag}: ${b.tag} right ${b.r} > vw-6`);
     }
+    const widths = H.fonts.map((x) => x.w);
+    assert.ok(Math.max(...widths) - Math.min(...widths) <= 2, `${tag}: unequal card widths ${widths.join('/')}`);
     for (const [i, fz] of H.fonts.entries()) {
       assert.ok(fz.nm >= 13, `${tag}: card[${i}] .nm ${fz.nm}px < 13px`);
       assert.ok(fz.pr >= 13, `${tag}: card[${i}] .pr ${fz.pr}px < 13px`);
       assert.equal(fz.badge, 14, `${tag}: card[${i}] .tb-badge ${fz.badge}px != 14px`);
       assert.equal(fz.nmClip, false, `${tag}: card[${i}] .nm text clipped`);
       assert.equal(fz.prClip, false, `${tag}: card[${i}] .pr text clipped`);
-      if (landscape) assert.ok(fz.w <= 168.5, `${tag}: card[${i}] width ${fz.w}px > 168px`);
     }
+    const cards = H.boxes;
     if (landscape) {
-      assert.equal(Math.round(H.stickSize), 112, `${tag}: landscape stick ${H.stickSize}px != 112px`);
-      assert.ok(H.stickBottomGap >= 16, `${tag}: landscape stick bottom gap ${H.stickBottomGap}px < 16px`);
-      assert.ok(H.actBottomGap >= 16, `${tag}: landscape act bottom gap ${H.actBottomGap}px < 16px`);
+      const tops = cards.map((c) => c.t);
+      assert.ok(Math.max(...tops) - Math.min(...tops) <= 1, `${tag}: landscape cards not single row: tops=${tops.join('/')}`);
+    } else {
+      assert.ok(H.vh - Math.max(...cards.map((c) => c.b)) >= 23.5, `${tag}: portrait bottom safe area < 24px`);
     }
-    // report: how much the stick still covers of the crate-pork counter top (not asserted — station visibility wins)
-    const crate = await page.evaluate(() => {
-      const g = window.__test.stationGeom().find((s) => s.id === 'crate-pork');
-      const ps = [-1, 1].flatMap((sx) => [-1, 1].map((sz) => window.__test.worldToScreen(g.x + sx * g.w / 2, g.topY, g.z + sz * g.d / 2)));
-      return { l: Math.min(...ps.map((p) => p.x)), r: Math.max(...ps.map((p) => p.x)), t: Math.min(...ps.map((p) => p.y)), b: Math.max(...ps.map((p) => p.y)) };
-    });
-    const cards = H.boxes.filter((x) => x.tag.startsWith('.card'));
-    console.log(`[run ${run}] ${tag} HUD 两两不交叠 OK: stick ${H.stickSize}px 底距 ${H.stickBottomGap}px; ` +
+    console.log(`[run ${run}] ${tag} HUD 两两不交叠 OK (legacy absent): ` +
       `cards x[${Math.min(...cards.map((c) => c.l)).toFixed(0)}..${Math.max(...cards.map((c) => c.r)).toFixed(0)}] ` +
-      `y[${Math.min(...cards.map((c) => c.t)).toFixed(0)}..${Math.max(...cards.map((c) => c.b)).toFixed(0)}]; ` +
-      `字号 nm=${H.fonts.map((x) => x.nm).join('/')} pr=${H.fonts.map((x) => x.pr).join('/')} badge=${H.fonts[0].badge}; ` +
-      `stick∩crate-pork 台面 ${inter(H.boxes[0], crate).toFixed(0)}px²`);
+      `y[${Math.min(...cards.map((c) => c.t)).toFixed(0)}..${Math.max(...cards.map((c) => c.b)).toFixed(0)}] ` +
+      `w=${widths.map((w) => w.toFixed(1)).join('/')}; ` +
+      `字号 nm=${H.fonts.map((x) => x.nm).join('/')} pr=${H.fonts.map((x) => x.pr).join('/')} badge=${H.fonts[0].badge}`);
     if (run === 1) await page.screenshot({ path: `e2e/shots/landscape-${width}x${height}.png`, timeout: 90000 }).catch(() => {});
 
     // c) draw calls at spawn / grill / t2

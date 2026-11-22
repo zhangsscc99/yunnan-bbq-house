@@ -1,13 +1,6 @@
-// E2E: B-126 — hide play-only HUD (#bbq-stick, #bbq-act, #bbq-orders, bubbles, popups, offscreen hint)
-// in menu and results modal states while keeping topbar (#bbq-hud .topbar) visible, and restore within 1 frame
-// when entering playing via 开 店 / 再 开 一 局 / 进入第 2 关.
-// Per run, per viewport (portrait 390x844, landscape 844x390), fresh browser:
-//  a) phase==='menu': #bbq-stick/#bbq-act/#bbq-orders all have display==='none' || opacity==='0'; .topbar visible;
-//  b) click「开 店」+ 2x rAF: all three display!=='none' && parseFloat(opacity)>0; #bbq-act 84x84, .cap non-empty >=12px;
-//  c) push timeLeft to 0 via __test.tick: phase==='results' all three hidden + bubbles/popups/offscreen cleared/hidden,
-//     .bbq-panel button clickable (elementFromPoint hits button);
-//  d) click「再 开 一 局」+ 2x rAF: all three restored (also verifies pass ->「进入第 2 关」);
-//  e) both viewports: topbar & results panel have no scrollWidth > clientWidth.
+// E2E: B-126 + Round 32 — hide play-only HUD (#bbq-orders, #bbq-onboard, bubbles, popups, rings)
+// in menu and results modal states while keeping topbar (#bbq-hud .topbar) visible, restore #bbq-orders
+// within 1 frame when entering playing, and ensure legacy controls (#bbq-stick/#bbq-act/#bbq-chop/.gb) never exist.
 // Usage: E2E_BASE=http://127.0.0.1:4175/bbq/ [E2E_RUNS=3] node e2e/modal-hud.mjs   (last line: MODAL-HUD OK)
 
 const { chromium } = await import('playwright');
@@ -42,9 +35,6 @@ const PROBE = () => {
     };
   };
   const st = window.__test.state();
-  const act = document.querySelector('#bbq-act');
-  const cap = act?.querySelector('.cap');
-  const capCs = cap ? getComputedStyle(cap) : null;
   const panel = document.querySelector('.bbq-panel');
   const panelCard = document.querySelector('.bbq-panel .card');
   const buttons = [...document.querySelectorAll('.bbq-panel button')].map((btn) => {
@@ -75,10 +65,11 @@ const PROBE = () => {
     level: st.level,
     timeLeft: st.timeLeft,
     stick: info(document.querySelector('#bbq-stick')),
-    act: info(act),
-    capText: (cap?.textContent ?? '').trim(),
-    capFontPx: capCs ? parseFloat(capCs.fontSize) : 0,
+    act: info(document.querySelector('#bbq-act')),
+    chop: info(document.querySelector('#bbq-chop')),
+    gb: info(document.querySelector('.gb')),
     orders: info(document.querySelector('#bbq-orders')),
+    onboard: info(document.querySelector('[data-onboard-tip]')),
     bubbles: info(document.querySelector('#bbq-bubbles')),
     popups: info(document.querySelector('#bbq-popups')),
     offhint: info(document.querySelector('#bbq-offhint, [data-offscreen-hint]')),
@@ -90,21 +81,23 @@ const PROBE = () => {
   };
 };
 
+function assertLegacyAbsent(tag, step, p) {
+  assert.equal(p.stick, null, `${tag}/${step}: legacy #bbq-stick must not exist`);
+  assert.equal(p.act, null, `${tag}/${step}: legacy #bbq-act must not exist`);
+  assert.equal(p.chop, null, `${tag}/${step}: legacy #bbq-chop must not exist`);
+  assert.equal(p.gb, null, `${tag}/${step}: legacy .gb must not exist`);
+  assert.equal(p.offhint, null, `${tag}/${step}: legacy offscreen hint must not exist`);
+}
+
 function assertHiddenModal(tag, step, p) {
-  for (const [name, el] of [['#bbq-stick', p.stick], ['#bbq-act', p.act], ['#bbq-orders', p.orders]]) {
-    assert.ok(el, `${tag}/${step}: ${name} missing`);
-    assert.ok(
-      el.display === 'none' || el.opacity === '0',
-      `${tag}/${step}: ${name} must be hidden in ${p.phase} (display=${el.display}, opacity=${el.opacity})`,
-    );
-    assert.equal(el.display, 'none', `${tag}/${step}: ${name} display=${el.display} !== none`);
-  }
+  assertLegacyAbsent(tag, step, p);
+  assert.ok(p.orders, `${tag}/${step}: #bbq-orders missing`);
+  assert.equal(p.orders.display, 'none', `${tag}/${step}: #bbq-orders display=${p.orders.display} !== none`);
+  assert.ok(!p.onboard || p.onboard.display === 'none', `${tag}/${step}: onboard tip visible in ${p.phase}`);
   assert.ok(p.bubbles && p.bubbles.display === 'none' && p.bubbles.children === 0,
     `${tag}/${step}: #bbq-bubbles not hidden/cleared: ${JSON.stringify(p.bubbles)}`);
   assert.ok(p.popups && p.popups.display === 'none' && p.popups.children === 0,
     `${tag}/${step}: #bbq-popups not hidden/cleared: ${JSON.stringify(p.popups)}`);
-  assert.ok(!p.offhint || p.offhint.display === 'none',
-    `${tag}/${step}: offscreen hint still visible: ${JSON.stringify(p.offhint)}`);
   assert.ok(p.rings && p.rings.display === 'none' && p.rings.children === 0,
     `${tag}/${step}: #bbq-rings not hidden/cleared: ${JSON.stringify(p.rings)}`);
   assert.ok(
@@ -127,25 +120,14 @@ function assertHiddenModal(tag, step, p) {
 }
 
 function assertPlayingRestored(tag, step, p) {
+  assertLegacyAbsent(tag, step, p);
   assert.equal(p.phase, 'playing', `${tag}/${step}: expected phase=playing, got ${p.phase}`);
   assert.equal(p.panel, null, `${tag}/${step}: .bbq-panel still mounted during playing`);
-  for (const [name, el] of [['#bbq-stick', p.stick], ['#bbq-act', p.act], ['#bbq-orders', p.orders]]) {
-    assert.ok(el, `${tag}/${step}: ${name} missing`);
-    assert.ok(
-      el.display !== 'none' && parseFloat(el.opacity) > 0,
-      `${tag}/${step}: ${name} not visible (display=${el.display}, opacity=${el.opacity})`,
-    );
-  }
-  assert.equal(p.stick.display, 'block', `${tag}/${step}: #bbq-stick display=${p.stick.display} !== block`);
-  assert.equal(p.act.display, 'flex', `${tag}/${step}: #bbq-act display=${p.act.display} !== flex`);
-  assert.equal(p.stick.pe, 'auto', `${tag}/${step}: #bbq-stick pointerEvents=${p.stick.pe}`);
-  assert.equal(p.act.pe, 'auto', `${tag}/${step}: #bbq-act pointerEvents=${p.act.pe}`);
+  assert.ok(p.orders, `${tag}/${step}: #bbq-orders missing`);
   assert.ok(
-    Math.abs(p.act.w - 84) <= 1 && Math.abs(p.act.h - 84) <= 1,
-    `${tag}/${step}: #bbq-act size ${p.act.w}x${p.act.h} !== 84x84`,
+    p.orders.display !== 'none' && parseFloat(p.orders.opacity) > 0,
+    `${tag}/${step}: #bbq-orders not visible (display=${p.orders.display}, opacity=${p.orders.opacity})`,
   );
-  assert.ok(p.capText.length > 0, `${tag}/${step}: #bbq-act .cap empty`);
-  assert.ok(p.capFontPx >= 12, `${tag}/${step}: #bbq-act .cap fontSize=${p.capFontPx}px < 12px`);
   assert.ok(
     p.topbar && p.topbar.sw <= p.topbar.cw,
     `${tag}/${step}: .topbar scrollWidth=${p.topbar?.sw} > clientWidth=${p.topbar?.cw}`,
@@ -216,15 +198,15 @@ async function runViewport(tag, width, height, run) {
       return {
         phase: window.__test.state().phase,
         timeLeft: window.__test.state().timeLeft,
-        stickD: getComputedStyle(document.querySelector('#bbq-stick')).display,
-        actD: getComputedStyle(document.querySelector('#bbq-act')).display,
+        stick: Boolean(document.querySelector('#bbq-stick')),
+        act: Boolean(document.querySelector('#bbq-act')),
         ordersD: getComputedStyle(document.querySelector('#bbq-orders')).display,
       };
     });
     assert.equal(sameFrame.phase, 'results', `${tag}/results-sync: phase=${sameFrame.phase}`);
     assert.equal(sameFrame.timeLeft, 0, `${tag}/results-sync: timeLeft=${sameFrame.timeLeft}`);
-    assert.equal(sameFrame.stickD, 'none', `${tag}/results-sync: stick not hidden on closing frame`);
-    assert.equal(sameFrame.actD, 'none', `${tag}/results-sync: act not hidden on closing frame`);
+    assert.equal(sameFrame.stick, false, `${tag}/results-sync: legacy stick exists`);
+    assert.equal(sameFrame.act, false, `${tag}/results-sync: legacy act exists`);
     assert.equal(sameFrame.ordersD, 'none', `${tag}/results-sync: orders not hidden on closing frame`);
 
     await raf2(page);
@@ -268,9 +250,9 @@ async function runViewport(tag, width, height, run) {
     assert.equal(errs.length, 0, `${tag}: JS errors:\n${errs.join('\n')}`);
     console.log(
       `[run ${run}/${RUNS}] ${tag} ${width}x${height} PASS | ` +
-      `menu(stick=${pMenu.stick.display}/op=${pMenu.stick.opacity}, act=${pMenu.act.display}/op=${pMenu.act.opacity}, orders=${pMenu.orders.display}/op=${pMenu.orders.opacity}, topbar=${pMenu.topbar.sw}/${pMenu.topbar.cw}) | ` +
-      `start(stick=${pStart.stick.display}/op=${pStart.stick.opacity}, act=${pStart.act.display}/${pStart.act.w.toFixed(0)}x${pStart.act.h.toFixed(0)}/"${pStart.capText}"/${pStart.capFontPx}px, orders=${pStart.orders.display}/op=${pStart.orders.opacity}) | ` +
-      `results(all=none, panel=${pRes.panelCard.sw}/${pRes.panelCard.cw}, replayHit=${replayBtn.hitSelf}, passNextHit=${nextBtn.hitSelf}/replayHit=${replayBtn2.hitSelf}) | ` +
+      `menu(legacy=absent, orders=${pMenu.orders.display}, topbar=${pMenu.topbar.sw}/${pMenu.topbar.cw}) | ` +
+      `start(legacy=absent, orders=${pStart.orders.display}/op=${pStart.orders.opacity}) | ` +
+      `results(orders=none, panel=${pRes.panelCard.sw}/${pRes.panelCard.cw}, replayHit=${replayBtn.hitSelf}, passNextHit=${nextBtn.hitSelf}/replayHit=${replayBtn2.hitSelf}) | ` +
       `replay/next restored(lv=${pNext.level}) | 0 JS err`,
     );
   } finally {

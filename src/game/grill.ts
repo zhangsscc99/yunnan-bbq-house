@@ -106,7 +106,8 @@ export class Grill {
     item.obj.position.copy(slot.pos).add(new THREE.Vector3(0, 0.02, 0));
     item.obj.rotation.set(0, 0.3, 0);
     this.group.add(item.obj);
-    slot.barBg.visible = slot.barFill.visible = true;
+    // Keep legacy 6s 3D sprite bar hidden; order-card ring is the single cooking timer truth.
+    slot.barBg.visible = slot.barFill.visible = false;
   }
 
   take(slot: GrillSlot): Item {

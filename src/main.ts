@@ -7,7 +7,7 @@ import { CameraRig } from './core/cameraRig.ts';
 import { buildLighting } from './core/lighting.ts';
 import { Input } from './core/input.ts';
 import { buildKitchen, COUNTER_D } from './world/kitchen.ts';
-import { STATIONS, TABLES } from './world/layout.ts';
+import { STATIONS } from './world/layout.ts';
 import { buildDining } from './world/dining.ts';
 import { buildProps } from './world/props.ts';
 import { mergeStatic } from './core/merge.ts';
@@ -17,10 +17,8 @@ import type { Interaction } from './game/stations.ts';
 import type { GamePhase } from './game/types.ts';
 import type { Results } from './game/flow.ts';
 import { Hud } from './ui/hud.ts';
-import type { OffscreenTarget, CardStateSnapshot } from './ui/hud.ts';
-import { Controls } from './ui/controls.ts';
+import type { CardStateSnapshot } from './ui/hud.ts';
 import { Panels } from './ui/panels.ts';
-import { COOK } from './config.ts';
 import type { DishId } from './config.ts';
 import { spawnCustomer } from './game/customers.ts';
 
@@ -51,7 +49,6 @@ const lights = buildLighting(renderer, scene, kitchen.grillLightPos, props.penda
 
 // ---- UI ----
 const hud = new Hud(uiRoot, rig.cam);
-const controls = new Controls(uiRoot, input);
 const panels = new Panels(uiRoot);
 
 // ---- game ----
@@ -59,7 +56,6 @@ let currentAction: Interaction = { action: 'none', label: '', icon: 'none', glyp
 
 function syncPhase(phase: GamePhase): void {
   const playing = phase === 'playing';
-  controls.setVisible(playing);
   hud.setPlayHudVisible(playing);
   if (playing) panels.hide();
 }
@@ -76,42 +72,27 @@ const flow = new Flow(scene, kitchen.stations, dining.tables, kitchen.grillSlots
     hud.setTime(s);
     hud.setStars(flow.starsNow());
   },
-  onOrders(customers, tables) { hud.setOrders(customers, tables, flow.orderCardStates()); },
+  onOrders(customers, tables) { hud.setOrders(customers, tables, flow.orderCardStates(), flow.served); },
   onPopup(pos, text, kind) { hud.popup(pos, text, kind); },
   onAction(a: Interaction) {
     currentAction = a;
-    syncAction();
   },
-  onGuide(text: string) { hud.showGuide(text); },
+  onGuide(_text: string) {},
   onResults(r: Results) { panels.showResults(r, restart, nextLevel); },
 });
 flow.placePlayer();
-const chopBoard = kitchen.stations.find((st) => st.id === 'chop')!;
 
 function syncOrderCards(withRings = true): void {
-  hud.setOrders(flow.customers, withRings ? dining.tables : undefined, flow.orderCardStates());
+  hud.setOrders(flow.customers, withRings ? dining.tables : undefined, flow.orderCardStates(), flow.served);
 }
 
 hud.setOnCardAction((tableId: string) => {
   if (flow.handleOrderCardAction(tableId)) {
     refreshAction();
     syncOrderCards(true);
-    hud.updateGrill(flow.grill.slots);
     hud.setStars(flow.starsNow());
   }
 });
-
-function syncAction(): void {
-  const enabled = currentAction.action !== 'none';
-  controls.setAction(
-    currentAction.icon,
-    currentAction.label,
-    enabled,
-    flow.denyActive(),
-    !!currentAction.guide,
-    !!currentAction.warn,
-  );
-}
 
 function refreshAction(): void {
   if (flow.phase !== 'playing') return;
@@ -125,29 +106,6 @@ function refreshAction(): void {
   );
   flow.current = currentAction;
   flow.syncHighlight(currentAction);
-  syncAction();
-}
-
-// B-090: short on-screen names for the「去 X」target of the off-screen edge hint
-const OFF_NAMES: Record<string, string> = { bin: '垃圾桶', crate: '料箱', chop: '切配台', grill: '烤炉', plate: '装盘台' };
-const offTarget: OffscreenTarget = { label: '', pos: new THREE.Vector3() };
-/** the current「去 X」target while the action key is in its direction state, else null */
-function offscreenTarget(): OffscreenTarget | null {
-  if (flow.phase !== 'playing' || currentAction.action !== 'none' || !currentAction.goto) return null;
-  const h = flow.hint;
-  if (!h) return null;
-  if (h.kind === 'station') {
-    const st = kitchen.stations.find((s) => s.id === h.id);
-    if (!st) return null;
-    offTarget.label = OFF_NAMES[st.kind] ?? st.label;
-    offTarget.pos.set(st.pos.x, st.topY, st.pos.z);
-  } else {
-    const tb = dining.tables.find((t) => t.id === h.id);
-    if (!tb) return null;
-    offTarget.label = `${TABLES.findIndex((t) => t.id === h.id) + 1}号桌`;
-    offTarget.pos.set(tb.pos.x, tb.pos.y, tb.pos.z);
-  }
-  return offTarget;
 }
 
 function restart(): void {
@@ -175,6 +133,7 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   rig.resize(window.innerWidth, window.innerHeight);
   if (flow.phase === 'playing') {
+    hud.repositionOnboard();
     hud.updateRings(flow.customers, dining.tables);
     hud.updateBubbles(flow.customers);
   }
@@ -225,15 +184,11 @@ function step(rawDt: number, draw = true, move?: THREE.Vector2): void {
   kitchen.emberMat.emissiveIntensity = emberPulse;
 
   if (flow.phase === 'playing') {
-    // action button semantics & continuous order-card cook progress (same-frame DOM sync)
-    syncAction();
+    // continuous order-card cook progress & first-order onboarding tip (same-frame DOM sync)
     syncOrderCards(false);
     // world-anchored table order rings & bubbles (rings first so bubbles can avoid them same-frame)
     hud.updateRings(flow.customers, dining.tables);
     hud.updateBubbles(flow.customers);
-    hud.updateGrill(flow.grill.slots);
-    hud.updateChop(chopBoard, COOK.chopTaps);
-    hud.updateOffscreen(offscreenTarget());
   }
 
   renderer.render(scene, rig.cam);
@@ -315,11 +270,8 @@ const hooks: TestHooks = {
     const mv = mx || mz ? new THREE.Vector2(mx, mz) : ZERO_MOVE;
     for (let i = 0; i < n; i++) step(dt, false, mv);
     if (flow.phase === 'playing') {
-      syncAction();
       syncOrderCards(true);
-      hud.updateGrill(flow.grill.slots);
-      hud.updateChop(chopBoard, COOK.chopTaps);
-      hud.updateOffscreen(offscreenTarget());
+      hud.updateBubbles(flow.customers);
     }
   },
   // read-only: world point -> CSS px in the current viewport (same math as the HUD anchors)
@@ -336,10 +288,9 @@ const hooks: TestHooks = {
     }));
   },
   camera() { return rig.info(); },
-  // read-only (B-090): the「去 X」target the off-screen edge hint points at, or null when not in that state
+  // legacy off-screen direction target removed in Round 32 per GAME-DESIGN §0/§1
   guideTarget() {
-    const t = offscreenTarget();
-    return t ? { label: t.label, x: t.pos.x, y: t.pos.y, z: t.pos.z } : null;
+    return null;
   },
   // read-only (B-094): per-crate 3D food telemetry (id, food, primary sRGB [r,g,b], horizontal cover, HSV saturation)
   foodNodes() {

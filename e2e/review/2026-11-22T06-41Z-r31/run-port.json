@@ -1,0 +1,502 @@
+{
+  "orient": "port",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "ts": "2026-11-22T06-41Z-r31",
+  "errors": [],
+  "warnings": [
+    "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.",
+    "[.WebGL-0x272c003be400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+    "[.WebGL-0x272c003be400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+  ],
+  "steps": {
+    "title": {
+      "msToIdentity": 32237,
+      "bodyText": "第 1 关 营业额 ¥0 时间 3:00 评级 柳真真云南烤肉 炭火生香，小店开张。 取料 → 切配 → 炭烤 → 装盘 → 上菜 第 1 关 · 目标：3 分钟营业额 ¥180 开 店",
+      "buttons": [
+        {
+          "text": "开 店",
+          "x": 120,
+          "y": 470.5,
+          "w": 150,
+          "h": 45,
+          "tag": "BUTTON"
+        }
+      ],
+      "panel": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 390,
+          "h": 844
+        }
+      ],
+      "hasStartWord": true,
+      "gameplayWording": false,
+      "oldWording": true,
+      "canvas": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 390,
+          "h": 844
+        }
+      ],
+      "startBtnBox": {
+        "x": 120,
+        "y": 470.5,
+        "w": 150,
+        "h": 45
+      }
+    },
+    "move": {
+      "geom": [
+        {
+          "id": "bin",
+          "x": -5.5,
+          "z": 3
+        },
+        {
+          "id": "crate-pork",
+          "x": -4.5,
+          "z": 3
+        },
+        {
+          "id": "crate-mush",
+          "x": -3.5,
+          "z": 3
+        },
+        {
+          "id": "crate-mix",
+          "x": -2.5,
+          "z": 3
+        },
+        {
+          "id": "chop",
+          "x": -1,
+          "z": 3
+        },
+        {
+          "id": "grill",
+          "x": 1.5,
+          "z": 3
+        },
+        {
+          "id": "plate",
+          "x": 4,
+          "z": 3
+        }
+      ],
+      "from": {
+        "x": 4.5,
+        "z": 1.5
+      },
+      "afterD": {
+        "x": 5.673333333333341,
+        "z": 1.5,
+        "dx": 1.17,
+        "dz": 0
+      },
+      "afterW": {
+        "x": 5.673333333333341,
+        "z": -2.0733333333333306,
+        "dx": 0,
+        "dz": -3.57
+      }
+    },
+    "loop": {
+      "cardInfo": {
+        "table": "t2",
+        "dish": "mixian",
+        "btn": {
+          "x": 315,
+          "y": 66,
+          "w": 56,
+          "h": 56
+        },
+        "card": {
+          "cookWindow": "idle",
+          "cookT": 0,
+          "progressPct": 0,
+          "btn": {
+            "w": 56,
+            "h": 56
+          },
+          "disabled": false,
+          "label": "上炉",
+          "slotIndex": -1
+        },
+        "customers": [
+          {
+            "id": 1,
+            "dish": "mixian",
+            "table": "t2",
+            "phase": "seated",
+            "patience": 85.9
+          },
+          {
+            "id": 2,
+            "dish": "pork",
+            "table": "t1",
+            "phase": "walking-in",
+            "patience": 75
+          },
+          {
+            "id": 3,
+            "dish": "pork",
+            "table": "t3",
+            "phase": "walking-in",
+            "patience": 75
+          }
+        ]
+      },
+      "seq": [
+        {
+          "tag": "after-first-click(t≈0.4s)",
+          "money": 0,
+          "served": 0,
+          "angry": 0,
+          "waste": 0,
+          "phase": "playing",
+          "card": {
+            "cookWindow": "raw",
+            "cookT": 0.4,
+            "progressPct": 3.3333,
+            "btn": {
+              "w": 56,
+              "h": 56
+            },
+            "disabled": false,
+            "label": "生串 4s",
+            "slotIndex": 0
+          },
+          "slots": [
+            {
+              "occupied": true,
+              "dish": "mixian",
+              "t": 0.4
+            },
+            {
+              "occupied": false,
+              "dish": null,
+              "t": 0
+            },
+            {
+              "occupied": false,
+              "dish": null,
+              "t": 0
+            }
+          ],
+          "popups": [],
+          "stars": "1"
+        },
+        {
+          "tag": "t≈5.5s-before-second-click",
+          "money": 0,
+          "served": 0,
+          "angry": 0,
+          "waste": 0,
+          "phase": "playing",
+          "card": {
+            "cookWindow": "perfect",
+            "cookT": 5.5,
+            "progressPct": 45.8333,
+            "btn": {
+              "w": 56,
+              "h": 56
+            },
+            "disabled": false,
+            "label": "完美 4s",
+            "slotIndex": 0
+          },
+          "slots": [
+            {
+              "occupied": true,
+              "dish": "mixian",
+              "t": 5.5
+            },
+            {
+              "occupied": false,
+              "dish": null,
+              "t": 0
+            },
+            {
+              "occupied": false,
+              "dish": null,
+              "t": 0
+            }
+          ],
+          "popups": [],
+          "stars": "1"
+        },
+        {
+          "tag": "after-second-click",
+          "money": 34,
+          "served": 1,
+          "angry": 0,
+          "waste": 0,
+          "phase": "playing",
+          "card": {
+            "cookWindow": "eating",
+            "cookT": 0,
+            "progressPct": 0,
+            "btn": {
+              "w": 56,
+              "h": 56
+            },
+            "disabled": true,
+            "label": "用餐中",
+            "slotIndex": -1
+          },
+          "slots": [
+            {
+              "occupied": false,
+              "dish": null,
+              "t": 0
+            },
+            {
+              "occupied": false,
+              "dish": null,
+              "t": 0
+            },
+            {
+              "occupied": false,
+              "dish": null,
+              "t": 0
+            }
+          ],
+          "popups": [
+            {
+              "text": "+¥34",
+              "cls": "popup money"
+            }
+          ],
+          "stars": "1"
+        }
+      ]
+    },
+    "angry": {
+      "beforeAngry": {
+        "customers": [
+          {
+            "id": 1,
+            "phase": "eating",
+            "patience": 80.4,
+            "table": "t2"
+          },
+          {
+            "id": 2,
+            "phase": "seated",
+            "patience": 70.6,
+            "table": "t1"
+          },
+          {
+            "id": 3,
+            "phase": "walking-in",
+            "patience": 75,
+            "table": "t3"
+          },
+          {
+            "id": 4,
+            "phase": "walking-in",
+            "patience": 90,
+            "table": "t4"
+          }
+        ],
+        "stars": "1",
+        "angry": 0,
+        "money": 34
+      },
+      "afterAngry": {
+        "customers": [
+          {
+            "id": 1,
+            "phase": "eating",
+            "patience": 80.4,
+            "table": "t2",
+            "x": -0.5,
+            "z": -2.43
+          },
+          {
+            "id": 2,
+            "phase": "leaving-angry",
+            "patience": 0,
+            "table": "t1",
+            "x": -4.1,
+            "z": -3.36
+          },
+          {
+            "id": 3,
+            "phase": "seated",
+            "patience": 74.1,
+            "table": "t3",
+            "x": 3.1,
+            "z": -2.43
+          },
+          {
+            "id": 4,
+            "phase": "walking-in",
+            "patience": 90,
+            "table": "t4",
+            "x": -2.8,
+            "z": -4.4
+          }
+        ],
+        "stars": "1",
+        "svgs": [
+          {
+            "fill": "#f0c060",
+            "stroke": "#f0c060"
+          },
+          {
+            "fill": "none",
+            "stroke": "rgba(240,192,96,.4)"
+          },
+          {
+            "fill": "none",
+            "stroke": "rgba(240,192,96,.4)"
+          }
+        ],
+        "angry": 1,
+        "money": 34,
+        "served": 1,
+        "popups": [
+          "愤怒离店"
+        ],
+        "orders": 2
+      }
+    },
+    "hud": {
+      "vw": 390,
+      "vh": 844,
+      "dpr": 1,
+      "visualH": 844,
+      "stick": {
+        "x": 22,
+        "y": 692,
+        "w": 130,
+        "h": 130,
+        "right": 152,
+        "bottom": 822
+      },
+      "act": {
+        "x": 280,
+        "y": 730,
+        "w": 84,
+        "h": 84,
+        "right": 364,
+        "bottom": 814
+      },
+      "topbar": {
+        "x": 33.1,
+        "y": 8,
+        "w": 323.8,
+        "h": 36,
+        "right": 356.9,
+        "bottom": 44
+      },
+      "orders": {
+        "x": 137,
+        "y": 60,
+        "w": 243,
+        "h": 142,
+        "right": 380,
+        "bottom": 202
+      },
+      "orderCards": [
+        {
+          "table": "t2",
+          "wc": "eating",
+          "x": 161.8,
+          "y": 60,
+          "w": 218.3,
+          "h": 68,
+          "right": 380,
+          "bottom": 128
+        },
+        {
+          "table": "t3",
+          "wc": "idle",
+          "x": 137,
+          "y": 134,
+          "w": 243,
+          "h": 68,
+          "right": 380,
+          "bottom": 202
+        }
+      ],
+      "btns": [
+        {
+          "table": "t2",
+          "x": 315,
+          "y": 66,
+          "w": 56,
+          "h": 56,
+          "right": 371,
+          "bottom": 122,
+          "font": "16px"
+        },
+        {
+          "table": "t3",
+          "x": 315,
+          "y": 140,
+          "w": 56,
+          "h": 56,
+          "right": 371,
+          "bottom": 196,
+          "font": "16px"
+        }
+      ],
+      "orderPct": 16.8,
+      "overlap": {
+        "stickOrders": 0,
+        "actOrders": 0,
+        "topbarOrders": 0
+      },
+      "outside": [],
+      "gb": 0,
+      "cb": 0,
+      "chopLayer": {
+        "x": 0,
+        "y": 0,
+        "w": 390,
+        "h": 844,
+        "right": 390,
+        "bottom": 844
+      },
+      "actLabel": "去料箱取料",
+      "capFont": {
+        "font": "12px",
+        "scrollW": 60,
+        "clientW": 60,
+        "text": "去料箱取料"
+      },
+      "bodyOverflow": {
+        "sw": 390,
+        "cw": 390,
+        "sh": 844,
+        "ch": 844
+      },
+      "smallTargets": [],
+      "visibleText": "2 3 第 1 关 营业额 ¥34 时间 2:34 评级 2 豆泥米线 ¥26 · 用餐中 已上 3 烤五花肉拼盘 ¥48 · 等待 上炉 用餐中 烤五花肉拼盘 料箱 去料箱取料"
+    },
+    "textAudit": {
+      "deadWording": [
+        "去料箱取料"
+      ],
+      "gbVisible": 0,
+      "stickVisible": true,
+      "actVisible": true
+    }
+  },
+  "build": "ebc762a-202611220549",
+  "shotTitle": "/tmp/bbq-walk31/shots-2026-11-22T06-41Z-r31/port-01-title.png",
+  "shotMove": "/tmp/bbq-walk31/shots-2026-11-22T06-41Z-r31/port-02-move.png",
+  "shotPerfect": "/tmp/bbq-walk31/shots-2026-11-22T06-41Z-r31/port-03-perfect-window.png",
+  "shotServed": "/tmp/bbq-walk31/shots-2026-11-22T06-41Z-r31/port-04-served.png",
+  "shotAngry": "/tmp/bbq-walk31/shots-2026-11-22T06-41Z-r31/port-05-after-angry.png",
+  "shotHud": "/tmp/bbq-walk31/shots-2026-11-22T06-41Z-r31/port-06-hud.png"
+}

@@ -1,0 +1,292 @@
+{
+  "shots": [
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/land-01-title.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/land-02-pass.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/land-03-carrying.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/land-04-grill-raw.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/land-05-perfect.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/land-06-served.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/land-07-burnt.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/land-08-angry.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/land-09-rapid.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/land-10-results.png"
+  ],
+  "errors": [],
+  "warns": [
+    "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+  ],
+  "tag": "land",
+  "build": "948f569-202611221511",
+  "title": {
+    "card": "柳真真云南烤肉\n顾客自助点单 · 三步出餐：窗口取菜 → 桌边烤 → 盛盘\n火候进金色完美窗盛盘拿满小费 · 出菜窗口最多放 3 份\n第 1 关 · 限时 5 分钟（模拟 90 分钟）· 入场 ¥79.9×3位 = ¥239.7 · 目标 6 位\n开店",
+    "btns": [
+      {
+        "t": "开店",
+        "w": 156,
+        "h": 48
+      }
+    ]
+  },
+  "startMoney": 239.7,
+  "t1": "t1",
+  "seated1": true,
+  "afterPrep": {
+    "st": {
+      "pass": 1,
+      "money": 239.7
+    },
+    "card": {
+      "orderState": "ready",
+      "cookWindow": "none",
+      "cookT": 0,
+      "prepT": 3,
+      "progressPct": 100,
+      "btn": {
+        "w": 58,
+        "h": 46
+      },
+      "disabled": true,
+      "statusText": "已出窗 · 去窗口取",
+      "btnText": "在窗口"
+    }
+  },
+  "slotBox": {
+    "x": 151.328125,
+    "y": 207,
+    "w": 264.65625,
+    "h": 54
+  },
+  "carrying": {
+    "dishId": "pork",
+    "tableId": "t1",
+    "customerId": 1
+  },
+  "cardBox": {
+    "x": 174.5,
+    "y": 350,
+    "w": 58,
+    "h": 46
+  },
+  "grillStart": {
+    "active": true,
+    "grilling": true,
+    "dishId": "pork",
+    "customerId": 1,
+    "grillT": 0.15,
+    "cookWindow": "raw",
+    "burntHandled": false
+  },
+  "grillRaw": {
+    "active": true,
+    "grilling": true,
+    "dishId": "pork",
+    "customerId": 1,
+    "grillT": 2.15,
+    "cookWindow": "raw",
+    "burntHandled": false
+  },
+  "grillPerfect": {
+    "active": true,
+    "grilling": true,
+    "dishId": "pork",
+    "customerId": 1,
+    "grillT": 5.65,
+    "cookWindow": "perfect",
+    "burntHandled": false
+  },
+  "serveBox": {
+    "x": 174.5,
+    "y": 350,
+    "w": 58,
+    "h": 46
+  },
+  "afterServe": {
+    "money": 243.7,
+    "served": 1,
+    "card": {
+      "orderState": "done",
+      "cookWindow": "none",
+      "cookT": 0,
+      "prepT": 3,
+      "progressPct": 100,
+      "btn": {
+        "w": 58,
+        "h": 46
+      },
+      "disabled": true,
+      "statusText": "已盛盘 · 用餐中",
+      "btnText": "用餐中"
+    },
+    "popups": 1
+  },
+  "t2": "t2",
+  "seated2": false,
+  "prep2": {
+    "pass": 1,
+    "card": {
+      "orderState": "ready",
+      "cookWindow": "none",
+      "cookT": 0,
+      "prepT": 3,
+      "progressPct": 100,
+      "btn": {
+        "w": 58,
+        "h": 46
+      },
+      "disabled": true,
+      "statusText": "已出窗 · 去窗口取",
+      "btnText": "在窗口"
+    }
+  },
+  "takeBox2": {
+    "x": 151.328125,
+    "y": 207,
+    "w": 264.65625,
+    "h": 54
+  },
+  "carrying2": {
+    "dishId": "mushroom",
+    "tableId": "t2",
+    "customerId": 2
+  },
+  "grillBox2": {
+    "x": 174.5,
+    "y": 350,
+    "w": 58,
+    "h": 46
+  },
+  "afterBurnt": {
+    "money": 243.7,
+    "waste": 1,
+    "angry": 0,
+    "grill": {
+      "active": false,
+      "grilling": false,
+      "dishId": null,
+      "customerId": null,
+      "grillT": 8,
+      "cookWindow": "none",
+      "burntHandled": true
+    },
+    "card": {
+      "orderState": "burnt",
+      "cookWindow": "burnt",
+      "cookT": 8,
+      "prepT": 3,
+      "progressPct": 100,
+      "btn": {
+        "w": 58,
+        "h": 46
+      },
+      "disabled": true,
+      "statusText": "烤焦作废 · 满意度-18",
+      "btnText": "已作废"
+    },
+    "cust": [
+      {
+        "id": 2,
+        "orderState": "burnt",
+        "patience": 25.95,
+        "phase": "burnt"
+      }
+    ]
+  },
+  "burntLinger": {
+    "money": 243.7,
+    "waste": 1,
+    "angry": 0,
+    "card": null
+  },
+  "preAngry": {
+    "angry": 0,
+    "seated": 0
+  },
+  "afterAngry": {
+    "angry": 0,
+    "served": 1,
+    "cust": [
+      {
+        "id": 2,
+        "phase": "leaving-angry",
+        "patience": 25.95
+      }
+    ],
+    "money": 243.7
+  },
+  "rapidSetup": "t1",
+  "rapid": {
+    "clickCount": 5,
+    "popups": 0,
+    "pass": 0,
+    "carrying": false,
+    "cards": [
+      {
+        "t": "t1",
+        "s": "ordering",
+        "cw": "none"
+      }
+    ]
+  },
+  "results": {
+    "phase": "results",
+    "panel": "打烊结算\n客数差 5 位（目标 6 位）\n营业额（入场费）\n¥243.7（¥79.9×3 + 小费¥4）\n服务客数\n1 / 6 位\n翻台率\n0.33×（3 座）\n满意度\n82%\n提前离店 / 焦糊\n0 位 / 1 份\n再开一局",
+    "btns": [
+      "再开一局"
+    ]
+  },
+  "replay": {
+    "clicked": "再开一局",
+    "phase": "playing",
+    "money": 239.7,
+    "timeLeft": 300
+  },
+  "dom": {
+    "btns": 3,
+    "small": [],
+    "tinyText": [
+      "营业额",
+      "时间",
+      "评级",
+      "0/3",
+      "后台自动备菜中",
+      "空位",
+      "空位",
+      "空位",
+      "自动备菜",
+      "¥79.9×3位",
+      "·",
+      "0/6",
+      "·",
+      "0.00×",
+      "·",
+      "100%"
+    ],
+    "overlapPairs": 0,
+    "ordersRect": {
+      "x": 10,
+      "y": 380,
+      "width": 824,
+      "height": 0,
+      "top": 380,
+      "right": 834,
+      "bottom": 380,
+      "left": 10
+    },
+    "passRect": {
+      "x": 10,
+      "y": 247,
+      "width": 824,
+      "height": 91,
+      "top": 247,
+      "right": 834,
+      "bottom": 338,
+      "left": 10
+    }
+  },
+  "perf": {
+    "calls": 72,
+    "tris": 11280,
+    "programs": 12
+  }
+}

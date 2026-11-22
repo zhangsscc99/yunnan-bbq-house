@@ -1,0 +1,322 @@
+{
+  "shots": [
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/port-01-title.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/port-02-pass.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/port-03-carrying.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/port-04-grill-raw.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/port-05-perfect.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/port-06-served.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/port-07-burnt.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/port-08-angry.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/port-09-rapid.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/port-10-results.png"
+  ],
+  "errors": [],
+  "warns": [
+    "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+  ],
+  "tag": "port",
+  "build": "948f569-202611221511",
+  "title": {
+    "card": "柳真真云南烤肉\n顾客自助点单 · 三步出餐：窗口取菜 → 桌边烤 → 盛盘\n火候进金色完美窗盛盘拿满小费 · 出菜窗口最多放 3 份\n第 1 关 · 限时 5 分钟（模拟 90 分钟）· 入场 ¥79.9×3位 = ¥239.7 · 目标 6 位\n开店",
+    "btns": [
+      {
+        "t": "开店",
+        "w": 156,
+        "h": 48
+      }
+    ]
+  },
+  "startMoney": 239.7,
+  "t1": "t1",
+  "seated1": true,
+  "afterPrep": {
+    "st": {
+      "pass": 1,
+      "money": 239.7
+    },
+    "card": {
+      "orderState": "ready",
+      "cookWindow": "none",
+      "cookT": 0,
+      "prepT": 3,
+      "progressPct": 100,
+      "btn": {
+        "w": 58,
+        "h": 46
+      },
+      "disabled": true,
+      "statusText": "已出窗 · 去窗口取",
+      "btnText": "在窗口"
+    }
+  },
+  "slotBox": {
+    "x": 74.328125,
+    "y": 657,
+    "w": 114.65625,
+    "h": 54
+  },
+  "carrying": {
+    "dishId": "pork",
+    "tableId": "t1",
+    "customerId": 2
+  },
+  "cardBox": {
+    "x": 155,
+    "y": 802,
+    "w": 58,
+    "h": 46
+  },
+  "grillStart": {
+    "active": true,
+    "grilling": true,
+    "dishId": "pork",
+    "customerId": 2,
+    "grillT": 0.15,
+    "cookWindow": "raw",
+    "burntHandled": false
+  },
+  "grillRaw": {
+    "active": true,
+    "grilling": true,
+    "dishId": "pork",
+    "customerId": 2,
+    "grillT": 2.15,
+    "cookWindow": "raw",
+    "burntHandled": false
+  },
+  "grillPerfect": {
+    "active": true,
+    "grilling": true,
+    "dishId": "pork",
+    "customerId": 2,
+    "grillT": 5.65,
+    "cookWindow": "perfect",
+    "burntHandled": false
+  },
+  "serveBox": {
+    "x": 155,
+    "y": 802,
+    "w": 58,
+    "h": 46
+  },
+  "afterServe": {
+    "money": 243.7,
+    "served": 1,
+    "card": {
+      "orderState": "done",
+      "cookWindow": "none",
+      "cookT": 0,
+      "prepT": 3,
+      "progressPct": 100,
+      "btn": {
+        "w": 58,
+        "h": 46
+      },
+      "disabled": true,
+      "statusText": "已盛盘 · 用餐中",
+      "btnText": "用餐中"
+    },
+    "popups": 1
+  },
+  "t2": "t2",
+  "seated2": true,
+  "prep2": {
+    "pass": 2,
+    "card": {
+      "orderState": "ready",
+      "cookWindow": "none",
+      "cookT": 0,
+      "prepT": 3,
+      "progressPct": 100,
+      "btn": {
+        "w": 58,
+        "h": 46
+      },
+      "disabled": true,
+      "statusText": "已出窗 · 去窗口取",
+      "btnText": "在窗口"
+    }
+  },
+  "takeBox2": {
+    "x": 74.328125,
+    "y": 555,
+    "w": 114.65625,
+    "h": 54
+  },
+  "carrying2": {
+    "dishId": "pork",
+    "tableId": "t3",
+    "customerId": 1
+  },
+  "grillBox2": {
+    "x": 345,
+    "y": 700,
+    "w": 58,
+    "h": 46
+  },
+  "afterBurnt": {
+    "money": 243.7,
+    "waste": 0,
+    "angry": 0,
+    "grill": {
+      "active": false,
+      "grilling": false,
+      "dishId": null,
+      "customerId": null,
+      "grillT": 0,
+      "cookWindow": "none",
+      "burntHandled": false
+    },
+    "card": {
+      "orderState": "ready",
+      "cookWindow": "none",
+      "cookT": 0,
+      "prepT": 3,
+      "progressPct": 100,
+      "btn": {
+        "w": 58,
+        "h": 46
+      },
+      "disabled": true,
+      "statusText": "已出窗 · 去窗口取",
+      "btnText": "在窗口"
+    },
+    "cust": [
+      {
+        "id": 1,
+        "orderState": "carrying",
+        "patience": 50.53,
+        "phase": "seated"
+      },
+      {
+        "id": 2,
+        "orderState": "done",
+        "patience": 65.88,
+        "phase": "eating"
+      },
+      {
+        "id": 3,
+        "orderState": "ready",
+        "patience": 77.98,
+        "phase": "seated"
+      }
+    ]
+  },
+  "burntLinger": {
+    "money": 243.7,
+    "waste": 0,
+    "angry": 0,
+    "card": {
+      "orderState": "ready",
+      "cookWindow": "none",
+      "cookT": 0,
+      "prepT": 3,
+      "progressPct": 100,
+      "btn": {
+        "w": 58,
+        "h": 46
+      },
+      "disabled": true,
+      "statusText": "已出窗 · 去窗口取",
+      "btnText": "在窗口"
+    }
+  },
+  "preAngry": {
+    "angry": 0,
+    "seated": 2
+  },
+  "afterAngry": {
+    "angry": 2,
+    "served": 1,
+    "cust": [
+      {
+        "id": 1,
+        "phase": "leaving-angry",
+        "patience": 0
+      },
+      {
+        "id": 3,
+        "phase": "leaving-angry",
+        "patience": 0
+      }
+    ],
+    "money": 243.7
+  },
+  "rapidSetup": "t4",
+  "rapid": {
+    "clickCount": 4,
+    "popups": 0,
+    "pass": 0,
+    "carrying": false,
+    "cards": [
+      {
+        "t": "t4",
+        "s": "ordering",
+        "cw": "none"
+      }
+    ]
+  },
+  "results": {
+    "phase": "results",
+    "panel": "打烊结算\n客数差 5 位（目标 6 位）\n营业额（入场费）\n¥243.7（¥79.9×3 + 小费¥4）\n服务客数\n1 / 6 位\n翻台率\n0.33×（3 座）\n满意度\n40%\n提前离店 / 焦糊\n0 位 / 0 份\n再开一局",
+    "btns": [
+      "再开一局"
+    ]
+  },
+  "replay": {
+    "clicked": "再开一局",
+    "phase": "playing",
+    "money": 239.7,
+    "timeLeft": 300
+  },
+  "dom": {
+    "btns": 3,
+    "small": [],
+    "tinyText": [
+      "营业额",
+      "时间",
+      "评级",
+      "0/3",
+      "后台自动备菜中",
+      "空位",
+      "空位",
+      "空位",
+      "自动备菜",
+      "¥79.9×3位",
+      "·",
+      "0/6",
+      "·",
+      "0.00×",
+      "·",
+      "100%"
+    ],
+    "overlapPairs": 0,
+    "ordersRect": {
+      "x": 8,
+      "y": 832,
+      "width": 374,
+      "height": 0,
+      "top": 832,
+      "right": 382,
+      "bottom": 832,
+      "left": 8
+    },
+    "passRect": {
+      "x": 8,
+      "y": 697,
+      "width": 374,
+      "height": 91,
+      "top": 697,
+      "right": 382,
+      "bottom": 788,
+      "left": 8
+    }
+  },
+  "perf": {
+    "calls": 75,
+    "tris": 10598,
+    "programs": 13
+  }
+}

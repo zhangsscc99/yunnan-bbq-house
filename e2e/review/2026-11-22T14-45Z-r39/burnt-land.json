@@ -1,0 +1,104 @@
+{
+  "shots": [
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/land-13-serve2.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/land-11-burnt.png",
+    "/www/yunnan-bbq-house/e2e/review/2026-11-22T14-45Z-r39/land-12-burnt-linger.png"
+  ],
+  "errors": [],
+  "build": "948f569-202611221511",
+  "seated": true,
+  "g1": {
+    "active": true,
+    "grilling": true,
+    "dishId": "pork",
+    "customerId": 1,
+    "grillT": 0.15,
+    "cookWindow": "raw",
+    "burntHandled": false
+  },
+  "g2": {
+    "active": true,
+    "grilling": true,
+    "dishId": "mushroom",
+    "customerId": 2,
+    "grillT": 0.15,
+    "cookWindow": "raw",
+    "burntHandled": false
+  },
+  "g2w": {
+    "active": true,
+    "grilling": true,
+    "dishId": "mushroom",
+    "customerId": 2,
+    "grillT": 5.75,
+    "cookWindow": "perfect",
+    "burntHandled": false
+  },
+  "serveBox2": {
+    "x": 382,
+    "y": 350
+  },
+  "afterServe2": {
+    "money": 243.7,
+    "served": 1,
+    "angry": 0,
+    "card": {
+      "orderState": "done",
+      "cookWindow": "none",
+      "cookT": 0,
+      "prepT": 3,
+      "progressPct": 100,
+      "btn": {
+        "w": 58,
+        "h": 46
+      },
+      "disabled": true,
+      "statusText": "已盛盘 · 用餐中",
+      "btnText": "用餐中"
+    },
+    "grill": {
+      "active": false,
+      "grilling": false,
+      "dishId": null,
+      "customerId": null,
+      "grillT": 0,
+      "cookWindow": "none",
+      "burntHandled": false
+    }
+  },
+  "afterBurnt": {
+    "money": 243.7,
+    "waste": 1,
+    "angry": 0,
+    "grill": {
+      "active": false,
+      "grilling": false,
+      "dishId": null,
+      "customerId": null,
+      "grillT": 8,
+      "cookWindow": "none",
+      "burntHandled": true
+    },
+    "card": null,
+    "cust": [
+      {
+        "id": 1,
+        "os": "burnt",
+        "ph": "leaving-angry",
+        "patience": 31.42
+      },
+      {
+        "id": 2,
+        "os": "done",
+        "ph": "eating",
+        "patience": 79.75
+      }
+    ]
+  },
+  "linger": {
+    "money": 243.7,
+    "waste": 1,
+    "angry": 0,
+    "card": null
+  }
+}

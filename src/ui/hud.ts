@@ -280,6 +280,7 @@ export class Hud {
   private lastMoney = -1;
   private lastSec = -1;
   private lastStars = -1;
+  private playHudVisible = false;
   private cam: THREE.Camera;
   private tmp = new THREE.Vector3();
   private ringPos = new THREE.Vector3();
@@ -332,6 +333,60 @@ export class Hud {
     this.offEl.innerHTML = OFF_ARROW;
     this.offTxt = el('span', 'off-txt', this.offEl);
     this.offEl.style.display = 'none';
+    this.setPlayHudVisible(false);
+  }
+
+  /**
+   * Single entry point for play-only HUD layers (B-126).
+   * Top bar (#bbq-hud .topbar) remains visible in menu/results; order cards, bubbles, popups,
+   * off-screen hint, table rings, grill/chop badges, and guide toast hide & clear immediately.
+   */
+  setPlayHudVisible(v: boolean): void {
+    this.playHudVisible = v;
+    if (!v) {
+      this.ordersEl.innerHTML = '';
+      this.ordersEl.style.display = 'none';
+      this.ordersEl.style.opacity = '0';
+      this.ordersEl.style.pointerEvents = 'none';
+
+      for (const [, b] of this.bubbleMap) b.root.remove();
+      this.bubbleMap.clear();
+      this.bubblesEl.innerHTML = '';
+      this.bubblesEl.style.display = 'none';
+
+      this.popupsEl.innerHTML = '';
+      this.popupsEl.style.display = 'none';
+
+      for (const [, entry] of this.ringMap) {
+        entry.ring.remove();
+        entry.num.remove();
+      }
+      this.ringMap.clear();
+      this.ringsEl.innerHTML = '';
+      this.ringsEl.style.display = 'none';
+
+      for (const b of this.gbs) b.root.style.display = 'none';
+      this.grillEl.style.display = 'none';
+
+      if (this.cb) this.cb.root.style.display = 'none';
+      this.chopEl.style.display = 'none';
+
+      clearTimeout(this.guideTimer);
+      this.guideEl.classList.remove('show');
+      this.guideEl.style.display = 'none';
+
+      this.hideOffscreen();
+    } else {
+      this.ordersEl.style.display = '';
+      this.ordersEl.style.opacity = '1';
+      this.ordersEl.style.pointerEvents = '';
+      this.bubblesEl.style.display = '';
+      this.popupsEl.style.display = '';
+      this.ringsEl.style.display = '';
+      this.grillEl.style.display = '';
+      this.chopEl.style.display = '';
+      this.guideEl.style.display = '';
+    }
   }
 
   /**
@@ -341,7 +396,7 @@ export class Hud {
    */
   updateOffscreen(t: OffscreenTarget | null): void {
     const e = this.offEl;
-    if (!t || this.root.style.display === 'none') { this.hideOffscreen(); return; }
+    if (!t || !this.playHudVisible || this.root.style.display === 'none') { this.hideOffscreen(); return; }
     this.cam.updateMatrixWorld();
     this.tmp.copy(t.pos).project(this.cam);
     const vw = window.innerWidth;
@@ -424,6 +479,7 @@ export class Hud {
 
   /** one shared guide toast, visible for 2s (re-press restarts the timer, never stacks) */
   showGuide(text: string): void {
+    if (!this.playHudVisible) return;
     this.guideEl.textContent = text;
     this.guideEl.classList.add('show');
     clearTimeout(this.guideTimer);
@@ -458,6 +514,7 @@ export class Hud {
   }
 
   setOrders(customers: Customer[], tables?: TableRuntime[]): void {
+    if (!this.playHudVisible) return;
     const seated = customers
       .filter((c) => c.phase === 'seated' || c.phase === 'eating')
       .sort((a, b) => tableOrder(a.table) - tableOrder(b.table) || a.id - b.id);
@@ -494,6 +551,7 @@ export class Hud {
 
   /** world-projected ground rings + table number badges under tables with active orders (seated / eating) */
   updateRings(customers: Customer[], tables: TableRuntime[]): void {
+    if (!this.playHudVisible) return;
     const active = new Set<string>();
     for (const c of customers) {
       if (c.phase === 'seated' || c.phase === 'eating') active.add(c.table);
@@ -541,6 +599,7 @@ export class Hud {
 
   /** born fully visible (opacity 1, 24px), clamped to 4-edge viewport safe area (below live .topbar) and kept clear of topbar/bubbles/other popups */
   popup(worldPos: THREE.Vector3, text: string, kind: 'money' | 'warn' | 'ok'): void {
+    if (!this.playHudVisible) return;
     this.cam.updateMatrixWorld();
     this.tmp.copy(worldPos).project(this.cam);
     const vw = window.innerWidth;
@@ -729,6 +788,7 @@ export class Hud {
 
   /** screen-space grill badges: one per occupied slot, constant pixel size (64×8 bar + status line) */
   updateGrill(slots: GrillSlot[]): void {
+    if (!this.playHudVisible) return;
     this.cam.updateMatrixWorld();
     const w = window.innerWidth;
     const h = window.innerHeight;
@@ -770,6 +830,7 @@ export class Hud {
 
   /** screen-space chop progress over the board: 切配 n/total → 已切好 ✓; hidden while the board is empty */
   updateChop(board: StationRuntime, total: number): void {
+    if (!this.playHudVisible) return;
     let b = this.cb;
     if (!b) {
       const root = el('div', 'cb', this.chopEl);
@@ -798,6 +859,7 @@ export class Hud {
 
   /** refresh world-anchored bubbles above customers: dish name + patience ring */
   updateBubbles(customers: Customer[]): void {
+    if (!this.playHudVisible) return;
     const live = new Set<number>();
     for (const c of customers) {
       if (c.phase !== 'seated' && c.phase !== 'eating' && c.phase !== 'walking-in') continue;

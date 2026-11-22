@@ -137,6 +137,9 @@ export class Controls {
   private stickId = -1;
   private origin = { x: 0, y: 0 };
   private lastIcon = 'none';
+  private visible = false;
+  private actOpacity = '1';
+  private resetStickFn: () => void = () => {};
 
   constructor(uiRoot: HTMLElement, input: Input) {
     this.input = input;
@@ -178,6 +181,7 @@ export class Controls {
 
     this.bindStick();
     this.bindAction();
+    this.setVisible(false);
   }
 
   private bindStick(): void {
@@ -199,8 +203,7 @@ export class Controls {
         this.input.stick.set(nx * k, ny * k);
       }
     };
-    const onUp = (e: PointerEvent): void => {
-      if (e.pointerId !== this.stickId) return;
+    const reset = (): void => {
       this.stickId = -1;
       this.input.stick.set(0, 0);
       this.nub.style.transform = '';
@@ -208,7 +211,13 @@ export class Controls {
       window.removeEventListener('pointerup', onUp);
       window.removeEventListener('pointercancel', onUp);
     };
+    const onUp = (e: PointerEvent): void => {
+      if (e.pointerId !== this.stickId) return;
+      reset();
+    };
+    this.resetStickFn = reset;
     this.stick.addEventListener('pointerdown', (e) => {
+      if (!this.visible) return;
       this.stickId = e.pointerId;
       const r = this.stick.getBoundingClientRect();
       this.origin.x = r.left + r.width / 2;
@@ -223,6 +232,7 @@ export class Controls {
 
   private bindAction(): void {
     this.act.addEventListener('pointerdown', (e) => {
+      if (!this.visible) return;
       e.preventDefault();
       this.input.pressAction();
       this.act.classList.add('on');
@@ -248,7 +258,8 @@ export class Controls {
       this.act.setAttribute('aria-disabled', ariaDisabled);
     }
     const opacity = enabled || guide ? '1' : '0.55';
-    if (this.act.style.opacity !== opacity) {
+    this.actOpacity = opacity;
+    if (this.visible && this.act.style.opacity !== opacity) {
       this.act.style.opacity = opacity;
     }
     if (this.act.classList.contains('deny') !== deny) {
@@ -264,7 +275,16 @@ export class Controls {
   }
 
   setVisible(v: boolean): void {
+    this.visible = v;
+    if (!v) {
+      this.resetStickFn();
+      this.act.classList.remove('on');
+    }
     this.stick.style.display = v ? 'block' : 'none';
+    this.stick.style.opacity = v ? '' : '0';
+    this.stick.style.pointerEvents = v ? 'auto' : 'none';
     this.act.style.display = v ? 'flex' : 'none';
+    this.act.style.opacity = v ? this.actOpacity : '0';
+    this.act.style.pointerEvents = v ? 'auto' : 'none';
   }
 }

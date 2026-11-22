@@ -57,10 +57,16 @@ const panels = new Panels(uiRoot);
 // ---- game ----
 let currentAction: Interaction = { action: 'none', label: '', icon: 'none', glyph: '' };
 
+function syncPhase(phase: GamePhase): void {
+  const playing = phase === 'playing';
+  controls.setVisible(playing);
+  hud.setPlayHudVisible(playing);
+  if (playing) panels.hide();
+}
+
 const flow = new Flow(scene, kitchen.stations, dining.tables, kitchen.grillSlots, dining.doorPos, {
   onPhase(phase: GamePhase) {
-    controls.setVisible(phase === 'playing');
-    if (phase === 'playing') panels.hide();
+    syncPhase(phase);
   },
   onMoney(m: number) { hud.setMoney(m); },
   onTimeLeft(s: number) {
@@ -144,6 +150,7 @@ function nextLevel(): void {
 }
 
 hud.setLevel(flow.level, flow.cfg.target);
+syncPhase(flow.phase);
 panels.showStart(flow.cfg.target, flow.cfg.duration, restart, flow.level);
 
 // ---- resize ----
@@ -197,17 +204,16 @@ function step(rawDt: number, draw = true, move?: THREE.Vector2): void {
   emberPulse = 3.0 + 0.45 * Math.sin(t * 7.3) + 0.15 * Math.sin(t * 17.1);
   kitchen.emberMat.emissiveIntensity = emberPulse;
 
-  // action button semantics (same-frame DOM sync)
-  syncAction();
-
-  // world-anchored bubbles & table order rings
   if (flow.phase === 'playing') {
+    // action button semantics (same-frame DOM sync)
+    syncAction();
+    // world-anchored bubbles & table order rings
     hud.updateBubbles(flow.customers);
     hud.updateRings(flow.customers, dining.tables);
+    hud.updateGrill(flow.grill.slots);
+    hud.updateChop(chopBoard, COOK.chopTaps);
+    hud.updateOffscreen(offscreenTarget());
   }
-  hud.updateGrill(flow.grill.slots);
-  hud.updateChop(chopBoard, COOK.chopTaps);
-  hud.updateOffscreen(offscreenTarget());
 
   renderer.render(scene, rig.cam);
 }
@@ -285,11 +291,13 @@ const hooks: TestHooks = {
   tick(dt = 0.05, n = 1, mx = 0, mz = 0) {
     const mv = mx || mz ? new THREE.Vector2(mx, mz) : ZERO_MOVE;
     for (let i = 0; i < n; i++) step(dt, false, mv);
-    syncAction();
-    hud.updateGrill(flow.grill.slots);
-    hud.updateChop(chopBoard, COOK.chopTaps);
-    hud.updateOffscreen(offscreenTarget());
-    if (flow.phase === 'playing') hud.updateRings(flow.customers, dining.tables);
+    if (flow.phase === 'playing') {
+      syncAction();
+      hud.updateGrill(flow.grill.slots);
+      hud.updateChop(chopBoard, COOK.chopTaps);
+      hud.updateOffscreen(offscreenTarget());
+      hud.updateRings(flow.customers, dining.tables);
+    }
   },
   // read-only: world point -> CSS px in the current viewport (same math as the HUD anchors)
   worldToScreen(x, y, z) {

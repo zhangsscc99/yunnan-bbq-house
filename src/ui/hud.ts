@@ -120,8 +120,10 @@ const CSS = `
   white-space: nowrap; font-variant-numeric: tabular-nums;
 }
 #bbq-orders .card.angry { border-color: rgba(224,90,58,.8); }
-#bbq-orders .card[data-cook-window="raw"] { border-color: rgba(220,214,204,.72); }
-#bbq-orders .card[data-cook-window="raw"] .pr { color: #dcd6cc; }
+#bbq-orders .card[data-cook-window="raw"] { border-color: rgba(154,160,166,.65); }
+#bbq-orders .card[data-cook-window="raw"] .pr { color: #b8bec4; }
+#bbq-orders .card[data-cook-window="raw"][data-lock-raw="true"] { border-color: rgba(220,214,204,.72); }
+#bbq-orders .card[data-cook-window="raw"][data-lock-raw="true"] .pr { color: #dcd6cc; }
 #bbq-orders .card[data-cook-window="perfect"] {
   border-color: #f0c060;
   box-shadow: 0 0 12px rgba(240,192,96,.32);
@@ -175,7 +177,11 @@ const CSS = `
   font-size: 10px; font-weight: 700; line-height: 1.1;
   color: #f5e8d8; white-space: nowrap; letter-spacing: 0;
 }
-#bbq-orders .card[data-cook-window="raw"] .card-btn { background: rgba(34,28,24,.94); }
+#bbq-orders .card[data-cook-window="raw"] .card-btn { background: rgba(34,34,36,.92); color: #9aa0a6; }
+#bbq-orders .card[data-cook-window="raw"] .card-btn .btn-lbl { color: #9aa0a6; }
+#bbq-orders .card[data-cook-window="raw"][data-lock-raw="true"] .card-btn { background: rgba(38,30,22,.94); color: #e6dcc8; }
+#bbq-orders .card[data-cook-window="raw"][data-lock-raw="true"] .card-btn .btn-lbl { color: #e6dcc8; }
+#bbq-orders .card[data-cook-window="raw"][data-lock-raw="true"] .card-btn:active:not(:disabled) { transform: none; }
 #bbq-orders .card[data-cook-window="perfect"] .card-btn {
   background: rgba(52,36,14,.94);
   box-shadow: 0 0 10px rgba(240,192,96,.45);
@@ -354,6 +360,7 @@ interface CardView {
   cookWindow: CookWindow;
   cookT: number;
   progressPct: number;
+  rawLocked: boolean;
   label: string;
   slotIndex: number;
 }
@@ -364,6 +371,7 @@ export interface CardStateSnapshot {
   progressPct: number;
   btn: { w: number; h: number };
   disabled: boolean;
+  rawLocked: boolean;
   label: string;
   slotIndex: number;
 }
@@ -621,6 +629,7 @@ export class Hud {
     const card = el('div', 'card', this.ordersEl);
     card.dataset.table = tableId;
     card.dataset.cookWindow = 'idle';
+    card.dataset.lockRaw = 'false';
     const col = tableColor(tableId);
 
     const badge = el('div', 'tb-badge', card);
@@ -680,6 +689,7 @@ export class Hud {
       cookWindow: 'idle',
       cookT: 0,
       progressPct: 0,
+      rawLocked: false,
       label: '',
       slotIndex: -1,
     };
@@ -708,6 +718,7 @@ export class Hud {
             cookT: 0,
             progressPct: 0,
             disabled: eating,
+            rawLocked: false,
             label: eating ? '用餐中' : '上炉',
             statusText: `¥${price} · ${eating ? '用餐中' : '等待'}`,
             slotIndex: -1,
@@ -761,11 +772,16 @@ export class Hud {
       view.cookWindow = st.cookWindow;
       view.cookT = st.cookT;
       view.progressPct = st.progressPct;
+      view.rawLocked = st.rawLocked;
       view.label = st.label;
       view.slotIndex = st.slotIndex;
 
       if (view.root.dataset.cookWindow !== st.cookWindow) {
         view.root.dataset.cookWindow = st.cookWindow;
+      }
+      const lockRaw = st.rawLocked ? 'true' : 'false';
+      if (view.root.dataset.lockRaw !== lockRaw) {
+        view.root.dataset.lockRaw = lockRaw;
       }
       view.root.dataset.cookT = String(st.cookT);
       view.root.dataset.progressPct = String(st.progressPct);
@@ -773,7 +789,7 @@ export class Hud {
 
       if (view.btn.disabled !== st.disabled) view.btn.disabled = st.disabled;
 
-      // segmented progress ring color (raw=灰白, perfect=金, over=橙+pulse, burnt=红) & icon/text
+      // segmented progress ring color (raw=灰白/弱灰, perfect=金, over=橙+pulse, burnt=红) & icon/text
       let iconKey: CardBtnIconKey;
       let btnText: string;
       let bgStroke: string;
@@ -784,13 +800,23 @@ export class Hud {
 
       switch (st.cookWindow) {
         case 'raw':
-          iconKey = 'lift';
-          btnText = '起锅';
-          bgStroke = 'rgba(220,214,204,.22)';
-          arcStroke = '#dcd6cc';
-          arcOpacity = '1';
-          arcOffset = COOK_RING_C * (1 - st.progressPct / 100);
-          icoColor = '#e6e0d6';
+          if (st.rawLocked) {
+            iconKey = 'fire';
+            btnText = '上炉中';
+            bgStroke = 'rgba(220,214,204,.22)';
+            arcStroke = '#dcd6cc';
+            arcOpacity = '1';
+            arcOffset = COOK_RING_C * (1 - st.progressPct / 100);
+            icoColor = '#f0c060';
+          } else {
+            iconKey = 'lift';
+            btnText = '未熟';
+            bgStroke = 'rgba(154,160,166,.22)';
+            arcStroke = '#9aa0a6';
+            arcOpacity = '1';
+            arcOffset = COOK_RING_C * (1 - st.progressPct / 100);
+            icoColor = '#9aa0a6';
+          }
           break;
         case 'perfect':
           iconKey = 'lift';
@@ -851,9 +877,11 @@ export class Hud {
         view.btnText = btnText;
         view.btnLbl.textContent = btnText;
       }
-      const aria = st.cookWindow === 'raw' || st.cookWindow === 'perfect' || st.cookWindow === 'over'
-        ? `起锅 · ${st.label}`
-        : st.label;
+      const aria = st.cookWindow === 'raw'
+        ? (st.rawLocked ? `上炉中 · ${st.label}` : st.label)
+        : st.cookWindow === 'perfect' || st.cookWindow === 'over'
+          ? `起锅 · ${st.label}`
+          : st.label;
       if (view.btn.getAttribute('aria-label') !== aria) {
         view.btn.setAttribute('aria-label', aria);
       }
@@ -873,6 +901,7 @@ export class Hud {
       progressPct: view.progressPct,
       btn: { w: Number(r.width.toFixed(2)), h: Number(r.height.toFixed(2)) },
       disabled: view.btn.disabled,
+      rawLocked: view.rawLocked,
       label: view.label,
       slotIndex: view.slotIndex,
     };

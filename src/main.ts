@@ -17,7 +17,7 @@ import type { Interaction } from './game/stations.ts';
 import type { GamePhase } from './game/types.ts';
 import type { Results } from './game/flow.ts';
 import { Hud } from './ui/hud.ts';
-import type { OffscreenTarget } from './ui/hud.ts';
+import type { OffscreenTarget, CardStateSnapshot } from './ui/hud.ts';
 import { Controls } from './ui/controls.ts';
 import { Panels } from './ui/panels.ts';
 import { COOK } from './config.ts';
@@ -68,12 +68,15 @@ const flow = new Flow(scene, kitchen.stations, dining.tables, kitchen.grillSlots
   onPhase(phase: GamePhase) {
     syncPhase(phase);
   },
-  onMoney(m: number) { hud.setMoney(m); },
+  onMoney(m: number) {
+    hud.setMoney(m);
+    hud.setStars(flow.starsNow());
+  },
   onTimeLeft(s: number) {
     hud.setTime(s);
     hud.setStars(flow.starsNow());
   },
-  onOrders(customers, tables) { hud.setOrders(customers, tables); },
+  onOrders(customers, tables) { hud.setOrders(customers, tables, flow.orderCardStates()); },
   onPopup(pos, text, kind) { hud.popup(pos, text, kind); },
   onAction(a: Interaction) {
     currentAction = a;
@@ -84,6 +87,19 @@ const flow = new Flow(scene, kitchen.stations, dining.tables, kitchen.grillSlots
 });
 flow.placePlayer();
 const chopBoard = kitchen.stations.find((st) => st.id === 'chop')!;
+
+function syncOrderCards(withRings = true): void {
+  hud.setOrders(flow.customers, withRings ? dining.tables : undefined, flow.orderCardStates());
+}
+
+hud.setOnCardAction((tableId: string) => {
+  if (flow.handleOrderCardAction(tableId)) {
+    refreshAction();
+    syncOrderCards(true);
+    hud.updateGrill(flow.grill.slots);
+    hud.setStars(flow.starsNow());
+  }
+});
 
 function syncAction(): void {
   const enabled = currentAction.action !== 'none';
@@ -135,6 +151,7 @@ function offscreenTarget(): OffscreenTarget | null {
 }
 
 function restart(): void {
+  acc = 0;
   hud.setLevel(flow.level, flow.cfg.target);
   flow.startLevel();
   rig.snapTo(flow.player.obj.position);
@@ -208,8 +225,9 @@ function step(rawDt: number, draw = true, move?: THREE.Vector2): void {
   kitchen.emberMat.emissiveIntensity = emberPulse;
 
   if (flow.phase === 'playing') {
-    // action button semantics (same-frame DOM sync)
+    // action button semantics & continuous order-card cook progress (same-frame DOM sync)
     syncAction();
+    syncOrderCards(false);
     // world-anchored table order rings & bubbles (rings first so bubbles can avoid them same-frame)
     hud.updateRings(flow.customers, dining.tables);
     hud.updateBubbles(flow.customers);
@@ -242,6 +260,8 @@ interface TestHooks {
   guideTarget(): { label: string; x: number; y: number; z: number } | null;
   foodNodes(): { id: string; food: DishId; color: [number, number, number]; cover: number; sat: number }[];
   decorSat(): number;
+  cardState(tableId: string): CardStateSnapshot | null;
+  grillSlots(): { occupied: boolean; dish: DishId | null; t: number }[];
 }
 function hexToRgb(hex: number): [number, number, number] {
   return [(hex >> 16) & 255, (hex >> 8) & 255, hex & 255];
@@ -296,10 +316,10 @@ const hooks: TestHooks = {
     for (let i = 0; i < n; i++) step(dt, false, mv);
     if (flow.phase === 'playing') {
       syncAction();
+      syncOrderCards(true);
       hud.updateGrill(flow.grill.slots);
       hud.updateChop(chopBoard, COOK.chopTaps);
       hud.updateOffscreen(offscreenTarget());
-      hud.updateRings(flow.customers, dining.tables);
     }
   },
   // read-only: world point -> CSS px in the current viewport (same math as the HUD anchors)
@@ -359,6 +379,16 @@ const hooks: TestHooks = {
     });
     if (!sats.length) return 0;
     return Number((sats.reduce((a, v) => a + v, 0) / sats.length).toFixed(4));
+  },
+  cardState(tableId) {
+    return hud.cardState(tableId);
+  },
+  grillSlots() {
+    return flow.grill.slots.map((s) => ({
+      occupied: Boolean(s.item),
+      dish: s.item ? s.item.dish : null,
+      t: s.item ? Number(s.item.grillT.toFixed(4)) : 0,
+    }));
   },
   state() {
     const g = (s: string): unknown => {

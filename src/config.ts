@@ -69,9 +69,15 @@ export const DISHES: Record<DishId, Dish> = {
 
 export const COOK = {
   chopTaps: 3,          // presses to finish chopping
-  grillTime: 6,         // seconds → done (golden)
+  grillTime: 6,         // seconds → done (golden, legacy chain)
   burnTime: 12,         // seconds → burnt waste
-  tipRate: 0.3,         // tip = price * tipRate * patienceFrac
+  tipRate: 0.3,         // tip = price * tipRate * patienceFrac (full when >= fullTipPatience)
+  fullTipPatience: 0.8, // patience fraction >= this earns full tip (GAME-DESIGN §2)
+  // one-click order-card cooking windows (GAME-DESIGN §1)
+  perfectStart: 4,      // [0, 4) raw (undercooked)
+  overStart: 9,         // [4, 9) perfect, [9, 12) overcooked, >= 12 burnt
+  overTipMult: 0.5,     // tip multiplier when lifted in overcooked window
+  burntLinger: 1.0,     // seconds burnt card stays visible in red before removal
 };
 
 export interface Level {

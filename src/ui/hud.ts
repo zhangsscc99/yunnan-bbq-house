@@ -4,9 +4,10 @@
 import * as THREE from 'three';
 import { DISHES } from '../config.ts';
 import { COOK } from '../config.ts';
-import type { Customer } from '../game/types.ts';
+import type { Customer, CookWindow } from '../game/types.ts';
 import type { GrillSlot } from '../game/grill.ts';
 import type { StationRuntime } from '../game/types.ts';
+import type { OrderCardState } from '../game/flow.ts';
 import type { TableRuntime } from '../world/dining.ts';
 import { TABLES } from '../world/layout.ts';
 import { FOOD_ICONS } from './controls.ts';
@@ -70,13 +71,16 @@ const CSS = `
 
 #bbq-orders {
   position: absolute; top: max(8px, env(safe-area-inset-top)); right: 10px;
-  display: flex; flex-direction: column; gap: 8px; max-width: 196px;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+  max-width: calc(100vw - 20px);
 }
 #bbq-orders .card {
-  display: flex; align-items: center; gap: 7px;
-  background: rgba(24,16,12,.72); backdrop-filter: blur(10px);
-  border: 1.5px solid rgba(232,180,90,.45); border-radius: 12px;
-  padding: 7px 10px; min-width: 148px;
+  display: flex; align-items: center; gap: 6px; box-sizing: border-box;
+  flex: 0 0 auto; max-width: 100%;
+  background: rgba(24,16,12,.76); backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(232,180,90,.45); border-radius: 14px;
+  padding: 5px 8px; min-width: 148px;
+  transition: border-color .15s, box-shadow .15s, background-color .15s;
 }
 #bbq-orders .card .tb-badge {
   width: 24px; height: 24px; flex: none; box-sizing: border-box;
@@ -87,23 +91,106 @@ const CSS = `
   font-variant-numeric: tabular-nums;
 }
 #bbq-orders .card .ring { position: relative; width: 30px; height: 30px; flex: none; }
-#bbq-orders .card .ring svg { transform: rotate(-90deg); }
-#bbq-orders .card .txt { min-width: 0; }
+#bbq-orders .card .ring svg { transform: rotate(-90deg); display: block; }
+#bbq-orders .card .txt { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 #bbq-orders .card .nm {
   display: flex; align-items: center; gap: 3px;
   font-size: 13px; color: #f5e8d8; font-weight: 600; line-height: 1.25; white-space: nowrap;
 }
 #bbq-orders .card .nm svg.food-ico { width: 16px; height: 16px; flex: none; }
-#bbq-orders .card .pr { font-size: 13px; color: #f0c060; font-weight: 600; line-height: 1.2; white-space: nowrap; }
+#bbq-orders .card .pr {
+  font-size: 13px; color: #f0c060; font-weight: 600; line-height: 1.2;
+  white-space: nowrap; font-variant-numeric: tabular-nums;
+}
 #bbq-orders .card.angry { border-color: rgba(224,90,58,.8); }
+#bbq-orders .card[data-cook-window="raw"] { border-color: rgba(220,214,204,.72); }
+#bbq-orders .card[data-cook-window="raw"] .pr { color: #dcd6cc; }
+#bbq-orders .card[data-cook-window="perfect"] {
+  border-color: #f0c060;
+  box-shadow: 0 0 12px rgba(240,192,96,.32);
+}
+#bbq-orders .card[data-cook-window="perfect"] .pr { color: #f6cf70; }
+#bbq-orders .card[data-cook-window="over"] {
+  border-color: #ff8c24;
+  box-shadow: 0 0 14px rgba(255,140,36,.42);
+}
+#bbq-orders .card[data-cook-window="over"] .pr { color: #ffa048; }
+#bbq-orders .card[data-cook-window="burnt"] {
+  border-color: #e04836;
+  background: rgba(54,18,14,.86);
+  box-shadow: 0 0 12px rgba(224,72,54,.42);
+}
+#bbq-orders .card[data-cook-window="burnt"] .pr { color: #ff7a66; }
+
+#bbq-orders .card .card-btn {
+  position: relative;
+  appearance: none; -webkit-appearance: none;
+  box-sizing: border-box; font: inherit; margin: 0; padding: 0; border: 0;
+  width: 56px; height: 56px; min-width: 56px; min-height: 56px; flex: none;
+  border-radius: 50%; overflow: hidden;
+  background: rgba(32,20,13,.92);
+  color: #f5e8d8;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1px;
+  pointer-events: auto; cursor: pointer; touch-action: manipulation;
+  transition: transform .08s, background-color .15s, opacity .15s, box-shadow .15s;
+}
+#bbq-orders .card .card-btn:focus { outline: none; }
+#bbq-orders .card .card-btn:focus-visible { outline: 2px solid #f0c060; outline-offset: 2px; }
+#bbq-orders .card .card-btn:active:not(:disabled) { transform: scale(.93); }
+#bbq-orders .card .card-btn:disabled {
+  cursor: not-allowed; opacity: .65;
+  background: rgba(24,17,13,.82);
+}
+#bbq-orders .card .card-btn svg.cook-ring {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; display: block;
+}
+#bbq-orders .card .card-btn .btn-ico {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: center;
+  width: 19px; height: 19px;
+}
+#bbq-orders .card .card-btn .btn-ico svg { width: 19px; height: 19px; display: block; }
+#bbq-orders .card .card-btn .btn-lbl {
+  position: relative; z-index: 1;
+  font-size: 10px; font-weight: 700; line-height: 1.1;
+  color: #f5e8d8; white-space: nowrap; letter-spacing: 0;
+}
+#bbq-orders .card[data-cook-window="raw"] .card-btn { background: rgba(34,28,24,.94); }
+#bbq-orders .card[data-cook-window="perfect"] .card-btn {
+  background: rgba(52,36,14,.94);
+  box-shadow: 0 0 10px rgba(240,192,96,.45);
+}
+#bbq-orders .card[data-cook-window="perfect"] .card-btn .btn-lbl { color: #f6cf70; }
+#bbq-orders .card[data-cook-window="over"] .card-btn {
+  background: rgba(62,30,10,.94);
+  animation: bbq-over-pulse .65s ease-in-out infinite;
+}
+#bbq-orders .card[data-cook-window="over"] .card-btn .btn-lbl { color: #ffad5c; }
+#bbq-orders .card[data-cook-window="burnt"] .card-btn {
+  background: rgba(68,18,14,.95); opacity: .92;
+}
+#bbq-orders .card[data-cook-window="burnt"] .card-btn .btn-lbl { color: #ff8070; }
+@keyframes bbq-over-pulse {
+  0%, 100% { box-shadow: 0 0 4px rgba(255,140,36,.35); transform: scale(1); }
+  50% { box-shadow: 0 0 16px rgba(255,140,36,.9); transform: scale(1.04); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #bbq-orders .card[data-cook-window="over"] .card-btn { animation: none; }
+}
 @media (max-width: 430px) {
   #bbq-orders { top: calc(max(8px, env(safe-area-inset-top)) + 52px); }
 }
-/* landscape (B-076): never shrink type (ART §5 HUD >= 13px) — wider card, two-line text column,
-   stacked between the table rings (top) and the action button (bottom) */
+/* landscape: 2-column wrap in the clear band between table nums (y<=146) and #bbq-act (y>=290),
+   keeping full >=13px type and >=56x56 circular card-btn with zero overflow */
 @media (max-height: 450px) and (min-width: 600px) {
-  #bbq-orders { top: 150px; right: max(10px, env(safe-area-inset-right)); gap: 4px; max-width: 168px; }
-  #bbq-orders .card { box-sizing: border-box; max-width: 168px; min-width: 0; padding: 4px 5px; gap: 4px; }
+  #bbq-orders {
+    top: 150px; right: max(10px, env(safe-area-inset-right));
+    flex-direction: row; flex-wrap: wrap; justify-content: flex-end; align-content: flex-start;
+    gap: 4px; max-width: 484px;
+  }
+  #bbq-orders .card { box-sizing: border-box; min-width: 0; max-width: none; padding: 3px 6px; gap: 4px; }
   #bbq-orders .card .tb-badge { width: 21px; height: 21px; }
   #bbq-orders .card .ring { width: 22px; height: 22px; }
   #bbq-orders .card .ring svg { width: 100%; height: 100%; }
@@ -237,6 +324,71 @@ const STAR = (filled: boolean): string => `
 const RING_R = 12;
 const RING_C = 2 * Math.PI * RING_R;
 
+const PATIENCE_R = 13;
+const PATIENCE_C = 2 * Math.PI * PATIENCE_R;
+
+const COOK_RING_R = 25;
+const COOK_RING_C = 2 * Math.PI * COOK_RING_R;
+
+type CardBtnIconKey = 'fire' | 'lift' | 'warn' | 'full' | 'done';
+
+// inline SVG icons for order-card primary circular button (no emoji)
+const CARD_BTN_ICONS: Record<CardBtnIconKey, string> = {
+  fire: `<svg viewBox="0 0 24 24" data-card-ico="fire" fill="none" stroke="#f0c060" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M12 3c1 3-2 4.5-2 7a4 4 0 0 0 8 0c0-1.5-.8-2.6-1.6-3.8-.5 1-1.2 1.6-1.9 1.8C14.7 6.5 14 4.5 12 3z"/>
+    <path d="M7.5 14.5a6.5 6.5 0 1 0 9 0"/>
+  </svg>`,
+  lift: `<svg viewBox="0 0 24 24" data-card-ico="lift" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M12 15V4M7.5 8.5L12 4l4.5 4.5"/>
+    <path d="M4 18h16M6 18a6 6 0 0 1 12 0"/>
+  </svg>`,
+  warn: `<svg viewBox="0 0 24 24" data-card-ico="warn" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M10.3 3.8L2.2 18a2 2 0 0 0 1.7 3h16.2a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0z"/>
+    <path d="M12 9.2v4.6"/>
+    <circle cx="12" cy="17.2" r="1" fill="currentColor" stroke="none"/>
+  </svg>`,
+  full: `<svg viewBox="0 0 24 24" data-card-ico="full" fill="none" stroke="rgba(245,232,216,.55)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="4" y="6" width="16" height="12" rx="2"/>
+    <path d="M9 6v12M15 6v12"/>
+  </svg>`,
+  done: `<svg viewBox="0 0 24 24" data-card-ico="done" fill="none" stroke="#7fd08a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M5 12.5l4.5 4.5L19 7.5"/>
+  </svg>`,
+};
+
+interface CardView {
+  tableId: string;
+  root: HTMLElement;
+  badge: HTMLElement;
+  patienceArc: SVGCircleElement;
+  nm: HTMLElement;
+  pr: HTMLElement;
+  btn: HTMLButtonElement;
+  cookBg: SVGCircleElement;
+  cookArc: SVGCircleElement;
+  btnIco: HTMLElement;
+  btnLbl: HTMLElement;
+  dishKey: string;
+  statusText: string;
+  btnText: string;
+  iconKey: CardBtnIconKey | '';
+  cookWindow: CookWindow;
+  cookT: number;
+  progressPct: number;
+  label: string;
+  slotIndex: number;
+}
+
+export interface CardStateSnapshot {
+  cookWindow: CookWindow;
+  cookT: number;
+  progressPct: number;
+  btn: { w: number; h: number };
+  disabled: boolean;
+  label: string;
+  slotIndex: number;
+}
+
 interface Bubble {
   root: HTMLElement;
   arc: SVGElement;
@@ -290,6 +442,8 @@ export class Hud {
   private cb: { root: HTMLElement; fill: HTMLElement; txt: HTMLElement; label: string; done: boolean } | null = null;
   private gbs: { root: HTMLElement; fill: HTMLElement; txt: HTMLElement; state: string; label: string }[] = [];
   private guideTimer = 0;
+  private cardMap = new Map<string, CardView>();
+  private onCardAction: ((tableId: string) => void) | null = null;
   private bubbleMap = new Map<number, Bubble>();
   private ringMap = new Map<string, { ring: HTMLElement; num: HTMLElement }>();
   private lastMoney = -1;
@@ -360,6 +514,8 @@ export class Hud {
   setPlayHudVisible(v: boolean): void {
     this.playHudVisible = v;
     if (!v) {
+      for (const [, c] of this.cardMap) c.root.remove();
+      this.cardMap.clear();
       this.ordersEl.innerHTML = '';
       this.ordersEl.style.display = 'none';
       this.ordersEl.style.opacity = '0';
@@ -529,40 +685,267 @@ export class Hud {
     this.starsEl.innerHTML = STAR(stars >= 1) + STAR(stars >= 2) + STAR(stars >= 3);
   }
 
-  setOrders(customers: Customer[], tables?: TableRuntime[]): void {
+  setOnCardAction(cb: (tableId: string) => void): void {
+    this.onCardAction = cb;
+  }
+
+  private createCardView(tableId: string): CardView {
+    const card = el('div', 'card', this.ordersEl);
+    card.dataset.table = tableId;
+    card.dataset.cookWindow = 'idle';
+    const col = tableColor(tableId);
+
+    const badge = el('div', 'tb-badge', card);
+    badge.textContent = String(tableOrder(tableId));
+    badge.style.borderColor = col;
+    badge.style.color = col;
+
+    const ring = el('div', 'ring', card);
+    ring.innerHTML = `
+      <svg width="30" height="30" viewBox="0 0 30 30">
+        <circle cx="15" cy="15" r="${PATIENCE_R}" fill="none" stroke="rgba(240,192,96,.2)" stroke-width="3"/>
+        <circle cx="15" cy="15" r="${PATIENCE_R}" fill="none" stroke="#f0c060"
+          stroke-width="3" stroke-linecap="round" stroke-dasharray="${PATIENCE_C}" stroke-dashoffset="0"/>
+      </svg>`;
+    const patienceArc = ring.querySelector('circle:nth-of-type(2)') as SVGCircleElement;
+
+    const txt = el('div', 'txt', card);
+    const nm = el('div', 'nm', txt);
+    const pr = el('div', 'pr', txt);
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'card-btn';
+    btn.innerHTML = `
+      <svg class="cook-ring" viewBox="0 0 56 56" aria-hidden="true">
+        <circle class="cook-bg" cx="28" cy="28" r="${COOK_RING_R}" fill="none" stroke="rgba(232,180,90,.65)" stroke-width="4"/>
+        <circle class="cook-arc" cx="28" cy="28" r="${COOK_RING_R}" fill="none" stroke="#dcd6cc" stroke-width="4"
+          stroke-linecap="round" stroke-dasharray="${COOK_RING_C}" stroke-dashoffset="${COOK_RING_C}"
+          stroke-opacity="0" transform="rotate(-90 28 28)"/>
+      </svg>
+      <span class="btn-ico" aria-hidden="true"></span>
+      <span class="btn-lbl"></span>`;
+    card.appendChild(btn);
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (btn.disabled) return;
+      this.onCardAction?.(tableId);
+    });
+
+    const view: CardView = {
+      tableId,
+      root: card,
+      badge,
+      patienceArc,
+      nm,
+      pr,
+      btn,
+      cookBg: btn.querySelector('.cook-bg') as SVGCircleElement,
+      cookArc: btn.querySelector('.cook-arc') as SVGCircleElement,
+      btnIco: btn.querySelector('.btn-ico') as HTMLElement,
+      btnLbl: btn.querySelector('.btn-lbl') as HTMLElement,
+      dishKey: '',
+      statusText: '',
+      btnText: '',
+      iconKey: '',
+      cookWindow: 'idle',
+      cookT: 0,
+      progressPct: 0,
+      label: '',
+      slotIndex: -1,
+    };
+    this.cardMap.set(tableId, view);
+    return view;
+  }
+
+  setOrders(customers: Customer[], tables?: TableRuntime[], cardStates?: OrderCardState[]): void {
     if (!this.playHudVisible) return;
-    const seated = customers
-      .filter((c) => c.phase === 'seated' || c.phase === 'eating')
-      .sort((a, b) => tableOrder(a.table) - tableOrder(b.table) || a.id - b.id);
-    this.ordersEl.innerHTML = '';
-    for (const c of seated.slice(0, 3)) {
-      const card = el('div', 'card', this.ordersEl);
-      card.dataset.table = c.table;
-      const col = tableColor(c.table);
-      if (c.patience / c.patienceMax < 0.25 && c.phase === 'seated') card.classList.add('angry');
-      const badge = el('div', 'tb-badge', card);
-      badge.textContent = String(tableOrder(c.table));
-      badge.style.borderColor = col;
-      badge.style.color = col;
-      const ring = el('div', 'ring', card);
-      const frac = c.phase === 'eating' ? 1 : Math.min(1, Math.max(0, c.patience / c.patienceMax));
-      const r = 13;
-      const circ = 2 * Math.PI * r;
-      ring.innerHTML = `
-        <svg width="30" height="30" viewBox="0 0 30 30">
-          <circle cx="15" cy="15" r="${r}" fill="none" stroke="rgba(240,192,96,.2)" stroke-width="3"/>
-          <circle cx="15" cy="15" r="${r}" fill="none" stroke="${frac < 0.25 ? '#e05a3a' : '#f0c060'}"
-            stroke-width="3" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${circ * (1 - frac)}"/>
-        </svg>`;
-      const txt = el('div', 'txt', card);
-      const nm = el('div', 'nm', txt);
-      nm.innerHTML = FOOD_ICONS[c.dish];
-      const nmTxt = document.createElement('span');
-      nmTxt.textContent = DISHES[c.dish].name;
-      nm.appendChild(nmTxt);
-      el('div', 'pr', txt).textContent = `¥${DISHES[c.dish].price} · ${c.phase === 'eating' ? '用餐中' : '等待'}`;
+    const items: OrderCardState[] = cardStates
+      ? [...cardStates]
+      : customers
+        .filter((c) => c.phase === 'seated' || c.phase === 'eating')
+        .map((c): OrderCardState => {
+          const price = DISHES[c.dish].price;
+          const eating = c.phase === 'eating';
+          return {
+            tableId: c.table,
+            customerId: c.id,
+            dish: c.dish,
+            phase: eating ? 'eating' : 'seated',
+            patience: eating ? c.patienceMax : c.patience,
+            patienceMax: c.patienceMax,
+            cookWindow: eating ? 'eating' : 'idle',
+            cookT: 0,
+            progressPct: 0,
+            disabled: eating,
+            label: eating ? '用餐中' : '上炉',
+            statusText: `¥${price} · ${eating ? '用餐中' : '等待'}`,
+            slotIndex: -1,
+          };
+        });
+
+    items.sort((a, b) => tableOrder(a.tableId) - tableOrder(b.tableId) || a.customerId - b.customerId);
+    const shown = items.slice(0, 4);
+    const liveTables = new Set<string>(shown.map((s) => s.tableId));
+
+    // remove gone cards first
+    for (const [tid, view] of this.cardMap) {
+      if (!liveTables.has(tid)) {
+        view.root.remove();
+        this.cardMap.delete(tid);
+      }
     }
+
+    // reconcile in-place in strict ascending table order without destroying live <button> nodes
+    shown.forEach((st, idx) => {
+      let view = this.cardMap.get(st.tableId);
+      if (!view) view = this.createCardView(st.tableId);
+      const curChild = this.ordersEl.children[idx];
+      if (curChild !== view.root) {
+        this.ordersEl.insertBefore(view.root, curChild ?? null);
+      }
+
+      if (view.dishKey !== st.dish) {
+        view.dishKey = st.dish;
+        view.nm.innerHTML = FOOD_ICONS[st.dish];
+        const nmTxt = document.createElement('span');
+        nmTxt.textContent = DISHES[st.dish].name;
+        view.nm.appendChild(nmTxt);
+      }
+
+      const frac = st.phase === 'eating'
+        ? 1
+        : st.patienceMax > 0
+          ? Math.min(1, Math.max(0, st.patience / st.patienceMax))
+          : 0;
+      const angry = st.phase === 'seated' && frac < 0.25;
+      view.root.classList.toggle('angry', angry);
+      view.patienceArc.setAttribute('stroke', angry ? '#e05a3a' : '#f0c060');
+      view.patienceArc.setAttribute('stroke-dashoffset', String(PATIENCE_C * (1 - frac)));
+
+      if (view.statusText !== st.statusText) {
+        view.statusText = st.statusText;
+        view.pr.textContent = st.statusText;
+      }
+
+      view.cookWindow = st.cookWindow;
+      view.cookT = st.cookT;
+      view.progressPct = st.progressPct;
+      view.label = st.label;
+      view.slotIndex = st.slotIndex;
+
+      if (view.root.dataset.cookWindow !== st.cookWindow) {
+        view.root.dataset.cookWindow = st.cookWindow;
+      }
+      view.root.dataset.cookT = String(st.cookT);
+      view.root.dataset.progressPct = String(st.progressPct);
+      view.root.dataset.slotIndex = String(st.slotIndex);
+
+      if (view.btn.disabled !== st.disabled) view.btn.disabled = st.disabled;
+
+      // segmented progress ring color (raw=灰白, perfect=金, over=橙+pulse, burnt=红) & icon/text
+      let iconKey: CardBtnIconKey;
+      let btnText: string;
+      let bgStroke: string;
+      let arcStroke = '#dcd6cc';
+      let arcOpacity = '0';
+      let arcOffset = COOK_RING_C;
+      let icoColor = '#f0c060';
+
+      switch (st.cookWindow) {
+        case 'raw':
+          iconKey = 'lift';
+          btnText = '起锅';
+          bgStroke = 'rgba(220,214,204,.22)';
+          arcStroke = '#dcd6cc';
+          arcOpacity = '1';
+          arcOffset = COOK_RING_C * (1 - st.progressPct / 100);
+          icoColor = '#e6e0d6';
+          break;
+        case 'perfect':
+          iconKey = 'lift';
+          btnText = '起锅';
+          bgStroke = 'rgba(240,192,96,.24)';
+          arcStroke = '#f0c060';
+          arcOpacity = '1';
+          arcOffset = COOK_RING_C * (1 - st.progressPct / 100);
+          icoColor = '#f0c060';
+          break;
+        case 'over':
+          iconKey = 'warn';
+          btnText = '快起';
+          bgStroke = 'rgba(255,140,36,.26)';
+          arcStroke = '#ff8c24';
+          arcOpacity = '1';
+          arcOffset = COOK_RING_C * (1 - st.progressPct / 100);
+          icoColor = '#ff9a3c';
+          break;
+        case 'burnt':
+          iconKey = 'warn';
+          btnText = '焦糊';
+          bgStroke = 'rgba(224,72,54,.32)';
+          arcStroke = '#e04836';
+          arcOpacity = '1';
+          arcOffset = 0;
+          icoColor = '#ff6b5a';
+          break;
+        case 'eating':
+          iconKey = 'done';
+          btnText = '已上';
+          bgStroke = 'rgba(127,208,138,.45)';
+          break;
+        default: // 'idle'
+          if (st.disabled) {
+            iconKey = 'full';
+            btnText = '烤位满了';
+            bgStroke = 'rgba(245,232,216,.28)';
+          } else {
+            iconKey = 'fire';
+            btnText = '上炉';
+            bgStroke = 'rgba(232,180,90,.65)';
+          }
+          break;
+      }
+
+      view.cookBg.setAttribute('stroke', bgStroke);
+      view.cookArc.setAttribute('stroke', arcStroke);
+      view.cookArc.setAttribute('stroke-opacity', arcOpacity);
+      view.cookArc.setAttribute('stroke-dashoffset', String(arcOffset));
+
+      if (view.iconKey !== iconKey) {
+        view.iconKey = iconKey;
+        view.btnIco.innerHTML = CARD_BTN_ICONS[iconKey];
+      }
+      if (view.btnIco.style.color !== icoColor) view.btnIco.style.color = icoColor;
+      if (view.btnText !== btnText) {
+        view.btnText = btnText;
+        view.btnLbl.textContent = btnText;
+      }
+      const aria = st.cookWindow === 'raw' || st.cookWindow === 'perfect' || st.cookWindow === 'over'
+        ? `起锅 · ${st.label}`
+        : st.label;
+      if (view.btn.getAttribute('aria-label') !== aria) {
+        view.btn.setAttribute('aria-label', aria);
+      }
+    });
+
     if (tables) this.updateRings(customers, tables);
+  }
+
+  cardState(tableId: string): CardStateSnapshot | null {
+    const view = this.cardMap.get(tableId);
+    if (!view || !view.root.isConnected) return null;
+    const r = view.btn.getBoundingClientRect();
+    return {
+      cookWindow: view.cookWindow,
+      cookT: view.cookT,
+      progressPct: view.progressPct,
+      btn: { w: Number(r.width.toFixed(2)), h: Number(r.height.toFixed(2)) },
+      disabled: view.btn.disabled,
+      label: view.label,
+      slotIndex: view.slotIndex,
+    };
   }
 
   /** world-projected ground rings + table number badges under tables with active orders (seated / eating) */

@@ -86,10 +86,11 @@ export class Grill {
     return this.slots.find((s) => !s.item) ?? null;
   }
 
-  /** slot holding a cooked or burnt skewer, always preferring cooked (most-done first) over burnt */
+  /** slot holding a cooked or burnt skewer (legacy chain only; skips card-bound one-click skewers), always preferring cooked (most-done first) over burnt */
   readySlot(): GrillSlot | null {
     const ready = this.slots.filter(
-      (s) => s.item && (s.item.stage === 'cooked' || s.item.stage === 'waste' || s.item.grillT >= COOK.grillTime),
+      (s) => s.item && s.item.orderCustomerId == null
+        && (s.item.stage === 'cooked' || s.item.stage === 'waste' || s.item.grillT >= COOK.grillTime),
     );
     if (!ready.length) return null;
     const cooked = ready.filter(
@@ -132,7 +133,10 @@ export class Grill {
       // stage transitions
       if (t >= COOK.burnTime && s.item.stage !== 'waste') {
         setItemStage(s.item, 'waste');
-      } else if (t >= COOK.grillTime && s.item.stage === 'chopped') {
+      } else if (s.item.orderCustomerId != null && t + 1e-6 >= COOK.perfectStart && s.item.stage === 'raw') {
+        setItemStage(s.item, 'cooked');
+        s.done = true;
+      } else if (s.item.orderCustomerId == null && t >= COOK.grillTime && s.item.stage === 'chopped') {
         setItemStage(s.item, 'cooked');
         s.done = true;
       }

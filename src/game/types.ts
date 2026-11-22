@@ -16,7 +16,11 @@ export interface Item {
   stage: ItemStage;
   obj: THREE.Object3D;   // live mesh, re-parented as it moves
   grillT: number;        // seconds spent on the grill
+  orderCustomerId?: number; // bound customer when placed by one-click order card
+  orderTableId?: string;    // bound table when placed by one-click order card
 }
+
+export type CookWindow = 'idle' | 'raw' | 'perfect' | 'over' | 'burnt' | 'eating';
 
 // ---- stations ----
 
@@ -66,6 +70,7 @@ export interface Customer {
   eatT: number;              // eating countdown
   leaveStep: number;         // 0 rise→aisle, 1 slide→door-x, 2→door
   bubble: HTMLElement | null;
+  paid?: boolean;            // prevents duplicate settlement across one-click & legacy chains
 }
 
 export type GamePhase = 'menu' | 'playing' | 'results';

@@ -1,0 +1,62 @@
+{
+  "rawPull": {
+    "s0": {
+      "money": 0,
+      "waste": 0
+    },
+    "before": {
+      "waste": 0,
+      "money": 0,
+      "card": {
+        "cookWindow": "raw",
+        "cookT": 1.6,
+        "progressPct": 13.3333,
+        "btn": {
+          "w": 56,
+          "h": 56
+        },
+        "disabled": false,
+        "rawLocked": false,
+        "label": "未熟 · 离熟 3s",
+        "slotIndex": 0
+      }
+    },
+    "after": {
+      "waste": 1,
+      "money": 0,
+      "angry": 0,
+      "cards": 1,
+      "cardWin": "idle",
+      "cardTxt": "1 烤五花肉拼盘 ¥48 · 等待 上炉",
+      "popups": [
+        "夹生丢弃 · 废料 +1"
+      ],
+      "patience": 71.85000000000018,
+      "stars": "1"
+    },
+    "head": {
+      "x": 164.11111111111111,
+      "y": 390.35342334976616,
+      "z": -0.7222614934987465
+    },
+    "popRects": [
+      {
+        "x": 11.9140625,
+        "y": 214.203125,
+        "w": 229.359375,
+        "h": 34
+      }
+    ],
+    "cardRects": [
+      {
+        "x": 8,
+        "y": 725,
+        "w": 184,
+        "h": 95
+      }
+    ],
+    "popupCardOverlap": [
+      0
+    ]
+  }
+}

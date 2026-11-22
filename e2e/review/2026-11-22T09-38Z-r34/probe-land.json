@@ -1,0 +1,159 @@
+{
+  "tag": "land",
+  "build": "de55a6c-202611220933",
+  "walkIn": {
+    "simSeconds": 1.65,
+    "cards": 1,
+    "phase": "seated"
+  },
+  "labelTimeline": [
+    {
+      "tag": "before",
+      "label": "上炉",
+      "disabled": false,
+      "cardWin": "idle",
+      "aria": "上炉"
+    },
+    {
+      "tag": "t=0.1",
+      "label": "上炉中",
+      "disabled": false,
+      "cardWin": "raw",
+      "aria": "上炉中 · 未熟 · 离熟 4s"
+    },
+    {
+      "tag": "t=0.7",
+      "label": "未熟",
+      "disabled": false,
+      "cardWin": "raw",
+      "aria": "未熟 · 离熟 4s"
+    },
+    {
+      "tag": "t=3.7",
+      "label": "未熟",
+      "disabled": false,
+      "cardWin": "raw",
+      "aria": "未熟 · 离熟 1s"
+    },
+    {
+      "tag": "t=4.7",
+      "label": "起锅",
+      "disabled": false,
+      "cardWin": "perfect",
+      "aria": "起锅 · 完美 5s"
+    }
+  ],
+  "stars": {
+    "outer": "<span class=\"stars\" data-stars=\"1\" aria-label=\"评级 1/3\">\n<svg viewBox=\"0 0 24 24\" fill=\"#f0c060\" stroke=\"#f0c060\" stroke-width=\"1.8\">\n  <path d=\"M12 2.6l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.5 6.1 20.6l1.2-6.5L2.5 9.5l6.6-.9z\"></path>\n</svg>\n<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"rgba(240,192,96,.4",
+    "dataStars": "1",
+    "aria": "评级 1/3",
+    "text": ""
+  },
+  "four": {
+    "cards": [
+      {
+        "x": 7,
+        "y": 312,
+        "w": 203.8,
+        "h": 68,
+        "right": 210.8,
+        "bottom": 380,
+        "txt": "1 烤五花肉拼盘 ¥48 · 等待 上炉"
+      },
+      {
+        "x": 215.8,
+        "y": 312,
+        "w": 203.8,
+        "h": 68,
+        "right": 419.5,
+        "bottom": 380,
+        "txt": "2 烤五花肉拼盘 ¥48 · 等待 上炉"
+      },
+      {
+        "x": 424.5,
+        "y": 312,
+        "w": 203.8,
+        "h": 68,
+        "right": 628.3,
+        "bottom": 380,
+        "txt": "3 烤五花肉拼盘 ¥48 · 等待 上炉"
+      },
+      {
+        "x": 633.3,
+        "y": 312,
+        "w": 203.8,
+        "h": 68,
+        "right": 837,
+        "bottom": 380,
+        "txt": "4 烤菌子 ¥32 · 等待 上炉"
+      }
+    ],
+    "btns": [
+      {
+        "x": 148.8,
+        "y": 318,
+        "w": 56,
+        "h": 56,
+        "right": 204.8,
+        "bottom": 374
+      },
+      {
+        "x": 357.5,
+        "y": 318,
+        "w": 56,
+        "h": 56,
+        "right": 413.5,
+        "bottom": 374
+      },
+      {
+        "x": 566.3,
+        "y": 318,
+        "w": 56,
+        "h": 56,
+        "right": 622.3,
+        "bottom": 374
+      },
+      {
+        "x": 775,
+        "y": 318,
+        "w": 56,
+        "h": 56,
+        "right": 831,
+        "bottom": 374
+      }
+    ],
+    "head": {
+      "x": 246.16666666666669,
+      "y": 115.4455220810712,
+      "z": -0.7126800189467571
+    },
+    "headCovered": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "vh": 390,
+    "dockTop": 312,
+    "customers": [
+      {
+        "id": 2,
+        "phase": "seated"
+      },
+      {
+        "id": 3,
+        "phase": "seated"
+      },
+      {
+        "id": 4,
+        "phase": "seated"
+      },
+      {
+        "id": 5,
+        "phase": "seated"
+      }
+    ],
+    "orders": 4
+  },
+  "errors": []
+}

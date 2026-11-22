@@ -1,0 +1,546 @@
+{
+  "tag": "port",
+  "stage": "play",
+  "build": "de55a6c-202611220933",
+  "console": [
+    "warning: THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "warning: THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+  ],
+  "pageerror": [],
+  "shots": [
+    "/tmp/r34/out/port-01-title.png",
+    "/tmp/r34/out/port-02-orders.png",
+    "/tmp/r34/out/port-03-grill-perfect.png",
+    "/tmp/r34/out/port-04-served.png",
+    "/tmp/r34/out/port-05-rapid.png",
+    "/tmp/r34/out/port-06-angry.png"
+  ],
+  "data": {
+    "title": {
+      "text": "柳真真云南烤肉 点订单卡两步出餐：上炉 → 起锅上菜 金色完美窗起锅拿满小费 · 3 个烤位排队 第 1 关 · 目标：3 分钟营业额 ¥180 开店",
+      "btn": {
+        "w": 156,
+        "h": 48,
+        "x": 117,
+        "y": 469.6
+      }
+    },
+    "afterSpawn": {
+      "phase": "playing",
+      "level": 1,
+      "levelTarget": 180,
+      "money": 0,
+      "timeLeft": 175.8499999999967,
+      "served": 0,
+      "angry": 0,
+      "waste": 0,
+      "hint": {
+        "kind": "station",
+        "id": "crate-pork",
+        "x": -4.5,
+        "z": 2
+      },
+      "carrying": null,
+      "action": "none",
+      "actionLabel": "去料箱取料",
+      "player": {
+        "x": -2.5,
+        "z": 0
+      },
+      "stations": {
+        "bin": {
+          "x": -5.5,
+          "z": 2
+        },
+        "crate-pork": {
+          "x": -4.5,
+          "z": 2
+        },
+        "crate-mush": {
+          "x": -3.5,
+          "z": 2
+        },
+        "crate-mix": {
+          "x": -2.5,
+          "z": 2
+        },
+        "chop": {
+          "x": -1,
+          "z": 2
+        },
+        "grill": {
+          "x": 1.5,
+          "z": 2
+        },
+        "plate": {
+          "x": 4,
+          "z": 2
+        }
+      },
+      "tables": {
+        "t1": {
+          "x": -3.3,
+          "z": -1.2000000000000002
+        },
+        "t2": {
+          "x": 0.2999999999999998,
+          "z": -1.2000000000000002
+        },
+        "t3": {
+          "x": 3.9000000000000004,
+          "z": -1.2000000000000002
+        },
+        "t4": {
+          "x": 2.0999999999999996,
+          "z": 0.7999999999999998
+        }
+      },
+      "customers": [
+        {
+          "id": 1,
+          "dish": "mixian",
+          "phase": "seated",
+          "patience": 97.65000000000013,
+          "table": "t1",
+          "x": -4.1,
+          "z": -2.43
+        },
+        {
+          "id": 2,
+          "dish": "mushroom",
+          "phase": "seated",
+          "patience": 89.9,
+          "table": "t2",
+          "x": -0.5,
+          "z": -2.43
+        },
+        {
+          "id": 3,
+          "dish": "pork",
+          "phase": "walking-in",
+          "patience": 75,
+          "table": "t3",
+          "x": 1.6,
+          "z": -4.4
+        }
+      ],
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      },
+      "calls": 77,
+      "tris": 16998,
+      "orders": 2
+    },
+    "geomBefore": {
+      "vw": 390,
+      "vh": 844,
+      "topbar": {
+        "x": 37.3,
+        "y": 8,
+        "w": 315.4,
+        "h": 36
+      },
+      "cards": [
+        {
+          "x": 8,
+          "y": 725,
+          "w": 184,
+          "h": 95,
+          "win": "idle",
+          "txt": "1 豆泥米线 ¥26 · 等待 上炉"
+        },
+        {
+          "x": 198,
+          "y": 725,
+          "w": 184,
+          "h": 95,
+          "win": "idle",
+          "txt": "2 烤菌子 ¥32 · 等待 上炉"
+        }
+      ],
+      "btns": [
+        {
+          "x": 128,
+          "y": 758,
+          "w": 56,
+          "h": 56,
+          "label": "上炉"
+        },
+        {
+          "x": 318,
+          "y": 758,
+          "w": 56,
+          "h": 56,
+          "label": "上炉"
+        }
+      ],
+      "tip": {
+        "x": 111,
+        "y": 685,
+        "w": 91,
+        "h": 30.3,
+        "txt": "点一下上炉"
+      },
+      "popups": [],
+      "stars": "1",
+      "starText": "",
+      "hudText": "第 1 关 营业额 ¥0 时间 2:56 评级"
+    },
+    "card1AfterGrill": {
+      "cookWindow": "raw",
+      "cookT": 0.15,
+      "progressPct": 1.25,
+      "btn": {
+        "w": 56,
+        "h": 56
+      },
+      "disabled": false,
+      "rawLocked": true,
+      "label": "未熟 · 离熟 4s",
+      "slotIndex": 0
+    },
+    "popupsAfterGrill": [],
+    "card1AtPerfect": {
+      "cookWindow": "perfect",
+      "cookT": 4.15,
+      "progressPct": 34.5833,
+      "btn": {
+        "w": 56,
+        "h": 56
+      },
+      "disabled": false,
+      "rawLocked": false,
+      "label": "完美 5s",
+      "slotIndex": 0
+    },
+    "afterServe": {
+      "money": 34,
+      "served": 1,
+      "angry": 0,
+      "waste": 0,
+      "orders": 3,
+      "popups": [
+        "+¥34"
+      ]
+    },
+    "geomAfterServe": {
+      "vw": 390,
+      "vh": 844,
+      "topbar": {
+        "x": 33.1,
+        "y": 8,
+        "w": 323.8,
+        "h": 36
+      },
+      "cards": [
+        {
+          "x": 8,
+          "y": 624,
+          "w": 184,
+          "h": 95,
+          "win": "eating",
+          "txt": "1 豆泥米线 ¥26 · 用餐中 已上"
+        },
+        {
+          "x": 198,
+          "y": 624,
+          "w": 184,
+          "h": 95,
+          "win": "idle",
+          "txt": "2 烤菌子 ¥32 · 等待 上炉"
+        },
+        {
+          "x": 8,
+          "y": 725,
+          "w": 184,
+          "h": 95,
+          "win": "idle",
+          "txt": "3 烤五花肉拼盘 ¥48 · 等待 上炉"
+        }
+      ],
+      "btns": [
+        {
+          "x": 128,
+          "y": 657,
+          "w": 56,
+          "h": 56,
+          "label": "已上"
+        },
+        {
+          "x": 318,
+          "y": 657,
+          "w": 56,
+          "h": 56,
+          "label": "上炉"
+        },
+        {
+          "x": 128,
+          "y": 758,
+          "w": 56,
+          "h": 56,
+          "label": "上炉"
+        }
+      ],
+      "tip": {
+        "x": 0,
+        "y": 0,
+        "w": 0,
+        "h": 0,
+        "txt": "金环亮起就起锅"
+      },
+      "popups": [
+        {
+          "x": 84.6,
+          "y": 214.2,
+          "w": 84.1,
+          "h": 34
+        }
+      ],
+      "stars": "1",
+      "starText": "",
+      "hudText": "第 1 关 营业额 ¥34 时间 2:52 评级"
+    },
+    "rapidBefore": {
+      "phase": "playing",
+      "level": 1,
+      "levelTarget": 180,
+      "money": 34,
+      "timeLeft": 171.38333333332648,
+      "served": 1,
+      "angry": 0,
+      "waste": 0,
+      "hint": {
+        "kind": "station",
+        "id": "crate-pork",
+        "x": -4.5,
+        "z": 2
+      },
+      "carrying": null,
+      "action": "none",
+      "actionLabel": "去料箱取料",
+      "player": {
+        "x": -2.5,
+        "z": 0
+      },
+      "stations": {
+        "bin": {
+          "x": -5.5,
+          "z": 2
+        },
+        "crate-pork": {
+          "x": -4.5,
+          "z": 2
+        },
+        "crate-mush": {
+          "x": -3.5,
+          "z": 2
+        },
+        "crate-mix": {
+          "x": -2.5,
+          "z": 2
+        },
+        "chop": {
+          "x": -1,
+          "z": 2
+        },
+        "grill": {
+          "x": 1.5,
+          "z": 2
+        },
+        "plate": {
+          "x": 4,
+          "z": 2
+        }
+      },
+      "tables": {
+        "t1": {
+          "x": -3.3,
+          "z": -1.2000000000000002
+        },
+        "t2": {
+          "x": 0.2999999999999998,
+          "z": -1.2000000000000002
+        },
+        "t3": {
+          "x": 3.9000000000000004,
+          "z": -1.2000000000000002
+        },
+        "t4": {
+          "x": 2.0999999999999996,
+          "z": 0.7999999999999998
+        }
+      },
+      "customers": [
+        {
+          "id": 1,
+          "dish": "mixian",
+          "phase": "eating",
+          "patience": 93.38333333333371,
+          "table": "t1",
+          "x": -4.1,
+          "z": -2.43
+        },
+        {
+          "id": 2,
+          "dish": "mushroom",
+          "phase": "seated",
+          "patience": 85.4333333333336,
+          "table": "t2",
+          "x": -0.5,
+          "z": -2.43
+        },
+        {
+          "id": 3,
+          "dish": "pork",
+          "phase": "seated",
+          "patience": 72.68333333333347,
+          "table": "t3",
+          "x": 3.1,
+          "z": -2.43
+        }
+      ],
+      "grill": [
+        null,
+        null,
+        null
+      ],
+      "chop": {
+        "held": null,
+        "chopLeft": 0
+      },
+      "calls": 102,
+      "tris": 21900,
+      "orders": 3
+    },
+    "rapidAfter": {
+      "money": 34,
+      "served": 1,
+      "waste": 0,
+      "angry": 0,
+      "grill": [
+        {
+          "stage": "raw",
+          "t": 0.6000000000000002
+        },
+        null,
+        null
+      ],
+      "orders": 3,
+      "popups": []
+    },
+    "geomAfterRapid": {
+      "vw": 390,
+      "vh": 844,
+      "topbar": {
+        "x": 33.1,
+        "y": 8,
+        "w": 323.8,
+        "h": 36
+      },
+      "cards": [
+        {
+          "x": 8,
+          "y": 624,
+          "w": 184,
+          "h": 95,
+          "win": "eating",
+          "txt": "1 豆泥米线 ¥26 · 用餐中 已上"
+        },
+        {
+          "x": 198,
+          "y": 624,
+          "w": 184,
+          "h": 95,
+          "win": "raw",
+          "txt": "2 烤菌子 未熟 · 离熟 4s 未熟"
+        },
+        {
+          "x": 8,
+          "y": 725,
+          "w": 184,
+          "h": 95,
+          "win": "idle",
+          "txt": "3 烤五花肉拼盘 ¥48 · 等待 上炉"
+        }
+      ],
+      "btns": [
+        {
+          "x": 128,
+          "y": 657,
+          "w": 56,
+          "h": 56,
+          "label": "已上"
+        },
+        {
+          "x": 318,
+          "y": 657,
+          "w": 56,
+          "h": 56,
+          "label": "未熟"
+        },
+        {
+          "x": 128,
+          "y": 758,
+          "w": 56,
+          "h": 56,
+          "label": "上炉"
+        }
+      ],
+      "tip": {
+        "x": 0,
+        "y": 0,
+        "w": 0,
+        "h": 0,
+        "txt": "金环亮起就起锅"
+      },
+      "popups": [],
+      "stars": "1",
+      "starText": "",
+      "hudText": "第 1 关 营业额 ¥34 时间 2:51 评级"
+    },
+    "afterAngry": {
+      "money": 34,
+      "served": 1,
+      "angry": 2,
+      "waste": 0,
+      "customers": [
+        {
+          "id": 1,
+          "phase": "leaving-happy",
+          "patience": 93.4
+        },
+        {
+          "id": 2,
+          "phase": "leaving-angry",
+          "patience": 0
+        },
+        {
+          "id": 3,
+          "phase": "leaving-angry",
+          "patience": 0
+        }
+      ],
+      "orders": 0,
+      "stars": "1",
+      "starText": "",
+      "popups": [
+        "愤怒离店",
+        "愤怒离店"
+      ]
+    },
+    "finalState": {
+      "phase": "playing",
+      "money": 34,
+      "served": 1,
+      "angry": 2,
+      "waste": 0
+    },
+    "errors": 0
+  }
+}

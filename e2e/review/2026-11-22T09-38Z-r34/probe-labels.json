@@ -1,0 +1,60 @@
+{
+  "seq": [
+    {
+      "tag": "idle",
+      "txt": "1 烤菌子 ¥32 · 等待 上炉",
+      "win": "idle",
+      "ringFound": true,
+      "dash": "157.08px",
+      "btnW": 56
+    },
+    {
+      "tag": "t=0.1",
+      "txt": "1 烤菌子 未熟 · 离熟 4s 上炉中",
+      "win": "raw",
+      "ringFound": true,
+      "dash": "155.771px",
+      "btnW": 56
+    },
+    {
+      "tag": "t=1.6",
+      "txt": "1 烤菌子 未熟 · 离熟 3s 未熟",
+      "win": "raw",
+      "ringFound": true,
+      "dash": "136.136px",
+      "btnW": 56
+    },
+    {
+      "tag": "t=3.8",
+      "txt": "1 烤菌子 未熟 · 离熟 1s 未熟",
+      "win": "raw",
+      "ringFound": true,
+      "dash": "107.338px",
+      "btnW": 56
+    },
+    {
+      "tag": "t=5.0",
+      "txt": "1 烤菌子 ¥32 · 完美 4s 起锅",
+      "win": "perfect",
+      "ringFound": true,
+      "dash": "91.6297px",
+      "btnW": 56
+    },
+    {
+      "tag": "t=9.5",
+      "txt": "1 烤菌子 ¥32 · 偏老 3s 快起",
+      "win": "over",
+      "ringFound": true,
+      "dash": "32.7249px",
+      "btnW": 56
+    },
+    {
+      "tag": "t=12.0",
+      "txt": "1 烤菌子 ¥32 · 焦糊 焦糊",
+      "win": "burnt",
+      "ringFound": true,
+      "dash": "0px",
+      "btnW": 56
+    }
+  ]
+}

@@ -1525,3 +1525,33 @@ vision 复核：竖屏放大后独立读出「三个筐＝红肉串 / 褐圆帽�
 - 执行过程：agy `gemini-4-neon-xhigh` 跑满 60 分钟超时（rc=124，尾段卡在并发 e2e），按兜底流程提交并合入 main，随后由我本人补跑 tsc/build/部署/验收。
 - 下一轮建议：`B-152`（生串双击静默撤串 + 夹生不计废料，玩家会以为点了没反应）优先于任何新内容；其次 `B-154`（8 条飘字糊屏）。
 - 遗留：`B-141`（`/api/health` 构建溯源）、`B-149`（愤怒离店无顶栏反馈）仍未做。
+
+## 2026-11-22 08:40Z 第 33 轮新增（B-156–B-159）
+
+### B-156 焦糊惩罚解耦（不一次双扣愤怒与废料）与焦糊留痕重烤机制
+优先级：P1
+来源：第 33 轮走查（冻结时钟推进至 `t=12.1s` 触发 `cookWindow="burnt"` 同帧 `angry 0→1` 且 `waste 0→1`，一次焦糊直接打破 `GAME-DESIGN.md §4` 的 `a=0` 条件令 `w≤1` 容错形同虚设，且焦糊卡 `1.0s` 后移除、顾客离店、桌面无残留提示，见 `/www/yunnan-bbq-house/e2e/review/2026-11-22T08-40Z-r33/port-08-burnt-linger.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T08-40Z-r33/port-05-grill-burnt.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T08-40Z-r33/land-05-grill-burnt.png`）
+需求：① 解耦烤焦惩罚，令 `t > 12s` 自动焦糊仅计 `waste += 1`、释放烤位并保持 `money` 不增（按 `GAME-DESIGN.md §1` 仅作废料结算），**不再同帧强制触发 `angry += 1` 赶走顾客**——顾客维持在座并继续消耗剩余耐心，仅当耐心真正归零时才 `angry += 1` 愤怒离店；② 焦糊发生后，该订单卡先以焦糊警示态驻留 `1.2s`（由 `flow.update(dt)` 驱动，禁 `setTimeout`），随后自动切回可重新上炉的 `idle` 态并附加 `[data-burnt-retry="true"]` 标记与「焦糊 · 重烤」轻提示角标直至玩家再次点击上炉；③ 焦糊飘字文案更新为 `焦糊了 · 废料 +1`，明确传达本次损耗口径，同步在 `GAME-DESIGN.md §1/§4` 写清焦糊仅计废料、不直接扣满意度的单一规则。
+验收：e2e 在竖屏 `390×844` 与横屏 `844×390` 冻结时钟下执行：(a) 点 1 号卡上炉并 `__test.tick()` 推进至 `t=12.1s`，断言同帧 `state().waste === 1`、`state().angry === 0`、`state().money === 0`，且 `#bbq-popups .popup` 文本同时包含 `焦糊` 与 `废料`；(b) `t=12.5s` 时该订单卡仍存在于 `#bbq-orders` 且 `dataset.cookWindow === 'burnt'`，继续推进 `1.5s` 后断言卡片切回 `dataset.cookWindow === 'idle'`、具备 `[data-burnt-retry="true"]` 且对应顾客仍为 `seated`；(c) 再次点击该卡上炉并于 `t=5.5s` 完美窗起锅收款，断言 `served === 1 && money > 0`，随后在 `money >= target, angry === 0, waste === 1` 条件下结算断言星级 `=== 3`；(d) 双端连跑 3 次 `0` JS error。
+参考：《胡闹厨房 2》/《沙威玛传奇》（烤焦仅损毁该份食材并要求重做，顾客耐心未归零前不会立刻离店，保留容错与翻盘空间）；`GAME-DESIGN.md §1`、`§4`、`TECH-STACK.md §2`。
+
+### B-157 偏老/焦糊订单卡分级边框着色与消除「焦糊 焦糊」文案重复
+优先级：P1
+来源：第 33 轮走查（`t=10.1s` `cookWindow="over"` 时订单卡边框 computed 为 `rgba(232, 180, 90, 0.48)` 与 `idle` 卡完全同色、按钮底色 `rgba(32,20,13,0.92)`，新手引导仍停在「金环亮起就起锅」；`t=12.1s` `cookWindow="burnt"` 时卡内出现 `焦糊 焦糊` 文案重复，见 `/www/yunnan-bbq-house/e2e/review/2026-11-22T08-40Z-r33/port-07-over-10s.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T08-40Z-r33/port-08-burnt-linger.png`）
+需求：① 为 `#bbq-orders .card` 按 `[data-cook-window]` 落实明确色阶区分：`idle` 保持 `rgba(232, 180, 90, 0.48)`，`perfect` 切亮金 `#f0c060`，`over` 切 `ART-DIRECTION.md §5` 警示橙红 `#e05a3a`（`2px solid rgb(224, 90, 58)`）并同步把 `.card-btn` 背景改为可见暖橙警示填充（如 `rgba(224, 90, 58, 0.28)`）配轻呼吸动效，`burnt` 切深红 `#c93b2b`；② 消除 `burnt` 态「焦糊 焦糊」重名：副行状态文案改为 `已焦糊`，按钮文案改为 `已废`（且 `disabled`，衔接 `B-156` 在 `1.2s` 驻留结束后恢复可点 `上炉` / `重烤`），禁止卡片状态词与按钮词同名；③ 若 `[data-onboard-tip]` 仍可见且目标卡进入 `over` 态，提示文案同帧切换为 `快焦了，立刻起锅！`。
+验收：e2e 在竖屏 `390×844` 与横屏 `844×390` 冻结时钟下保持 2 号卡 `idle`、点 1 号卡上炉：(a) 推进至 `t=10.1s`（`over`）读取 `getComputedStyle(card1).borderColor` 与 `getComputedStyle(card2).borderColor`，断言两者严格不等且 `card1` 为 `rgb(224, 90, 58)`，`card1` `.card-btn` 的 `backgroundColor` 严格不等同于 `card2` `.card-btn`；若 `[data-onboard-tip]` 可见则文本匹配 `/快焦|立刻/`；(b) 推进至 `t=12.1s`（`burnt`），断言 `card1` 状态文本与 `.card-btn` 文本去空白后严格不等，且 `card1.innerText` 不匹配 `/焦糊\s+焦糊/`；(c) 全部卡片内文本满足 `scrollWidth <= clientWidth` 且计算字号 `>= 13px`；(d) 双端连跑 3 次 `0` JS error。
+参考：《胡闹厨房 2》/《烹饪发烧友》（过火预警整卡切警示红框与按钮底色，焦糊结果态与操作词严格区分）；`ART-DIRECTION.md §5`、`GAME-DESIGN.md §1`。
+
+### B-158 清理状态机与 `__test.state()` 废弃五步死语义（`crate-pork` / `去料箱取料` / `bin/chop/plate`）
+优先级：P2
+来源：第 33 轮走查（UI 层已在 `61f17e1` 清除旧五步控件，但 `__test.state()` 仍导出 `hint:{kind:"station", id:"crate-pork"}`、`actionLabel:"去料箱取料"`、`stations` 仍包含 `bin / chop / plate`，导致状态语义与 `GAME-DESIGN.md §1` 割裂并污染 E2E 与调试日志，参考 `/www/yunnan-bbq-house/e2e/review/2026-11-22T08-40Z-r33/port-02-orders.png`）
+需求：① 清理 `src/game/flow.ts` 与 `src/game/stations.ts` 中已废弃五步流程的运行时状态导出：`state().hint` 改为反映当前订单卡两步循环的真实建议（如 `{kind:"order", tableId, action:"grill"|"serve"}` 或 `null`），删除 `actionLabel: "去料箱取料"` 等旧站点引导文案；② 将 `bin / chop / plate / crate-*` 从玩法可交互站点表移除（保留 `src/world/kitchen.ts` 的 3D 静态布景网格不变，严格落实 `GAME-DESIGN.md §1`），`state().stations` 仅保留有效玩法实体；③ 同步更新引用上述旧字段的测试断言，保持 E2E 全套通过。
+验收：e2e 在竖屏 `390×844` 与横屏 `844×390` 进入 `playing` 态并就座 3 位顾客后读取 `window.__test.state()`：(a) `JSON.stringify(state)` 不匹配 `/去料箱|取料|切配|装盘|crate-pork/`；(b) 若 `state.stations` 存在，其 id 集合不包含 `bin`、`chop`、`plate`；(c) `node scripts/measure-look.mjs` 与 `e2e/r32-clean-loop.mjs` 回归全绿，厨房台面静态布景正常渲染；(d) 双端连跑 3 次 `0` JS error。
+参考：`GAME-DESIGN.md §0`、`§1`（料箱/切配/装盘/垃圾桶全部从玩法里移除，美术资产可保留作布景）；`TECH-STACK.md §2`。
+
+### B-159 修订 `ART-DIRECTION.md §5` 过期订单卡规格与横屏引导气泡防压料箱
+优先级：P2
+来源：第 33 轮走查（`docs/ART-DIRECTION.md §5` 仍写着「订单卡：右上竖排 ≤3 张、`top:150px`、横屏 `max-width 168px`、夹在桌位光圈与动作键之间」，§1 仍保留摇杆与动作键尺寸，与 `61f17e1` 实测的底部停靠区规格严重过期；同时横屏 `[data-onboard-tip]` 引导气泡直接叠压 2 号菌子料箱与挂牌，见 `/www/yunnan-bbq-house/e2e/review/2026-11-22T08-40Z-r33/land-02-orders.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T08-40Z-r33/land-03-grill-raw.png`、`/www/yunnan-bbq-house/e2e/review/2026-11-22T08-40Z-r33/land-04-grill-perfect.png`）
+需求：① 修订 `docs/ART-DIRECTION.md §5` 订单卡皮肤与布局定稿为底部单手停靠区规范（竖屏底部 2×2 停靠、占屏高 `<=25%`、距底 `>=max(16px, env(safe-area-inset-bottom))`、按钮 `>=48×48px`；横屏底部单排、占屏高 `<=20%`、距底 `>=10px`），并将 `§1` 中废弃的摇杆/动作键条款标明已移除，消除文档债；② 调整横屏（`aspect >= 1.5`）下 `[data-onboard-tip]` 锚点位置：将气泡上移至厨房台面上沿之上的中区走道，或改为贴紧 1 号卡上缘偏右且避开 `crate-pork/mush/mix` 台面投影区，避免遮挡料箱实物与斗方挂牌。
+验收：(a) 检查 `docs/ART-DIRECTION.md §5` 不再包含 `top:150px`、`右上竖排`、`动作键` 等过期表述，新增底部停靠区占比与底距参数与实测（竖屏 `23.2% / 24px`、横屏 `17.4% / 10px`）一致；(b) e2e 在横屏 `844×390` 就座与上炉态下读取 `[data-onboard-tip]` 与三个料箱屏幕投影矩形，断言交叠面积 `=== 0` 且气泡不越出视口；(c) 竖屏 `390×844` 下 `[data-onboard-tip]` 仍紧贴 1 号卡上方、与 `.topbar` 及 `#bbq-orders .card` 交叠 `=== 0`；(d) 双端连跑 3 次 `0` JS error。
+参考：《胡闹厨房 2》/《烹饪日记》移动端底部停靠规范与不压关键布景的引导锚点；`ART-DIRECTION.md §1`、`§5`、`GAME-DESIGN.md §0`。

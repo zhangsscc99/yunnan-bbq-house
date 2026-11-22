@@ -1,0 +1,341 @@
+{
+ "over": {
+  "cw": "over",
+  "text": "1 烤五花肉拼盘 ¥48 · 偏老 2s 快起",
+  "btn": "快起",
+  "btnColor": "rgba(32, 20, 13, 0.92)",
+  "cardBorder": "rgba(232, 180, 90, 0.48)",
+  "slots": [
+   {
+    "occupied": true,
+    "dish": "pork",
+    "t": 10.1167
+   },
+   {
+    "occupied": false,
+    "dish": null,
+    "t": 0
+   },
+   {
+    "occupied": false,
+    "dish": null,
+    "t": 0
+   }
+  ]
+ },
+ "burntLinger": {
+  "cards": [
+   {
+    "cw": "burnt",
+    "text": "1 烤五花肉拼盘 ¥48 · 焦糊 焦糊",
+    "opacity": "1",
+    "border": "rgb(255, 140, 36)"
+   },
+   {
+    "cw": "idle",
+    "text": "2 烤菌子 ¥32 · 等待 上炉",
+    "opacity": "1",
+    "border": "rgba(232, 180, 90, 0.48)"
+   }
+  ],
+  "popups": [
+   "焦糊了"
+  ],
+  "state": {
+   "phase": "playing",
+   "level": 1,
+   "levelTarget": 180,
+   "money": 0,
+   "timeLeft": 163.8833333333205,
+   "served": 0,
+   "angry": 1,
+   "waste": 1,
+   "hint": {
+    "kind": "station",
+    "id": "crate-pork",
+    "x": -4.5,
+    "z": 2
+   },
+   "carrying": null,
+   "action": "none",
+   "actionLabel": "去料箱取料",
+   "player": {
+    "x": -2.5,
+    "z": 0
+   },
+   "stations": {
+    "bin": {
+     "x": -5.5,
+     "z": 2
+    },
+    "crate-pork": {
+     "x": -4.5,
+     "z": 2
+    },
+    "crate-mush": {
+     "x": -3.5,
+     "z": 2
+    },
+    "crate-mix": {
+     "x": -2.5,
+     "z": 2
+    },
+    "chop": {
+     "x": -1,
+     "z": 2
+    },
+    "grill": {
+     "x": 1.5,
+     "z": 2
+    },
+    "plate": {
+     "x": 4,
+     "z": 2
+    }
+   },
+   "tables": {
+    "t1": {
+     "x": -3.3,
+     "z": -1.2000000000000002
+    },
+    "t2": {
+     "x": 0.2999999999999998,
+     "z": -1.2000000000000002
+    },
+    "t3": {
+     "x": 3.9000000000000004,
+     "z": -1.2000000000000002
+    },
+    "t4": {
+     "x": 2.0999999999999996,
+     "z": 0.7999999999999998
+    }
+   },
+   "customers": [
+    {
+     "id": 1,
+     "dish": "pork",
+     "phase": "leaving-angry",
+     "patience": 888.0166666666776,
+     "table": "t1",
+     "x": -4.1,
+     "z": -2.8
+    },
+    {
+     "id": 2,
+     "dish": "mushroom",
+     "phase": "seated",
+     "patience": 887.7833333333444,
+     "table": "t2",
+     "x": -0.5,
+     "z": -2.43
+    }
+   ],
+   "grill": [
+    null,
+    null,
+    null
+   ],
+   "chop": {
+    "held": null,
+    "chopLeft": 0
+   },
+   "calls": 107,
+   "tris": 21070
+  },
+  "slots": [
+   {
+    "occupied": false,
+    "dish": null,
+    "t": 0
+   },
+   {
+    "occupied": false,
+    "dish": null,
+    "t": 0
+   },
+   {
+    "occupied": false,
+    "dish": null,
+    "t": 0
+   }
+  ]
+ },
+ "burntAfter": {
+  "cards": [
+   {
+    "cw": "idle",
+    "text": "2 烤菌子 ¥32 · 等待 上炉"
+   }
+  ],
+  "state": {
+   "phase": "playing",
+   "level": 1,
+   "levelTarget": 180,
+   "money": 0,
+   "timeLeft": 162.3833333333193,
+   "served": 0,
+   "angry": 1,
+   "waste": 1,
+   "hint": {
+    "kind": "station",
+    "id": "crate-pork",
+    "x": -4.5,
+    "z": 2
+   },
+   "carrying": null,
+   "action": "none",
+   "actionLabel": "去料箱取料",
+   "player": {
+    "x": -2.5,
+    "z": 0
+   },
+   "stations": {
+    "bin": {
+     "x": -5.5,
+     "z": 2
+    },
+    "crate-pork": {
+     "x": -4.5,
+     "z": 2
+    },
+    "crate-mush": {
+     "x": -3.5,
+     "z": 2
+    },
+    "crate-mix": {
+     "x": -2.5,
+     "z": 2
+    },
+    "chop": {
+     "x": -1,
+     "z": 2
+    },
+    "grill": {
+     "x": 1.5,
+     "z": 2
+    },
+    "plate": {
+     "x": 4,
+     "z": 2
+    }
+   },
+   "tables": {
+    "t1": {
+     "x": -3.3,
+     "z": -1.2000000000000002
+    },
+    "t2": {
+     "x": 0.2999999999999998,
+     "z": -1.2000000000000002
+    },
+    "t3": {
+     "x": 3.9000000000000004,
+     "z": -1.2000000000000002
+    },
+    "t4": {
+     "x": 2.0999999999999996,
+     "z": 0.7999999999999998
+    }
+   },
+   "customers": [
+    {
+     "id": 2,
+     "dish": "mushroom",
+     "phase": "seated",
+     "patience": 886.2833333333458,
+     "table": "t2",
+     "x": -0.5,
+     "z": -2.43
+    }
+   ],
+   "grill": [
+    null,
+    null,
+    null
+   ],
+   "chop": {
+    "held": null,
+    "chopLeft": 0
+   },
+   "calls": 94,
+   "tris": 20888
+  }
+ },
+ "rapid": {
+  "seated": 1,
+  "seq": [
+   {
+    "i": 0,
+    "cw": "raw",
+    "waste": 1,
+    "slots": 1
+   },
+   {
+    "i": 1,
+    "cw": "idle",
+    "waste": 1,
+    "slots": 0
+   },
+   {
+    "i": 2,
+    "cw": "raw",
+    "waste": 1,
+    "slots": 1
+   },
+   {
+    "i": 3,
+    "cw": "idle",
+    "waste": 1,
+    "slots": 0
+   },
+   {
+    "i": 4,
+    "cw": "raw",
+    "waste": 1,
+    "slots": 1
+   },
+   {
+    "i": 5,
+    "cw": "idle",
+    "waste": 1,
+    "slots": 0
+   },
+   {
+    "i": 6,
+    "cw": "raw",
+    "waste": 1,
+    "slots": 1
+   },
+   {
+    "i": 7,
+    "cw": "idle",
+    "waste": 1,
+    "slots": 0
+   },
+   {
+    "i": 8,
+    "cw": "raw",
+    "waste": 1,
+    "slots": 1
+   },
+   {
+    "i": 9,
+    "cw": "idle",
+    "waste": 1,
+    "slots": 0
+   }
+  ],
+  "popups": [
+   "夹生 · 重烤",
+   "夹生 · 重烤",
+   "夹生 · 重烤",
+   "夹生 · 重烤",
+   "夹生 · 重烤"
+  ],
+  "waste": 1,
+  "money": 0
+ },
+ "rapidShot": true,
+ "errors": []
+}

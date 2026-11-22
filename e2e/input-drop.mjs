@@ -63,8 +63,7 @@ const inPage = (page, body, arg) => page.evaluate(({ src, arg }) => {
     const t0 = S().timeLeft;
     for (let i = 0; i < 40 && S().timeLeft === t0; i++) T.tick(0.001, 1);
   };
-  const tap = () => document.querySelector('#bbq-act')
-    .dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch', isPrimary: true }));
+  const tap = () => T.press();
   const atStation = (id) => { T.teleportToStation(id); T.tick(0.05, 2); };
   const fresh = () => { T.start(); T.pauseSpawns(true); T.tick(0.05, 2); };
   return new Function('T', 'S', 'settle', 'tap', 'atStation', 'fresh', 'arg', `return (${src})(arg)`)(T, S, settle, tap, atStation, fresh, arg);
@@ -108,7 +107,7 @@ async function runViewportOnce(tag, viewport) {
       console.log(`PASS ${tag} (b) 连点5次 手持1个 ${JSON.stringify(r.carrying)} 未复制`);
     }
 
-    // (c) raw skewer on the board; 3 taps at 120Hz frames → chopLeft 3→0 and 已切好 ✓
+    // (c) raw skewer on the board; 3 taps at 120Hz frames → chopLeft 3→0 (legacy #bbq-chop layer absent)
     {
       const r = await inPage(page, (FRAME) => {
         fresh(); atStation('crate-pork'); T.press(); T.tick(0.05, 2);
@@ -117,14 +116,13 @@ async function runViewportOnce(tag, viewport) {
         settle();
         for (let i = 0; i < 3; i++) { tap(); T.tick(FRAME, 1); }
         T.tick(FRAME, 12);
-        const txt = document.querySelector('#bbq-chop .cb .cb-txt')?.textContent ?? null;
-        return { start, end: S().chop, txt };
+        return { start, end: S().chop, hasChopEl: Boolean(document.querySelector('#bbq-chop')) };
       }, FRAME);
       assert.deepEqual(r.start, { held: 'raw', chopLeft: 3 }, `${tag} (c) setup board ${JSON.stringify(r.start)}`);
       assert.equal(r.end.chopLeft, 0, `${tag} (c) chopLeft ${r.end.chopLeft} != 0 — taps lost`);
       assert.equal(r.end.held, 'chopped', `${tag} (c) held ${r.end.held}`);
-      assert.match(r.txt ?? '', /已切好 ✓/, `${tag} (c) badge text "${r.txt}"`);
-      console.log(`PASS ${tag} (c) 3 连点@120Hz chopLeft 3→0 「${r.txt}」`);
+      assert.equal(r.hasChopEl, false, `${tag} (c) legacy #bbq-chop must not exist`);
+      console.log(`PASS ${tag} (c) 3 连点@120Hz chopLeft 3→0 (#bbq-chop absent)`);
     }
 
     assert.equal(errors.length, 0, `${tag} JS errors:\n${errors.join('\n')}`);

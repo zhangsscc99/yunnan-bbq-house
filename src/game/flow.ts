@@ -356,8 +356,7 @@ export class Flow {
         break;
       }
       case 'none':
-        if (it.guide) this.ev.onGuide(it.label);
-        else this.denyT = 0.25;
+        if (!it.guide) this.denyT = 0.25;
         break;
     }
   }
@@ -595,14 +594,9 @@ export class Flow {
     return this.highlighter.state;
   }
 
-  syncHighlight(it: Interaction): void {
-    if (it.station || it.table) {
-      const anchor = it.station?.pos ?? it.table!.pos;
-      const w = it.station?.id === 'grill' ? 3 : 1.1;
-      this.highlighter.show(anchor, w, it.glyph, !!it.warn);
-    } else {
-      this.highlighter.hide();
-    }
+  syncHighlight(_it: Interaction): void {
+    // Legacy five-step station glow & floating glyph hidden per GAME-DESIGN §0/§1.
+    this.highlighter.hide();
   }
 
   // ---------------- per-frame ----------------
@@ -627,14 +621,13 @@ export class Flow {
     this.player.move(move, dt);
     this.player.update(dt);
 
-    // interaction + highlight
+    // interaction (kept for test hooks; legacy world arrow & station highlight stay hidden per §0/§1)
     this.current = resolveInteraction(
       this.player.obj.position, this.player.carrying,
       this.stations, this.tables, this.customers, this.grill,
     );
-    this.syncHighlight(this.current);
-    this.marker.set(this.current.action === 'none' ? this.hint : null);
-    this.marker.update(dt);
+    this.highlighter.hide();
+    this.marker.set(null);
     this.ev.onAction(this.current);
     if (actionPressed) this.act(this.current);
 

@@ -1,8 +1,7 @@
 // E2E: B-094 — three crates must be distinguishable at a glance (pork / mushroom / mixian):
 //   1) __test.foodNodes(): all 3 foods present, pairwise primary RGB Euclidean distance >= 40, cover >= 0.6
 //   2) __test.decorSat(): > 0 and <= min(food sat) - 0.15 (left-wall decor subdued vs crate food)
-//   3) standing at crate-pork / crate-mush / crate-mix use cells: #bbq-act innerText has ingredient name
-//      and icon container innerHTML has data-food="pork|mushroom|mixian" (not dashed placeholder)
+//   3) legacy #bbq-act / #bbq-stick absent & no legacy five-step copy on screen (Round 32)
 //   4) __test.spawnNow orders -> .card .nm [data-food] >= 1 and matches dish name; .bubble [data-food] matches
 //   5) screenshots e2e/shots/b094-port.png & e2e/shots/b094-land.png; 0 pageerror / 0 console.error
 // Usage: E2E_BASE=http://127.0.0.1:4175/bbq/ [E2E_RUNS=2] node e2e/crates.mjs
@@ -181,32 +180,20 @@ async function runViewportOnce(tag, shotPath, viewport, takeShot) {
     }
     console.log(`PASS ${tag} HUD) .card .nm [data-food]=${hudCheck.cardFoodCount} [${hudCheck.cards.map((c) => `${c.food}:${c.text}`).join(', ')}] bubbles=${seatedBubbles.length}`);
 
-    // 3) stand at each crate use cell (finishing on crate-mush for screenshot)
-    for (const c of CRATE_CHECKS) {
-      const actSnap = await page.evaluate((id) => {
-        window.__test.teleportToStation(id);
-        window.__test.setPatience(600);
-        window.__test.tick(0.05, 2);
-        const btn = document.querySelector('#bbq-act');
-        const iconBox = btn?.firstElementChild;
-        return {
-          action: window.__test.state().action,
-          innerText: btn?.innerText?.trim() ?? '',
-          iconHTML: iconBox?.innerHTML ?? '',
-        };
-      }, c.id);
-      assert.equal(actSnap.action, 'take-raw', `${tag} @${c.id}: action=${actSnap.action}`);
-      assert.ok(actSnap.innerText.includes(c.kw), `${tag} @${c.id}: #bbq-act innerText "${actSnap.innerText}" lacks "${c.kw}"`);
-      assert.ok(
-        actSnap.iconHTML.includes(`data-food="${c.food}"`),
-        `${tag} @${c.id}: icon container innerHTML lacks data-food="${c.food}": ${actSnap.iconHTML}`,
-      );
-      assert.ok(
-        !actSnap.iconHTML.includes('stroke-dasharray'),
-        `${tag} @${c.id}: icon fell back to dashed placeholder`,
-      );
-    }
-    console.log(`PASS ${tag} ACT) crate-pork/mix/mush 动作键文案与 data-food SVG 全部匹配（非占位）`);
+    // 3) Round 32: legacy action button / joystick removed and no legacy five-step copy visible
+    const legacy = await page.evaluate(() => ({
+      act: Boolean(document.querySelector('#bbq-act')),
+      stick: Boolean(document.querySelector('#bbq-stick')),
+      chop: Boolean(document.querySelector('#bbq-chop')),
+      gb: Boolean(document.querySelector('.gb')),
+      text: document.body.innerText ?? '',
+    }));
+    assert.equal(legacy.act, false, `${tag}: legacy #bbq-act still present`);
+    assert.equal(legacy.stick, false, `${tag}: legacy #bbq-stick still present`);
+    assert.equal(legacy.chop, false, `${tag}: legacy #bbq-chop still present`);
+    assert.equal(legacy.gb, false, `${tag}: legacy .gb still present`);
+    assert.doesNotMatch(legacy.text, /去料箱|取料|切配|装盘|烤制中/, `${tag}: legacy five-step copy found: ${legacy.text}`);
+    console.log(`PASS ${tag} CLEAN) 旧操控节点不存在且页面无旧五步文案`);
 
     await raf2(page);
     if (takeShot) await capture(page, shotPath);

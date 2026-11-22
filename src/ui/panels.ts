@@ -18,7 +18,8 @@ const CSS = `
   margin: 0 0 4px; font-size: 26px; font-weight: 800; color: #f5e8d8;
   letter-spacing: 1px;
 }
-.bbq-panel .sub { font-size: 13px; color: rgba(245,232,216,.7); margin-bottom: 14px; line-height: 1.5; }
+.bbq-panel .sub { font-size: 13px; color: rgba(245,232,216,.78); margin-bottom: 14px; line-height: 1.55; }
+.bbq-panel .sub b { color: #f0c060; font-weight: 700; }
 .bbq-panel .target {
   font-size: 13px; color: #f0c060; font-weight: 700; margin-bottom: 18px;
   border: 1px dashed rgba(240,192,96,.4); border-radius: 8px; padding: 6px 10px;
@@ -26,13 +27,20 @@ const CSS = `
 .bbq-panel button {
   font: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
   color: #241408; background: linear-gradient(180deg, #f0c060, #d89a40);
-  border: none; border-radius: 12px; padding: 12px 34px; min-width: 150px;
+  border: none; border-radius: 12px; padding: 12px 34px; min-width: 156px; min-height: 48px;
+  letter-spacing: 0.14em;
   box-shadow: 0 4px 14px rgba(240,192,96,.3); pointer-events: auto;
 }
 .bbq-panel button.ghost {
   background: transparent; color: #f0c060;
   border: 1.5px solid rgba(240,192,96,.55); box-shadow: none;
-  margin-top: 10px; font-size: 14px; padding: 10px 30px;
+  margin-top: 10px; font-size: 15px; padding: 11px 30px; min-height: 48px;
+}
+@media (max-height: 450px) {
+  .bbq-panel .card { padding: 14px 24px; max-height: calc(100dvh - 16px); overflow-y: auto; }
+  .bbq-panel h1 { font-size: 22px; }
+  .bbq-panel .sub { margin-bottom: 10px; }
+  .bbq-panel .target { margin-bottom: 12px; }
 }
 .bbq-panel button:disabled { opacity: .45; cursor: default; }
 .bbq-panel .stars-big { display: flex; gap: 6px; justify-content: center; margin: 6px 0 12px; }
@@ -76,9 +84,9 @@ export class Panels {
     p.innerHTML = `
       <div class="card">
         <h1>柳真真云南烤肉</h1>
-        <div class="sub">炭火生香，小店开张。<br/>取料 → 切配 → 炭烤 → 装盘 → 上菜</div>
+        <div class="sub">点订单卡两步出餐：<b>上炉 → 起锅上菜</b><br/>金色完美窗起锅拿满小费 · 3 个烤位排队</div>
         <div class="target">第 ${level} 关 · 目标：${Math.floor(duration / 60)} 分钟营业额 ¥${target}</div>
-        <button data-btn="start">开 店</button>
+        <button data-btn="start">开店</button>
       </div>`;
     this.root.appendChild(p);
     p.querySelector('button')!.addEventListener('click', onStart);
@@ -103,7 +111,7 @@ export class Panels {
         <div class="row ${r.angry ? 'neg' : ''}"><span>愤怒离店</span><b>${r.angry} 位</b></div>
         <div class="row ${r.waste ? 'neg' : ''}"><span>废料</span><b>${r.waste} 份</b></div>
         ${nextBtn}
-        <button class="ghost" data-btn="replay">再 开 一 局</button>
+        <button class="ghost" data-btn="replay">再开一局</button>
       </div>`;
     this.root.appendChild(p);
     p.querySelector('[data-btn="replay"]')!.addEventListener('click', onReplay);

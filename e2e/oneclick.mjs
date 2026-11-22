@@ -9,7 +9,7 @@
 //  (c) t = 6.5 lift -> money delta = price + full tip (and over window t = 10.5 = half tip, no double-pay);
 //  (d) t = 2.0 lift -> money unchanged, waste + 1, card back to idle, popup includes '夹生丢弃 · 废料 +1';
 //  (e) 3 cards cooking -> 4th card disabled === true & label includes '烤位满了'; release 1 -> disabled === false;
-//  (f) t > 12 without lift -> waste + 1 && angry + 1, customer leaves angry, card removed after burnt flash;
+//  (f) t > 12 without lift -> waste + 1 && angry unchanged, guest stays seated, card lingers burnt 1.2s (disabled, '已废') then returns to idle ('重烤');
 //  (g) pageerror + console.error === 0 across 3 runs.
 
 const { chromium } = await import('playwright');
@@ -216,25 +216,49 @@ async function runViewport(tag, width, height, run) {
     const segColors = new Set([samples[0].arcStroke, samples[1].arcStroke, samples[3].arcStroke, samples[5].arcStroke]);
     assert.equal(segColors.size, 4, `${tag} (b): expected 4 distinct segmented ring colors, got ${JSON.stringify([...segColors])}`);
 
-    // ---- (f) Auto-burn verification (both right after t=12.5 above AND standalone check) ----
+    // ---- (f) Auto-burn verification: waste + 1, angry unchanged, guest stays seated, lingers 1.2s then returns to idle ('重烤') ----
     const burntSnap = samples[5];
     assert.equal(burntSnap.st.waste, 1, `${tag} (f): expected waste===1 after t>12, got ${burntSnap.st.waste}`);
-    assert.equal(burntSnap.st.angry, 1, `${tag} (f): expected angry===1 after t>12, got ${burntSnap.st.angry}`);
+    assert.equal(burntSnap.st.angry, 0, `${tag} (f): expected angry===0 after t>12, got ${burntSnap.st.angry}`);
     assert.equal(burntSnap.slots.filter((s) => s.occupied).length, 0, `${tag} (f): burnt grill slot not released`);
-    const guestLeaving = burntSnap.st.customers.find((c) => c.table === 't1');
-    assert.ok(!guestLeaving || guestLeaving.phase === 'leaving-angry' || guestLeaving.phase === 'gone',
-      `${tag} (f): expected guest leaving-angry, got ${JSON.stringify(guestLeaving)}`);
-    // Advance +1.1s so burnt flash finishes and card is removed from DOM
-    await tickSec(page, 1.1);
-    const afterBurnLinger = await page.evaluate(() => ({
-      cardEl: Boolean(document.querySelector('#bbq-orders .card[data-table="t1"]')),
-      cs: window.__test.cardState('t1'),
-      st: window.__test.state(),
-    }));
-    assert.equal(afterBurnLinger.cardEl, false, `${tag} (f): burnt card was not removed from DOM`);
-    assert.equal(afterBurnLinger.cs, null, `${tag} (f): cardState should be null after card removal`);
+    assert.equal(burntSnap.cs.disabled, true, `${tag} (f): burnt card must be disabled during linger`);
+    const guestAfterBurn = burntSnap.st.customers.find((c) => c.table === 't1');
+    assert.ok(guestAfterBurn && guestAfterBurn.phase === 'seated',
+      `${tag} (f): expected guest to stay seated after burn, got ${JSON.stringify(guestAfterBurn)}`);
+    const burntDom = await page.evaluate(() => {
+      const card = document.querySelector('#bbq-orders .card[data-table="t1"]');
+      return {
+        text: (card?.textContent ?? '').trim(),
+        btnText: (card?.querySelector('.card-btn')?.textContent ?? '').trim(),
+        btnDisabled: Boolean(card?.querySelector('.card-btn')?.disabled),
+      };
+    });
+    assert.equal(burntDom.btnDisabled, true, `${tag} (f): burnt card DOM button must be disabled`);
+    assert.equal(burntDom.btnText, '已废', `${tag} (f): burnt button text "${burntDom.btnText}" !== '已废'`);
+    assert.doesNotMatch(burntDom.text, /焦糊\s+焦糊/, `${tag} (f): duplicate '焦糊 焦糊' in "${burntDom.text}"`);
+    // Advance +0.9s (t=12.5 + 0.9 = 13.4 > 12 + 1.2) so burnt linger finishes and card returns to retryable idle
+    await tickSec(page, 0.9);
+    const afterBurnLinger = await page.evaluate(() => {
+      const card = document.querySelector('#bbq-orders .card[data-table="t1"]');
+      const btn = card?.querySelector('.card-btn');
+      return {
+        cardCount: document.querySelectorAll('#bbq-orders .card[data-table="t1"]').length,
+        cs: window.__test.cardState('t1'),
+        btnText: (btn?.textContent ?? '').trim(),
+        btnDisabled: Boolean(btn?.disabled),
+        st: window.__test.state(),
+      };
+    });
+    assert.equal(afterBurnLinger.cardCount, 1, `${tag} (f): expected 1 card for t1 after burn linger, got ${afterBurnLinger.cardCount}`);
+    assert.equal(afterBurnLinger.cs?.cookWindow, 'idle', `${tag} (f): expected idle after burn linger, got ${afterBurnLinger.cs?.cookWindow}`);
+    assert.equal(afterBurnLinger.cs?.disabled, false, `${tag} (f): card should be re-enabled after burn linger`);
+    assert.equal(afterBurnLinger.btnDisabled, false, `${tag} (f): DOM button should be enabled after burn linger`);
+    assert.equal(afterBurnLinger.btnText, '重烤', `${tag} (f): expected retry button text '重烤', got "${afterBurnLinger.btnText}"`);
     assert.equal(afterBurnLinger.st.waste, 1, `${tag} (f): waste double-incremented`);
-    assert.equal(afterBurnLinger.st.angry, 1, `${tag} (f): angry double-incremented`);
+    assert.equal(afterBurnLinger.st.angry, 0, `${tag} (f): angry incremented after burn linger`);
+    const guestRetry = afterBurnLinger.st.customers.find((c) => c.table === 't1');
+    assert.ok(guestRetry && guestRetry.phase === 'seated',
+      `${tag} (f): expected guest still seated after linger, got ${JSON.stringify(guestRetry)}`);
 
     // ---- (c) t = 6.5 lift -> money delta = price + full tip (plus over t = 10.5 -> half tip & no double-pay) ----
     await resetAndSeat(page, ['pork', 'mushroom']);
@@ -340,7 +364,7 @@ async function runViewport(tag, width, height, run) {
       `windows=[${samples.map((s) => `${s.t}:${s.cs.cookWindow}(${s.cs.progressPct.toFixed(1)}%)`).join(',')}] | ` +
       `perfect=+¥${expectedFullPork} over=+¥${expectedOverMush} raw=¥0(idle,waste+1) | ` +
       `4th(full=${fullState.c4.disabled}/"${fullState.c4.label}"->free=${afterRelease.c4.disabled}) | ` +
-      `burn(waste=${burntSnap.st.waste},angry=${burntSnap.st.angry},removed=true) | 0 JS err`,
+      `burn(waste=${burntSnap.st.waste},angry=${burntSnap.st.angry},retry="${afterBurnLinger.btnText}") | 0 JS err`,
     );
   } finally {
     await browser.close().catch(() => {});

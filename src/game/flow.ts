@@ -68,6 +68,7 @@ export interface OrderCardState {
   progressPct: number;
   disabled: boolean;
   rawLocked: boolean;
+  burntRetry: boolean;
   label: string;
   statusText: string;
   slotIndex: number;
@@ -112,6 +113,7 @@ export class Flow {
   private chopFlash = 0;
   private denyT = 0;
   private burntCards = new Map<string, BurntCardEntry>();
+  private burntRetry = new Set<string>();
   current: Interaction = { action: 'none', label: '', icon: 'none', glyph: '' };
 
   constructor(
@@ -191,6 +193,7 @@ export class Flow {
     this.spawnT = 2.0;
     this.ordersT = 0;
     this.burntCards.clear();
+    this.burntRetry.clear();
     // clear leftovers
     for (const c of this.customers) { this.scene.remove(c.obj); disposeTree(c.obj); }
     this.customers.length = 0;
@@ -239,6 +242,7 @@ export class Flow {
     };
     this.phase = 'results';
     this.burntCards.clear();
+    this.burntRetry.clear();
     const best = Number(localStorage.getItem(SAVE_KEYS.best) ?? '0');
     if (this.money > best) localStorage.setItem(SAVE_KEYS.best, String(this.money));
     this.ev.onPhase('results');
@@ -383,6 +387,7 @@ export class Flow {
     guest.paid = true;
     this.releaseGuestGrillSlot(guest.id);
     this.burntCards.delete(guest.table);
+    this.burntRetry.delete(guest.table);
 
     // plate lands on the table, guest eats
     dish.obj.position.set(table.pos.x - 0.15, table.pos.y + 0.03, table.pos.z + 0.1);
@@ -419,14 +424,11 @@ export class Flow {
     this.waste += 1;
     const guest = this.customers.find((c) => c.id === customerId && c.phase === 'seated');
     if (guest) {
-      guest.phase = 'leaving-angry';
-      guest.obj.position.y = 0;
-      this.angry += 1;
       const table = this.tables.find((t) => t.id === guest.table);
       const popPos = table
         ? table.pos.clone().add(new THREE.Vector3(0, 0.5, 0))
         : guest.obj.position.clone().add(new THREE.Vector3(0, 1.2, 0));
-      this.ev.onPopup(popPos, '焦糊了', 'warn');
+      this.ev.onPopup(popPos, '焦糊 · 废料 +1', 'warn');
       this.burntCards.set(guest.table, {
         tableId: guest.table,
         customerId: guest.id,
@@ -434,6 +436,7 @@ export class Flow {
         cookT,
         lingerLeft: COOK.burntLinger,
       });
+      this.burntRetry.add(guest.table);
     } else if (tableId) {
       this.burntCards.set(tableId, {
         tableId,
@@ -442,6 +445,7 @@ export class Flow {
         cookT,
         lingerLeft: COOK.burntLinger,
       });
+      this.burntRetry.add(tableId);
     }
     this.ev.onOrders(this.customers, this.tables);
   }
@@ -456,6 +460,8 @@ export class Flow {
 
     const slotIndex = this.grill.slots.findIndex((s) => s.item?.orderCustomerId === guest.id);
     if (slotIndex < 0) {
+      const burnt = this.burntCards.get(tableId);
+      if (burnt && burnt.lingerLeft > 0) return false;
       const slot = this.grill.freeSlot();
       if (!slot) return false;
       const item = createItem(guest.dish, 'raw');
@@ -515,6 +521,7 @@ export class Flow {
           progressPct: 0,
           disabled: true,
           rawLocked: false,
+          burntRetry: false,
           label: '用餐中',
           statusText: `¥${price} · 用餐中`,
           slotIndex: -1,
@@ -539,7 +546,7 @@ export class Flow {
           const rem = Math.max(1, Math.ceil(COOK.burnTime - (rawT + COOK_EPS)));
           label = `偏老 ${rem}s`;
         } else {
-          label = '焦糊';
+          label = '已焦';
         }
         const rawLocked = isRawLocked(win, rawT);
         out.push({
@@ -554,28 +561,58 @@ export class Flow {
           progressPct,
           disabled: win === 'burnt',
           rawLocked,
+          burntRetry: false,
           label,
-          statusText: win === 'raw' ? label : `¥${price} · ${label}`,
+          statusText: win === 'raw' ? label : win === 'burnt' ? `¥${price} · 已焦糊 · 废料 +1` : `¥${price} · ${label}`,
           slotIndex,
         });
       } else {
-        const label = grillFull ? '烤位满了' : '上炉';
-        out.push({
-          tableId: c.table,
-          customerId: c.id,
-          dish: c.dish,
-          phase: 'seated',
-          patience: c.patience,
-          patienceMax: c.patienceMax,
-          cookWindow: 'idle',
-          cookT: 0,
-          progressPct: 0,
-          disabled: grillFull,
-          rawLocked: false,
-          label,
-          statusText: grillFull ? `¥${price} · 烤位满了` : `¥${price} · 等待`,
-          slotIndex: -1,
-        });
+        const burnt = this.burntCards.get(c.table);
+        if (burnt && burnt.lingerLeft > 0) {
+          activeTables.add(c.table);
+          out.push({
+            tableId: c.table,
+            customerId: c.id,
+            dish: c.dish,
+            phase: 'seated',
+            patience: c.patience,
+            patienceMax: c.patienceMax,
+            cookWindow: 'burnt',
+            cookT: Number(burnt.cookT.toFixed(4)),
+            progressPct: 100,
+            disabled: true,
+            rawLocked: false,
+            burntRetry: false,
+            label: '已焦',
+            statusText: `¥${price} · 已焦糊 · 废料 +1`,
+            slotIndex: -1,
+          });
+        } else {
+          const isRetry = this.burntRetry.has(c.table);
+          const label = grillFull ? '烤位满了' : isRetry ? '重烤' : '上炉';
+          const statusText = grillFull
+            ? `¥${price} · 烤位满了`
+            : isRetry
+              ? `¥${price} · 重烤可上炉`
+              : `¥${price} · 等待`;
+          out.push({
+            tableId: c.table,
+            customerId: c.id,
+            dish: c.dish,
+            phase: 'seated',
+            patience: c.patience,
+            patienceMax: c.patienceMax,
+            cookWindow: 'idle',
+            cookT: 0,
+            progressPct: 0,
+            disabled: grillFull,
+            rawLocked: false,
+            burntRetry: isRetry,
+            label,
+            statusText,
+            slotIndex: -1,
+          });
+        }
       }
     }
 
@@ -594,8 +631,9 @@ export class Flow {
         progressPct: 100,
         disabled: true,
         rawLocked: false,
-        label: '焦糊',
-        statusText: `¥${price} · 焦糊`,
+        burntRetry: false,
+        label: '已焦',
+        statusText: `¥${price} · 已焦糊 · 废料 +1`,
         slotIndex: -1,
       });
     }
@@ -693,6 +731,7 @@ export class Flow {
         onGone: (cc) => {
           table.guest = null;
           table.cooldown = this.cfg.tableCooldown;
+          this.burntRetry.delete(cc.table);
           const plate = (cc as unknown as { _plate?: THREE.Object3D })._plate;
           if (plate) { this.scene.remove(plate); disposeTree(plate); }
           const i = this.customers.indexOf(cc);
@@ -702,6 +741,7 @@ export class Flow {
       });
       if (was === 'walking-in' && c.phase === 'seated') {
         this.burntCards.delete(c.table);
+        this.burntRetry.delete(c.table);
         justSeated = true;
       }
     }

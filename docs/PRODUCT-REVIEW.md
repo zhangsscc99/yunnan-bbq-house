@@ -4,6 +4,26 @@
 > 截图目录：`e2e/review/<UTC>-live/`（竖屏 `port-*` 390×844、横屏 `land-*` 844×390，含 `run-*.json` 原始测量）。
 
 
+## 2026-11-22 13:00Z 第 38 轮（规格实现轮 · G-01）
+
+综合评分：不重评（本轮只做 `SPEC-BACKLOG-V2` G-01 的机器验收，不改代码）
+
+> 本轮对象：本机 `:3035` 与网关 `:80/bbq/`，部署包 `assets/index-BurmCeOO.js`（main `c09d56f`）。
+> 部署前线上是 `index-zczXh931.js`（v2 逻辑已在，但非 main HEAD 构建）；本轮已重新 `ci-deploy.sh`，`3035`/网关均 200 且同为 `BurmCeOO`。
+
+### G-01 顾客自助点单（玩家零操作）→ 通过
+- 断言实测（`e2e/verify-g01.mjs`，390×844，冻结时钟逐帧 0.05s）：顾客在模拟 `4.65s` / `6.65s` 入座，**入座当帧**该桌 `.card[data-table]` 已存在（延迟 0ms ≤300ms），入座后 300ms 窗口 6/6 帧卡片均在。
+- 卡片 `data-order-state=ordering`，文案「后台备菜 · 3s」+ 按钮「备菜中」，`.prep-ring` `display:block`，备菜环形 `stroke-dashoffset` `78.53→40.84`、`prepT 0.917→1.917`（+1.0s），进度确实在走。
+- 零操作：卡片整体 + `.card-btn` 各连点 3 次后 `orderState` 仍 `ordering`、`clickCount 0→0`、`money 0→0`、`pass 0`、`carrying false`、`prepT` 未被重置、顾客耐心 `98.08` 不降。
+- 双端（本机 preview + `:3035`）各跑一遍：`console error 0` / `failed request 0`。
+- 证据截图：`/www/yunnan-bbq-house/e2e/shots/g01-ordering-390x844.png`（备菜中环形进度）、`/www/yunnan-bbq-house/e2e/shots/g01-pass-ready-390x844.png`（3 份出窗 + 卡片 ready）。
+- 性能实测（同一帧读数）：`renderer.info.render.calls = 156`、`triangles = 15,852`（G-01 属既有能力，本轮无新增开销）。
+
+### 本轮发现（留给后续 G 条目）
+1) **出菜窗口会一次堆到 3 份而卡片仍全在 ordering**：截图 `g01-pass-ready` 里同时 3 份出窗，说明同时入座的多桌会集中备好；`G-02`（窗口容量 3 / 第 4 份暂停）必须验证「堆满后后台计时是否真停」，这是 v2 唯一的压力来源，别只测 UI。
+2) **备菜 ring 与耐心 ring 在小卡上都是圆环**（`g01-ordering` 里左侧金环 + 按钮蓝环并存），两圈语义不同但形态近似，`G-08` 做六态可辨时应顺手确认不会误读。
+3) 线上包刚与 main HEAD 拉齐，`G-02…G-10` 的后续验收都应固定在 `index-BurmCeOO.js` 这个构建上，避免又出现「测的包不是线上包」。
+
 ## 2026-11-22 12:10Z 第 37 轮
 综合评分：3.2/5（比上轮 -0.1）
 

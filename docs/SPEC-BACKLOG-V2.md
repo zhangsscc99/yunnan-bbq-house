@@ -25,7 +25,8 @@
 ### G-01 顾客自助点单（玩家零操作）
 - 来源：GAME-DESIGN v2 §1 ①
 - 验收断言：顾客入座后 300ms 内出现订单卡；卡片显示「备菜中」环形进度；对卡片任何点击都不改变状态
-- 状态：未核对
+- 状态：通过
+- 证据：c09d56f + 部署 assets/index-BurmCeOO.js（2026-11-22 12:52Z）· 模拟 4.65s/6.65s 入座当帧卡片延迟 0ms（≤300ms），入座后 6/6 帧均在；卡 data-order-state=ordering，文案「后台备菜 · 3s」+「备菜中」，.prep-ring display=block，dashoffset 78.53→40.84 / prepT 0.917→1.917（+1.0s）；卡片+按钮各点 3 次：orderState ordering→ordering、clickCount 0→0、money 0→0、pass 0→0、carrying false、prepT 未被重置、耐心 98.08 不降；console error 0 / failed request 0（`e2e/verify-g01.mjs` 连跑 2 次 PASS）· 截图 `/www/yunnan-bbq-house/e2e/shots/g01-ordering-390x844.png`、`/www/yunnan-bbq-house/e2e/shots/g01-pass-ready-390x844.png`
 
 ### G-02 后台自动备菜 + 出菜窗口队列
 - 来源：§1 ②

@@ -1535,6 +1535,7 @@ vision 复核：竖屏放大后独立读出「三个筐＝红肉串 / 褐圆帽�
 验收：e2e 在竖屏 `390×844` 与横屏 `844×390` 冻结时钟下执行：(a) 点 1 号卡上炉并 `__test.tick()` 推进至 `t=12.1s`，断言同帧 `state().waste === 1`、`state().angry === 0`、`state().money === 0`，且 `#bbq-popups .popup` 文本同时包含 `焦糊` 与 `废料`；(b) `t=12.5s` 时该订单卡仍存在于 `#bbq-orders` 且 `dataset.cookWindow === 'burnt'`，继续推进 `1.5s` 后断言卡片切回 `dataset.cookWindow === 'idle'`、具备 `[data-burnt-retry="true"]` 且对应顾客仍为 `seated`；(c) 再次点击该卡上炉并于 `t=5.5s` 完美窗起锅收款，断言 `served === 1 && money > 0`，随后在 `money >= target, angry === 0, waste === 1` 条件下结算断言星级 `=== 3`；(d) 双端连跑 3 次 `0` JS error。
 参考：《胡闹厨房 2》/《沙威玛传奇》（烤焦仅损毁该份食材并要求重做，顾客耐心未归零前不会立刻离店，保留容错与翻盘空间）；`GAME-DESIGN.md §1`、`§4`、`TECH-STACK.md §2`。
 - [done 第 34 轮] `flow.ts` `triggerAutoBurn()` 删除 `angry += 1` 与 `leaving-angry`（顾客保持 `seated` 耐心不动）、飘字改 `焦糊 · 废料 +1`，`burntLinger` 调至 `1.2s` 并用 `burntRetry` 在驻留结束后切回 `idle` 显示「重烤」可再次上炉，新增 `e2e/burn-retry.mjs` 与更新 `e2e/oneclick.mjs` 验收全绿。
+  - 适用范围：本次修的是 v1 两次点击循环（线上在跑的版本）。`GAME-DESIGN.md §0/§1 v2` 落地时 `flow.ts` 会被重写，「焦糊只计一次、不得双扣、可重做」这条规则必须照搬到 v2 的桌边烤判定里，别丢。
 
 ### B-157 偏老/焦糊订单卡分级边框着色与消除「焦糊 焦糊」文案重复
 优先级：P1
